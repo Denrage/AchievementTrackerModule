@@ -12,6 +12,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework.Graphics;
+using System.Net;
+using System.Text.Json.Serialization;
+using Gw2Sharp.WebApi.V2.Clients;
 
 namespace AchievementTrackerModule
 {
@@ -42,7 +45,10 @@ namespace AchievementTrackerModule
 
         protected override void Initialize()
         {
-
+            this.Gw2ApiManager.SubtokenUpdated += (sender, args) =>
+            {
+                System.Diagnostics.Debug.Write("foobar");
+            };
         }
 
         protected override async Task LoadAsync()
@@ -52,12 +58,11 @@ namespace AchievementTrackerModule
             var achievementTrackerService = new AchievementTrackerService();
             achievementTrackerService.AchievementTracked += AchievementTrackerService_AchievementTracked;
             GameService.Overlay.BlishHudWindow.AddTab("AchievementTracker", ContentsManager.GetTexture("243.png"), () => new AchievementTrackerView(groups, categories, Gw2ApiManager, this.ContentsManager, achievementTrackerService));
-
         }
 
         private void AchievementTrackerService_AchievementTracked(Achievement obj)
         {
-            new AchievementTrackWindow(this.ContentsManager, obj)
+            new AchievementTrackWindow(this.ContentsManager, obj, this.Gw2ApiManager)
             {
                 Parent = GameService.Graphics.SpriteScreen,
                 Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2),
@@ -86,16 +91,65 @@ namespace AchievementTrackerModule
 
     }
 
+    public class ItemDetailWindow : WindowBase2
+    {
+        private readonly ContentsManager contentsManager;
+        private readonly Item item;
+        private readonly string acquisitionText;
+        private readonly Texture2D texture;
+
+        public ItemDetailWindow(ContentsManager contentsManager, Item item, string acquisitionText)
+        {
+            this.contentsManager = contentsManager;
+            this.item = item;
+            this.acquisitionText = acquisitionText;
+            this.texture = this.contentsManager.GetTexture("156390.png");
+            this.BuildWindow();
+        }
+
+        private void BuildWindow()
+        {
+            this.Title = this.item.Name;
+            this.ConstructWindow(texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 300, 400), new Microsoft.Xna.Framework.Rectangle(0, 30, 300, 400 - 30));
+
+            var panel = new Panel()
+            {
+                Size = this.ContentRegion.Size,
+                Parent = this,
+            };
+
+            new Label()
+            {
+                Text = this.acquisitionText,
+                Size = panel.ContentRegion.Size,
+                WrapText = true,
+                Parent = panel,
+            };
+        }
+
+        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
+        {
+            spriteBatch.DrawOnCtrl(this,
+                                   texture,
+                                   bounds);
+            base.PaintBeforeChildren(spriteBatch, bounds);
+        }
+    }
+
     public class AchievementTrackWindow : WindowBase2
     {
         private readonly ContentsManager contentsManager;
         private readonly Achievement achievement;
+        private readonly Gw2ApiManager gw2ApiManager;
         private readonly Texture2D texture;
+        private FlowPanel panel;
+        private IEnumerable<AccountAchievement> playerAchievements;
 
-        public AchievementTrackWindow(ContentsManager contentsManager, Achievement achievement)
+        public AchievementTrackWindow(ContentsManager contentsManager, Achievement achievement, Gw2ApiManager gw2ApiManager)
         {
             this.contentsManager = contentsManager;
             this.achievement = achievement;
+            this.gw2ApiManager = gw2ApiManager;
             this.texture = this.contentsManager.GetTexture("156390.png");
             this.BuildWindow();
         }
@@ -103,12 +157,122 @@ namespace AchievementTrackerModule
         private void BuildWindow()
         {
             this.Title = this.achievement.Name;
-            this.ConstructWindow(texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 400, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 400, 600 - 30));
-            new Panel()
+            this.ConstructWindow(texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 7 * 74, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 7 * 74, 600 - 30));
+            this.panel = new FlowPanel()
             {
                 Parent = this,
-                BackgroundColor = Microsoft.Xna.Framework.Color.White,
+                Size = this.ContentRegion.Size,
+                CanScroll = true,
+                FlowDirection = ControlFlowDirection.LeftToRight,
+                ControlPadding = new Vector2(5f),
             };
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+
+            var hasPermission = this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression });
+            //this.playerAchievements = this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync().Result;
+            //this.ParseWikiCollectionTable(AchievementTrackerModule.Module.EnvoyArmorWikiContent);
+            base.OnShown(e);
+        }
+
+
+        private void ParseWikiCollectionTable(string wikiSource)
+        {
+            var collectionLines = wikiSource.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries).Where(x => x.Contains("{{collection"));
+
+            foreach (var row in collectionLines)
+            {
+                if (row.Contains("collection table header"))
+                {
+                    continue;
+                }
+                this.ParseCollectionRow(row);
+            }
+        }
+
+        private void ParseCollectionRow(string row)
+        {
+            row = row.Replace("{{", string.Empty).Replace("}}", string.Empty); // {{collection table row | ... }} -> collection table row | ...
+            var parts = row.Split(new[] { "|" }, StringSplitOptions.RemoveEmptyEntries).Skip(1).ToArray(); // convert columns to array
+            var collectionItem = parts[0].Trim();
+            var collectionAcquisitionText = string.Join("|", parts.Skip(1)).Trim();
+
+            var item = this.ParseCollectionItem(collectionItem);
+            var apiItem = this.gw2ApiManager.Gw2ApiClient.V2.Items.GetAsync(item).Result;
+            //var tint = this.playerAchievements.FirstOrDefault(x => x.Id == this.achievement.Id) != null;
+            var tint = false;
+            var image = new Image()
+            {
+                Parent = this.panel,
+                Width = 64,
+                Height = 64,
+                Tint = tint ? Microsoft.Xna.Framework.Color.Gray : default(Microsoft.Xna.Framework.Color),
+                Texture = Content.GetRenderServiceTexture(apiItem.Icon),
+                BackgroundColor = Microsoft.Xna.Framework.Color.Gray,
+            };
+
+            image.Click += (s, e) =>
+            {
+                new ItemDetailWindow(this.contentsManager, apiItem, collectionAcquisitionText)
+                {
+                    Parent = GameService.Graphics.SpriteScreen,
+                    Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2),
+                }.ToggleWindow();
+            };
+        }
+
+        private int ParseCollectionItem(string name)
+        {
+            var webClient = new WebClient();
+            webClient.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36");
+            var requestTitle = "https://wiki.guildwars2.com/api.php?action=query&prop=revisions&titles=" + name.Replace(" ", "%20") + "&rvslots=*&rvprop=content&formatversion=2&format=json";
+            var wikiResult = webClient.DownloadString(requestTitle);
+            var parsedWikiResult = System.Text.Json.JsonSerializer.Deserialize<Root>(wikiResult);
+
+            var wikiContent = parsedWikiResult.query.pages[0].revisions[0].slots.main.content;
+
+            var idFirstIndex = wikiContent.IndexOf("| id") + "| id = ".Length;
+            var idLastIndex = wikiContent.IndexOf("\n", idFirstIndex);
+            var result = wikiContent.Substring(idFirstIndex, idLastIndex - idFirstIndex);
+            return int.Parse(result);
+        }
+
+        public class Main
+        {
+            public string contentmodel { get; set; }
+            public string contentformat { get; set; }
+            public string content { get; set; }
+        }
+
+        public class Slots
+        {
+            public Main main { get; set; }
+        }
+
+        public class RevisionsItem
+        {
+            public Slots slots { get; set; }
+        }
+
+        public class PagesItem
+        {
+            public int pageid { get; set; }
+            public int ns { get; set; }
+            public string title { get; set; }
+            public List<RevisionsItem> revisions { get; set; }
+        }
+
+        public class Query
+        {
+            public List<PagesItem> pages { get; set; }
+        }
+
+        public class Root
+        {
+            public bool batchcomplete { get; set; }
+            public Query query { get; set; }
         }
 
         public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
@@ -267,20 +431,23 @@ namespace AchievementTrackerModule
                 Location = new Point(menuPanel.Width, 0),
             };
 
-            foreach (var group in groups.OrderBy(x => x.Order))
+            foreach (var group in groups.OrderBy(x => x.Order).Where(x => x.Name.Contains("Collection")))
             {
                 var menuItem = menu.AddMenuItem(group.Name);
                 foreach (var categoryId in group.Categories)
                 {
                     var category = this.categories[categoryId];
-                    var innerMenuItem = new MenuItem(category.Name)
+                    if (category.Name.Contains("Armor"))
                     {
-                        Parent = menuItem
-                    };
+                        var innerMenuItem = new MenuItem(category.Name)
+                        {
+                            Parent = menuItem
+                        };
 
-                    innerMenuItem.ItemSelected += (sender, e) => selectedMenuItemView.Show(new AchievementCategoryOverview(this.menuItemCategories[(MenuItem)sender], this.gw2ApiManager, this.contentsManager, this.achievementTrackerService));
+                        innerMenuItem.ItemSelected += (sender, e) => selectedMenuItemView.Show(new AchievementCategoryOverview(this.menuItemCategories[(MenuItem)sender], this.gw2ApiManager, this.contentsManager, this.achievementTrackerService));
 
-                    this.menuItemCategories.Add(innerMenuItem, category);
+                        this.menuItemCategories.Add(innerMenuItem, category);
+                    }
                 }
             }
         }

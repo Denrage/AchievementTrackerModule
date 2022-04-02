@@ -14,5 +14,15 @@
     {
       "name": "Denrage"
     }
-  ]
+  ],
+  "api_permissions": {
+    "account": {
+      "optional": false,
+      "details": "Needed if you want the special feature enabled."
+    },
+    "progression": {
+      "optional": false,
+      "details": "Needed to review the item in your inventory."
+    }
+  }
 }
