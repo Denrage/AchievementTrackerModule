@@ -57,6 +57,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controls\" />
+  </ItemGroup>
   <PropertyGroup />
   <PropertyGroup />
   <ProjectExtensions>
