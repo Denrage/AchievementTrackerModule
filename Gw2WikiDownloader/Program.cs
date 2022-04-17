@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using HtmlAgilityPack;
+using System.Diagnostics;
 using System.Net;
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36";
 
@@ -16,26 +17,28 @@ var response = await httpClient.SendAsync(request);
 
 var parser = new Gw2WikiDownload.WikiParser();
 
-var document = new HtmlAgilityPack.HtmlDocument();
-document.LoadHtml(File.ReadAllText("Untitled-1.html"));
-var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
+//var document = new HtmlAgilityPack.HtmlDocument();
+//document.LoadHtml(File.ReadAllText("Untitled-1.html"));
+//var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
 
-var result = parser.Parse(tables.First().OuterHtml);
-//var listElements = parser.ParseListElementsFromWiki(await response.Content.ReadAsStringAsync()).Skip(4);
-//var result = new List<Gw2WikiDownload.WikiParser.AchievementTableEntry>();
-//foreach (var item in listElements)
-//{
-//    if (item.title.Contains("Daily") || item.title == "Living World Dailies")
-//    {
-//        System.Diagnostics.Debug.WriteLine(item.title + " skipped");
-//        continue;
-//    }
-//    System.Diagnostics.Debug.WriteLine(item.title);
-//    var web = new HtmlWeb();
-//    var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link);
-//    var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
-//    result.AddRange(parser.Parse(tables.First().OuterHtml));
-//}
+//var result = parser.Parse(document, tables.First());
+var listElements = parser.ParseListElementsFromWiki(await response.Content.ReadAsStringAsync()).Skip(4);
+var result = new List<Gw2WikiDownload.WikiParser.AchievementTableEntry>();
+foreach (var item in listElements)
+{
+    if (item.title == "Living World Dailies")
+    {
+        System.Diagnostics.Debug.WriteLine(item.title + " skipped");
+        continue;
+    }
+    System.Diagnostics.Debug.WriteLine(item.title);
+    var web = new HtmlWeb();
+    var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link);
+    var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
+    result.AddRange(parser.Parse(document, tables.First()));
+}
+
+
 
 
 Console.WriteLine("Done");
@@ -76,215 +79,260 @@ namespace Gw2WikiDownload
         }
 
         // TODO: cites (sup)
-        public IEnumerable<AchievementTableEntry> Parse(string table)
-        {
-            HtmlAgilityPack.HtmlDocument document = new HtmlAgilityPack.HtmlDocument();
-            document.LoadHtml(table);
-            var groupedAchievements = new Dictionary<string, List<HtmlNode>>();
-            var achievementNodes = document.DocumentNode.SelectNodes("//tr[@data-id]");
-            foreach (var achievementNode in achievementNodes)
-            {
-                var achievementId = achievementNode.Attributes["data-id"].Value;
-
-                if (!groupedAchievements.ContainsKey(achievementId))
-                {
-                    groupedAchievements[achievementId] = new List<HtmlNode>();
-                }
-
-                groupedAchievements[achievementId].Add(achievementNode);
-            }
-
-            var result = new List<AchievementTableEntry>();
-
-            foreach (var achievement in groupedAchievements.Values)
-            {
-                if (achievement[1].InnerHtml.Contains("Objectives:"))
-                {
-                    result.Add(ParseAchievementTable(achievement));
-                }
-                else if (achievement[1].InnerHtml.Contains("-bit"))
-                {
-                    result.Add(ParseCollection(achievement));
-                }
-                else
-                {
-                    var achievementName = ParseAchievementName(achievement);
-                    var descriptionCell = achievement[1].ChildNodes.FindFirst("td");
-                    var gameText = SanitizesDisplayName(descriptionCell.ChildNodes[0].InnerText);
-                    var gameHint = string.Empty;
-
-                    if (descriptionCell.ChildNodes.FindFirst("span") != null)
-                    {
-                        gameHint = SanitizesDisplayName(descriptionCell.ChildNodes.FindFirst("span").InnerText);
-                    }
-                    var descriptionElementList = descriptionCell.ChildNodes.FindFirst("dl");
-                    var reward = Reward.EmptyReward;
-                    var prerequisite = string.Empty;
-
-                    if (descriptionElementList != null)
-                    {
-                        var descriptionElements = descriptionElementList.ChildNodes.Where(x => x.Name == "dd");
-                        if (descriptionElements.Any())
-                        {
-                            if (descriptionElements.First().InnerHtml.Contains("Prerequisite:"))
-                            {
-                                prerequisite = descriptionElements.First().LastChild.InnerText;
-                            }
-
-                            if (descriptionElements.Select(x => x.InnerHtml).Any(x => x.Contains("Reward:") || x.Contains("Title:")))
-                            {
-                                reward = ParseReward(descriptionElements);
-                            }
-                        }
-                    }
-
-                    var description = new StringDescription(gameText, prerequisite) { GameHint = gameHint };
-                    description.Reward = reward;
-                    result.Add(new AchievementTableEntry(achievementName.Name, description, achievementName.Link));
-                }
-
-            }
-
-            return result;
-        }
-
-        private static (string Name, string Link) ParseAchievementName(List<HtmlNode> achievement)
+        public IEnumerable<AchievementTableEntry> Parse(HtmlDocument fullDocument, HtmlNode table)
         {
             try
             {
-                var headerRow = achievement[0];
-                var headerNameColumn = headerRow.ChildNodes.FindFirst("th");
-                var possibleLinkNodes = headerNameColumn.ChildNodes.Where(x => x.Name == "a");
-
-                if (possibleLinkNodes.Any())
+                var groupedAchievements = new Dictionary<string, List<HtmlNode>>();
+                var achievementNodes = table.SelectNodes("//tr[@data-id]");
+                foreach (var achievementNode in achievementNodes)
                 {
-                    var linkNode = possibleLinkNodes.FirstOrDefault(x => x.ChildNodes.FindFirst("img") == null);
-                    
-                    if (linkNode != null)
+                    var achievementId = achievementNode.Attributes["data-id"].Value;
+
+                    if (!groupedAchievements.ContainsKey(achievementId))
                     {
-                        return (SanitizesDisplayName(linkNode.InnerText), linkNode.GetAttributeValue("href", string.Empty));
+                        groupedAchievements[achievementId] = new List<HtmlNode>();
                     }
+
+                    groupedAchievements[achievementId].Add(achievementNode);
                 }
 
-                return (SanitizesDisplayName(headerNameColumn.InnerText), string.Empty);
+                var result = new List<AchievementTableEntry>();
+
+                foreach (var achievement in groupedAchievements.Values)
+                {
+                    var achievementName = ParseHeaderRow(achievement[0].ChildNodes.FindFirst("th"));
+                    var entry = new AchievementTableEntry(achievementName.Name, link: achievementName.Link);
+                    ParseDescriptionRow(fullDocument.DocumentNode, achievement[1], entry);
+                    result.Add(entry);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {
 
-                throw ex;
+                throw;
             }
         }
 
-        private static HtmlNode GetDescription(List<HtmlNode> achievement)
-            => achievement[1].ChildNodes.FindFirst("td");
-
-        private static Reward ParseReward(IEnumerable<HtmlNode> descriptionElements)
+        public void ParseDescriptionRow(HtmlNode fullDocument, HtmlNode descriptionRow, AchievementTableEntry entry)
         {
-            var rewardDescriptionElement = descriptionElements.First();
-            if (descriptionElements.First().InnerHtml.Contains("Prerequisite:"))
+            try
             {
-                rewardDescriptionElement = descriptionElements.Skip(1).First();
+                var gameText = string.Empty;
+                var gameHint = string.Empty;
+
+                foreach (var node in descriptionRow.ChildNodes.Where(x => x.Name == "td").First().ChildNodes)
+                {
+                    if (node.NodeType == HtmlNodeType.Text && !string.IsNullOrEmpty(node.InnerText.Replace(Environment.NewLine, string.Empty))) // Description text
+                    {
+                        gameText = node.InnerText;
+                    }
+                    else if (node.Name == "dl") // Multiarea description (Collection, Titles, Rewards, Objectives)
+                    {
+                        ParseDescriptionList(entry, node.ChildNodes.Where(x => x.Name == "dd"));
+                    }
+                    else if (node.Name == "p") // Additional notes with cites
+                    {
+                        var referenceNodes = fullDocument.SelectNodes("//ol[contains(@class, 'references')]");
+                        if (referenceNodes.Any())
+                        {
+                            var relevantNode = referenceNodes.First();
+                            var references = relevantNode.ChildNodes.Where(x => x.Name == "li");
+
+                            var citeLink = node.ChildNodes.FindFirst("sup").ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty)[1..];
+                            entry.Cite = references.First(x => x.GetAttributeValue("id", string.Empty) == citeLink).InnerText;
+
+                        }
+                    }
+                    else if (node.Name == "span") // Game hint text
+                    {
+                        gameHint = node.InnerText;
+                    }
+                }
+
+                if (entry.Description is null)
+                {
+                    entry.Description = new StringDescription();
+                }
+
+                entry.Description.GameText = gameText;
+                entry.Description.GameHint = gameHint;
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+
+        public (string Name, string Link) ParseHeaderRow(HtmlNode headerRow)
+        {
+            var name = string.Empty;
+            var link = string.Empty;
+
+            foreach (var node in headerRow.ChildNodes)
+            {
+                if (node.NodeType == HtmlNodeType.Text && !string.IsNullOrEmpty(node.InnerText)) // Text only header
+                {
+                    name = node.InnerText;
+                }
+                else if (node.Name == "a")
+                {
+                    if (node.ChildNodes.Any(x => x.Name == "img")) // Small icon in front
+                    {
+
+                    }
+                    else // Link to a wiki page for this achievement
+                    {
+                        link = node.GetAttributeValue("href", string.Empty);
+                        name = SanitizesDisplayName(node.InnerText);
+
+                        return (name, link);
+                    }
+                }
             }
 
-            // TODO: Parse multitier reward
-            if (rewardDescriptionElement.InnerHtml.Contains("Reward:"))
+            return (name, link);
+        }
+
+        private (string RewardImage, string RewardName, string RewardLink) ParseItemReward(HtmlNode ddElement)
+        {
+            try
             {
-                var rewardImage = rewardDescriptionElement.ChildNodes.FindFirst("span").ChildNodes.FindFirst("a").ChildNodes.FindFirst("img").GetAttributeValue("src", string.Empty);
-                var rewardNameAndLinkElement = rewardDescriptionElement.ChildNodes.FindFirst("a");
+                var rewardImage = ddElement.ChildNodes.FindFirst("span").ChildNodes.FindFirst("a").ChildNodes.FindFirst("img").GetAttributeValue("src", string.Empty);
+                var rewardNameAndLinkElement = ddElement.ChildNodes.FindFirst("a");
                 var rewardName = rewardNameAndLinkElement.GetAttributeValue("title", string.Empty);
                 var rewardLink = rewardNameAndLinkElement.GetAttributeValue("href", string.Empty);
 
-                return new ItemReward(rewardImage, rewardName, rewardLink);
+                return (rewardImage, rewardName, rewardLink);
             }
-            else if(rewardDescriptionElement.InnerHtml.Contains(""))
+            catch (Exception ex)
             {
-                return new TitleReward(SanitizesDisplayName(rewardDescriptionElement.LastChild.InnerText));
+
+                throw;
             }
         }
 
-        private static AchievementTableEntry ParseCollection(List<HtmlNode> achievement)
+        public void ParseDescriptionList(AchievementTableEntry achievementTableEntry, IEnumerable<HtmlNode> ddElements)
         {
-            var descriptionCell = GetDescription(achievement);
-            var descriptionElements = descriptionCell.ChildNodes.First(x => x.Name == "dl").ChildNodes.Where(x => x.Name == "dd");
-            var prerequisite = string.Empty;
-
-            if (descriptionElements.First().InnerHtml.Contains("Prerequisite:"))
+            try
             {
-                prerequisite = descriptionElements.First().LastChild.InnerText;
-            }
-
-            var description = new CollectionDescription(SanitizesDisplayName(descriptionCell.ChildNodes[0].InnerText), ParseReward(descriptionElements), prerequisite);
-
-            var descriptionCollectionElement = descriptionElements.First(x => x.InnerHtml.Contains("-bit"));
-
-            foreach (var item in descriptionCollectionElement.ChildNodes.FindFirst("div").ChildNodes.Where(x => x.Name == "div"))
-            {
-                description.EntryList.Add(new CollectionDescriptionEntry() { DisplayName = SanitizesDisplayName(item.ChildNodes.FindFirst("a").GetAttributeValue("title", string.Empty)), Link = item.ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty), ImageUrl = item.ChildNodes.FindFirst("a").ChildNodes.FindFirst("img").GetAttributeValue("src", string.Empty) });
-            }
-
-            var achievementName = ParseAchievementName(achievement);
-            return new AchievementTableEntry(achievementName.Name, description, achievementName.Link);
-        }
-
-        private static AchievementTableEntry ParseAchievementTable(List<HtmlNode> achievement)
-        {
-            var descriptionCell = GetDescription(achievement);
-            var descriptionElements = descriptionCell.ChildNodes.First(x => x.Name == "dl").ChildNodes.Where(x => x.Name == "dd");
-            var prerequisite = string.Empty;
-
-            if (descriptionElements.First().InnerHtml.Contains("Prerequisite:"))
-            {
-                prerequisite = descriptionElements.First().LastChild.InnerText;
-            }
-
-            var description = new TableDescription(SanitizesDisplayName(descriptionCell.ChildNodes[0].InnerText), ParseReward(descriptionElements), prerequisite);
-
-            // TODO: Better handling of multi tier rewards and finding correct table
-            var descriptionTable = descriptionElements.First(x => x.ChildNodes.FindFirst("table") != null && !x.InnerHtml.Contains("Rewards")).ChildNodes.FindFirst("table");
-            var tableBody = descriptionTable.ChildNodes.FindFirst("tbody");
-            var tableRows = tableBody.ChildNodes.Where(x => x.Name == "tr" && !x.InnerHtml.Contains("Objectives:") && !x.InnerHtml.Contains("<b>..."));
-
-            foreach (var row in tableRows)
-            {
-                var entry = row.ChildNodes.FindFirst("td").ChildNodes.FindFirst("ul").ChildNodes.FindFirst("li");
-                var entryLink = entry.ChildNodes.FindFirst("a");
-                var displayName = entry.InnerText;
-                var link = string.Empty;
-
-                if (entryLink != null)
+                foreach (var ddElement in ddElements)
                 {
-                    displayName = entryLink.InnerText;
-                    link = entryLink.GetAttributeValue("href", string.Empty);
-                }
-                description.EntryList.Add(new TableDescriptionEntry() { DisplayName = SanitizesDisplayName(displayName), Link = link });
-            }
+                    if (ddElement.InnerHtml.Contains("Reward:")) // Item Reward
+                    {
+                        var (rewardImage, rewardName, rewardLink) = ParseItemReward(ddElement);
+                        achievementTableEntry.Reward = new ItemReward(rewardImage, rewardName, rewardLink);
+                    }
+                    else if (ddElement.InnerHtml.Contains("Rewards:")) // Multitier Reward - cant exists with Item Reward
+                    {
+                        var rewardRows = ddElement.ChildNodes.FindFirst("table").ChildNodes.FindFirst("tbody").ChildNodes.Where(x => x.Name == "tr");
+                        var reward = new MultiTierReward();
 
-            var achievementName = ParseAchievementName(achievement);
-            return new AchievementTableEntry(achievementName.Name, description, achievementName.Link);
+                        foreach (var row in rewardRows)
+                        {
+                            if (row.InnerHtml.Contains("Rewards:") || row.InnerHtml.Contains("<b>...</b>"))
+                            {
+                                continue;
+                            }
+
+                            var tableData = row.ChildNodes.Where(x => x.Name == "td").ToArray();
+                            var tier = int.Parse(tableData[1].InnerText.Replace(":", string.Empty).Trim());
+                            var (rewardImage, rewardName, rewardLink) = ParseItemReward(tableData[2]);
+                            reward.Tiers.Add(new MultiTierReward.TierReward(rewardImage, rewardName, rewardLink, tier));
+                        }
+
+                        achievementTableEntry.Reward = reward;
+                    }
+                    else if (ddElement.InnerHtml.Contains("Title:")) // Title - Can exist with Reward(s)
+                    {
+                        achievementTableEntry.Title = new AchievementTitle(SanitizesDisplayName(ddElement.LastChild.InnerText));
+                    }
+                    else if (ddElement.InnerHtml.Contains("Objectives:")) // Objective list
+                    {
+                        var description = new ObjectivesDescription();
+                        var tableRows = ddElement.ChildNodes.FindFirst("table").ChildNodes.FindFirst("tbody").ChildNodes.Where(x => x.Name == "tr");
+                        foreach (var row in tableRows)
+                        {
+                            if (row.InnerHtml.Contains("Objectives:") || row.InnerHtml.Contains("<b>...</b>"))
+                            {
+                                continue;
+                            }
+
+                            var entry = row.ChildNodes.FindFirst("td").ChildNodes.FindFirst("ul").ChildNodes.FindFirst("li");
+                            var entryLink = entry.ChildNodes.FindFirst("a");
+                            var displayName = entry.InnerText;
+                            var link = string.Empty;
+
+                            if (entryLink != null)
+                            {
+                                displayName = entryLink.InnerText;
+                                link = entryLink.GetAttributeValue("href", string.Empty);
+                            }
+                            description.EntryList.Add(new TableDescriptionEntry() { DisplayName = SanitizesDisplayName(displayName), Link = link });
+                        }
+
+                        achievementTableEntry.Description = description;
+                    }
+                    else if (ddElement.InnerHtml.Contains("Collection:")) // Collection Achievement. Problem: Collection Items are in the next dd-Element
+                    {
+                        var description = new CollectionDescription();
+
+                        var descriptionCollectionElement = ddElements.First(x => x.InnerHtml.Contains("-bit"));
+
+                        foreach (var item in descriptionCollectionElement.ChildNodes.FindFirst("div").ChildNodes.Where(x => x.Name == "div"))
+                        {
+                            description.EntryList.Add(new CollectionDescriptionEntry() { DisplayName = SanitizesDisplayName(item.ChildNodes.FindFirst("a").GetAttributeValue("title", string.Empty)), Link = item.ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty), ImageUrl = item.ChildNodes.FindFirst("a").ChildNodes.FindFirst("img").GetAttributeValue("src", string.Empty) });
+                        }
+
+                        achievementTableEntry.Description = description;
+                    }
+                    else if (ddElement.InnerHtml.Contains("Prerequisite:")) // Prerequisite
+                    {
+                        achievementTableEntry.Prerequisite = ddElement.LastChild.InnerText;
+                    }
+                }
+            }
+            catch (Exception ex )
+            {
+
+                throw;
+            }
         }
 
         private static string SanitizesDisplayName(string displayName)
             => string.Join(" ", WebUtility.HtmlDecode(displayName).Replace(Environment.NewLine, "").Trim().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
 
+        [DebuggerDisplay("{Name}")]
         public class AchievementTableEntry
         {
-            public string Title { get; set; }
+            public string Name { get; set; } = string.Empty;
 
-            public AchievementTableEntryDescription Description { get; set; }
+            public string? Link { get; set; }
 
-            public string Link { get; set; }
+            public bool HasLink => this.Link != null;
 
-            public AchievementTableEntry(string title, AchievementTableEntryDescription description, string link = "")
+            public string? Prerequisite { get; set; }
+
+            public AchievementTitle Title { get; set; }
+
+            public Reward Reward { get; set; }
+
+            public AchievementTableEntryDescription? Description { get; set; }
+
+            public string? Cite { get; set; }
+
+            public AchievementTableEntry(string name, AchievementTableEntryDescription? description = null, AchievementTitle? title = null, Reward? reward = null, string? prerequisite = null, string? link = null)
             {
-                this.Title = title;
+                this.Name = name;
                 this.Description = description;
+                this.Reward = reward ?? Reward.EmptyReward;
                 this.Link = link;
+                this.Prerequisite = prerequisite;
+                this.Title = title ?? AchievementTitle.EmptyTitle;
             }
-        }
-
-        public interface IRewardable
-        {
-            Reward Reward { get; set; }
         }
 
         public abstract class Reward
@@ -292,11 +340,13 @@ namespace Gw2WikiDownload
             public static Reward EmptyReward { get; } = new EmptyReward();
         }
 
+        [DebuggerDisplay("EmptyReward")]
         public class EmptyReward : Reward
         {
 
         }
 
+        [DebuggerDisplay("{DisplayName}")]
         public class ItemReward : Reward
         {
             public string ImageUrl { get; set; }
@@ -313,11 +363,31 @@ namespace Gw2WikiDownload
             }
         }
 
-        public class TitleReward : Reward
+        [DebuggerDisplay("{Tiers[0].DisplayName}")]
+        public class MultiTierReward : Reward
         {
+            public List<TierReward> Tiers { get; set; } = new List<TierReward>();
+
+            public class TierReward : ItemReward
+            {
+                public int Tier { get; set; }
+
+                public TierReward(string imageUrl, string displayName, string itemUrl, int tier)
+                    : base(imageUrl, displayName, itemUrl)
+                {
+                    this.Tier = tier;
+                }
+            }
+        }
+
+        [DebuggerDisplay("{Title}")]
+        public class AchievementTitle
+        {
+            public static AchievementTitle EmptyTitle { get; } = new AchievementTitle(string.Empty);
+
             public string Title { get; set; }
 
-            public TitleReward(string title)
+            public AchievementTitle(string title)
             {
                 this.Title = title;
             }
@@ -325,55 +395,50 @@ namespace Gw2WikiDownload
 
         public abstract class AchievementTableEntryDescription
         {
-            public string GameText { get; set; } = string.Empty;
+            public string? GameText { get; set; }
 
-            public string Prerequisite { get; set; }
+            public string? GameHint { get; set; }
 
-            protected AchievementTableEntryDescription(string gameText, string prerequisite)
+            protected AchievementTableEntryDescription(string? gameText, string? gameHint)
             {
                 this.GameText = gameText;
-                this.Prerequisite = prerequisite;
+                this.GameHint = gameHint;
             }
         }
 
-        public class StringDescription : AchievementTableEntryDescription, IRewardable
+        [DebuggerDisplay("{GameText} || {GameHint}")]
+        public class StringDescription : AchievementTableEntryDescription
         {
-            public StringDescription(string gameText, string prerequisite)
-                : base(gameText, prerequisite)
+            public StringDescription(string? gameText = null, string? gameHint = null)
+                : base(gameText, gameHint)
             {
             }
-
-            public string GameHint { get; set; } = string.Empty;
-
-            public Reward Reward { get; set; } = Reward.EmptyReward;
         }
 
-        public class TableDescription : AchievementTableEntryDescription, IRewardable
+        [DebuggerDisplay("Objectives: {EntryList.Count} || {GameText} || {GameHint}")]
+        public class ObjectivesDescription : AchievementTableEntryDescription
         {
-            public Reward Reward { get; set; }
-
             public List<TableDescriptionEntry> EntryList { get; set; } = new List<TableDescriptionEntry>();
 
-            public TableDescription(string gameText, Reward reward, string prerequisite)
-                : base(gameText, prerequisite)
+            public ObjectivesDescription(string? gameText = null, string? gameHint = null)
+                : base(gameText, gameHint)
             {
-                this.Reward = reward;
             }
         }
 
-        public class CollectionDescription : AchievementTableEntryDescription, IRewardable
+        [DebuggerDisplay("CollectionItems: {EntryList.Count} || {GameText} || {GameHint}")]
+        public class CollectionDescription : AchievementTableEntryDescription
         {
-            public CollectionDescription(string gameText, Reward reward, string prerequisite)
-                : base(gameText, prerequisite)
+            public List<CollectionDescriptionEntry> EntryList { get; set; } = new List<CollectionDescriptionEntry>();
+
+            public CollectionDescription(string? gameText = null, string? gameHint = null)
+                : base(gameText, gameHint)
             {
-                this.Reward = reward;
             }
 
-            public Reward Reward { get; set; }
-
-            public List<CollectionDescriptionEntry> EntryList { get; set; } = new List<CollectionDescriptionEntry>();
         }
 
+        [DebuggerDisplay("{DisplayName}")]
         public class CollectionDescriptionEntry
         {
             public string DisplayName { get; set; } = string.Empty;
@@ -383,6 +448,7 @@ namespace Gw2WikiDownload
             public string Link { get; set; } = string.Empty;
         }
 
+        [DebuggerDisplay("{DisplayName}")]
         public class TableDescriptionEntry
         {
             public string DisplayName { get; set; } = string.Empty;
