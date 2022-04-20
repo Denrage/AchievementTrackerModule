@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Profile 1": {
-      "commandName": "Executable",
-      "executablePath": "D:\\Benutzerverzeichnis\\Desktop\\Games\\GW2\\BlishHud\\Blish HUD.exe",
-      "commandLineArgs": "--debug --module \"D:\\Repos\\AchievementTrackerModule\\src\\bin\\Debug\\net4.7.2\\AchievementTrackerModule.bhm\" --mumble \"MumbleLink_1\""
-    }
-  }
-}
