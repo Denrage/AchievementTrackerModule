@@ -3,7 +3,7 @@ using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
 using Gw2Sharp.WebApi.V2.Models;
 
-namespace AchievementTrackerModule
+namespace Denrage.AchievementTrackerModule
 {
     public interface IAchievementListItemFactory
     {
@@ -20,7 +20,7 @@ namespace AchievementTrackerModule
         }
 
         public AchievementListItem Create(Achievement achievement)
-            => new AchievementListItem(achievement, this.achievementTrackerService);
+            => new AchievementListItem(achievement, achievementTrackerService);
     }
 
     public class AchievementListItem : View
@@ -36,11 +36,11 @@ namespace AchievementTrackerModule
 
         protected override void Build(Container buildPanel)
         {
-            buildPanel.Click += (s, e) => this.achievementTrackerService.TrackAchievement(this.achievement);
+            buildPanel.Click += (s, e) => achievementTrackerService.TrackAchievement(achievement);
 
             var button = new DetailsButton()
             {
-                Text = this.achievement.Name,
+                Text = achievement.Name,
                 Parent = buildPanel,
                 ShowToggleButton = true,
             };

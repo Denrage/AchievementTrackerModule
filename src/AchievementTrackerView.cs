@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using Gw2Sharp.WebApi.V2.Models;
 using System.Threading.Tasks;
 
-namespace AchievementTrackerModule
+namespace Denrage.AchievementTrackerModule
 {
     public interface IAchievementApiService
     {
@@ -31,8 +31,8 @@ namespace AchievementTrackerModule
 
         public async Task LoadAsync()
         {
-            this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync();
-            this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync();
+            AchievementGroups = await gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync();
+            AchievementCategories = await gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync();
         }
     }
 
@@ -47,8 +47,8 @@ namespace AchievementTrackerModule
         {
             this.achievementApiService = achievementApiService;
             this.achievementCategoryOverviewFactory = achievementCategoryOverviewFactory;
-            this.categories = achievementApiService.AchievementCategories.ToDictionary(x => x.Id, y => y);
-            this.menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();
+            categories = achievementApiService.AchievementCategories.ToDictionary(x => x.Id, y => y);
+            menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();
         }
 
         protected override void Build(Container buildPanel)
@@ -78,21 +78,21 @@ namespace AchievementTrackerModule
                 Location = new Point(menuPanel.Width, 0),
             };
 
-            foreach (var group in this.achievementApiService.AchievementGroups.OrderBy(x => x.Order))
+            foreach (var group in achievementApiService.AchievementGroups.OrderBy(x => x.Order))
             {
                 var menuItem = menu.AddMenuItem(group.Name);
                 foreach (var categoryId in group.Categories)
                 {
-                    var category = this.categories[categoryId];
+                    var category = categories[categoryId];
 
                     var innerMenuItem = new MenuItem(category.Name)
                     {
                         Parent = menuItem
                     };
 
-                    innerMenuItem.ItemSelected += (sender, e) => selectedMenuItemView.Show(this.achievementCategoryOverviewFactory.Create(this.menuItemCategories[(MenuItem)sender]));
+                    innerMenuItem.ItemSelected += (sender, e) => selectedMenuItemView.Show(achievementCategoryOverviewFactory.Create(menuItemCategories[(MenuItem)sender]));
 
-                    this.menuItemCategories.Add(innerMenuItem, category);
+                    menuItemCategories.Add(innerMenuItem, category);
 
                 }
             }

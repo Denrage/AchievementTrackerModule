@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Gw2Sharp.WebApi.V2.Models;
 
-namespace AchievementTrackerModule
+namespace Denrage.AchievementTrackerModule
 {
     public interface IAchievementCategoryOverviewFactory
     {
@@ -26,7 +26,7 @@ namespace AchievementTrackerModule
         }
 
         public AchievementCategoryOverview Create(AchievementCategory category)
-            => new AchievementCategoryOverview(category, this.gw2ApiManager, this.achievementListItemFactory);
+            => new AchievementCategoryOverview(category, gw2ApiManager, achievementListItemFactory);
     }
 
     public class AchievementCategoryOverview : View
@@ -47,7 +47,7 @@ namespace AchievementTrackerModule
         {
             var panel = new FlowPanel()
             {
-                Title = this.category.Name,
+                Title = category.Name,
                 ShowBorder = true,
                 Parent = buildPanel,
                 Size = buildPanel.ContentRegion.Size,
@@ -55,7 +55,7 @@ namespace AchievementTrackerModule
                 FlowDirection = ControlFlowDirection.LeftToRight,
             };
 
-            foreach (var achievement in this.achievements)
+            foreach (var achievement in achievements)
             {
                 var viewContainer = new ViewContainer()
                 {
@@ -64,13 +64,13 @@ namespace AchievementTrackerModule
                     Parent = panel,
                 };
 
-                viewContainer.Show(this.achievementListItemFactory.Create(achievement));
+                viewContainer.Show(achievementListItemFactory.Create(achievement));
             }
         }
 
         protected override async Task<bool> Load(IProgress<string> progress)
         {
-            this.achievements = await this.apiManager.Gw2ApiClient.V2.Achievements.ManyAsync(this.category.Achievements);
+            achievements = await apiManager.Gw2ApiClient.V2.Achievements.ManyAsync(category.Achievements);
             return true;
         }
     }
