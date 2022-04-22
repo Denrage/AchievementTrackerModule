@@ -10,60 +10,26 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Net;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Flurl.Http;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 
 namespace Denrage.AchievementTrackerModule
 {
-    public class AchievementService
-    {
-        private readonly ContentsManager contentsManager;
-
-        public IReadOnlyList<Models.Achievement.AchievementTableEntry> Achievements { get; private set; }
-
-        public IReadOnlyList<Models.Achievement.CollectionAchievementTable> AchievementDetails { get; private set; }
-
-        public AchievementService(ContentsManager contentsManager)
-        {
-            this.contentsManager = contentsManager;
-        }
-
-        public async Task LoadAsync()
-        {
-            var serializerOptions = new JsonSerializerOptions()
-            {
-                Converters = { new Models.Achievement.RewardConverter(), new Models.Achievement.AchievementTableEntryDescriptionConverter(), new Models.Achievement.CollectionAchievementTableEntryConverter() },
-            };
-
-            using (var achievements = this.contentsManager.GetFileStream("achievement_data.json"))
-            {
-                this.Achievements = (await System.Text.Json.JsonSerializer.DeserializeAsync<List<Models.Achievement.AchievementTableEntry>>(achievements, serializerOptions)).AsReadOnly();
-            }
-
-            using (var achievementDetails = this.contentsManager.GetFileStream("achievement_tables.json"))
-            {
-                this.AchievementDetails = (await System.Text.Json.JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
-            }
-        }
-    }
-
     public class AchievementTrackWindow : WindowBase2
     {
         private readonly ContentsManager contentsManager;
         private readonly Achievement achievement;
-        private readonly Gw2ApiManager gw2ApiManager;
         private readonly AchievementService achievementService;
+        private readonly AchievementControlProvider achievementControlProvider;
         private readonly Texture2D texture;
-        private FlowPanel panel;
-        private IEnumerable<AccountAchievement> playerAchievements;
 
-        public AchievementTrackWindow(ContentsManager contentsManager, Achievement achievement, Gw2ApiManager gw2ApiManager, AchievementService achievementService)
+        public AchievementTrackWindow(ContentsManager contentsManager, Achievement achievement, AchievementService achievementService, AchievementControlProvider achievementControlProvider)
         {
             this.contentsManager = contentsManager;
             this.achievement = achievement;
-            this.gw2ApiManager = gw2ApiManager;
             this.achievementService = achievementService;
+            this.achievementControlProvider = achievementControlProvider;
             texture = this.contentsManager.GetTexture("156390.png");
             BuildWindow();
         }
@@ -72,73 +38,355 @@ namespace Denrage.AchievementTrackerModule
         {
             Title = achievement.Name;
             ConstructWindow(texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 7 * 74, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 7 * 74, 600 - 30));
-            panel = new FlowPanel()
+
+
+            Control control = this.achievementControlProvider.GetAchievementControl(this.achievement, this.achievementService.Achievements.FirstOrDefault(x => x.Id == this.achievement.Id).Description, this.ContentRegion.Size);
+
+            if (control is null)
             {
-                Parent = this,
-                Size = ContentRegion.Size,
-                CanScroll = true,
-                FlowDirection = ControlFlowDirection.LeftToRight,
-                ControlPadding = new Vector2(5f),
-            };
+                return;
+            }
+
+            control.Parent = this;
+
         }
 
         protected override void OnShown(EventArgs e)
         {
-            if (playerAchievements == null && gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
-            {
-                playerAchievements = gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync().Result;
-            }
-
-            Task.Run(async () =>
-            {
-                try
-                {
-                    var items = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id).Entries.SelectMany(x => x).OfType<Models.Achievement.CollectionAchievementTable.CollectionAchievementTableItemEntry>();
-
-                    foreach (var item in items)
-                    {
-                        var tint = playerAchievements == null || playerAchievements.FirstOrDefault(x => x.Id == achievement.Id) == null;
-                        var imageStream = await ("https://wiki.guildwars2.com" + item.ImageUrl).WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36").GetStreamAsync();
-
-
-                        var texture = new Blish_HUD.Content.AsyncTexture2D(ContentService.Textures.TransparentPixel);
-
-                        GameService.Graphics.QueueMainThreadRender(_ =>
-                        {
-                            texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
-                            imageStream.Close();
-                        });
-
-                        var image = new Image()
-                        {
-                            Parent = panel,
-                            Width = 64,
-                            Height = 64,
-                            Texture = texture,
-                        };
-
-                        if (false && tint)
-                        {
-                            image.Tint = Microsoft.Xna.Framework.Color.Gray;
-                        }
-
-                        image.Click += (s, eventArgs) =>
-                        {
-                            //var itemWindow = itemDetailWindowFactory.Create(item);
-                            //itemWindow.Parent = GameService.Graphics.SpriteScreen;
-                            //itemWindow.Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2);
-                            //itemWindow.ToggleWindow();
-                        };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
-            });
-
             base.OnShown(e);
         }
+
+        public class AchievementControlProvider
+        {
+            private Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
+
+            public AchievementControlProvider(AchievementService achievementService, ItemDetailWindowFactory itemDetailWindowFactory)
+            {
+                this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory(achievementService));
+                this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowFactory));
+                this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowFactory));
+            }
+
+            public Control GetAchievementControl(Achievement achievement, AchievementTableEntryDescription description, Point size)
+            {
+                if (this.mapping.TryGetValue(description.GetType(), out AchievementControlFactory factory))
+                {
+                    return factory.Create(achievement, description, size);
+                }
+
+                return null;
+            }
+        }
+
+        public interface IControlFactory<T, TDescription>
+            where T : IAchievementControl
+        {
+            T Create(Achievement achievement, TDescription description, Point size);
+        }
+
+        public abstract class AchievementControlFactory
+        {
+            public abstract Control Create(Achievement achievement, object description, Point size);
+        }
+
+        public abstract class AchievementControlFactory<T, TDescription> : AchievementControlFactory, IControlFactory<T, TDescription>
+            where T : Control, IAchievementControl
+        {
+            protected abstract T CreateInternal(Achievement achievement, TDescription description);
+
+            public override Control Create(Achievement achievement, object description, Point size)
+                => this.Create(achievement, (TDescription)description, size);
+
+            public T Create(Achievement achievement, TDescription description, Point size)
+            {
+                var control = this.CreateInternal(achievement, description);
+                control.Size = size;
+                control.BuildControl();
+
+                return control;
+            }
+        }
+
+        public class AchievementTextControlFactory : AchievementControlFactory<AchievementTextControl, StringDescription>
+        {
+            private readonly AchievementService achievementService;
+
+            public AchievementTextControlFactory(AchievementService achievementService)
+            {
+                this.achievementService = achievementService;
+            }
+
+            protected override AchievementTextControl CreateInternal(Achievement achievement, StringDescription description)
+                => new AchievementTextControl(achievement, description);
+        }
+
+        public class AchievementCollectionControlFactory : AchievementControlFactory<AchievementCollectionControl, CollectionDescription>
+        {
+            private readonly AchievementService achievementService;
+            private readonly ItemDetailWindowFactory itemDetailWindowFactory;
+
+            public AchievementCollectionControlFactory(AchievementService achievementService, ItemDetailWindowFactory itemDetailWindowFactory)
+            {
+                this.achievementService = achievementService;
+                this.itemDetailWindowFactory = itemDetailWindowFactory;
+            }
+
+            protected override AchievementCollectionControl CreateInternal(Achievement achievement, CollectionDescription description)
+                => new AchievementCollectionControl(achievement, this.itemDetailWindowFactory, description, this.achievementService);
+        }
+
+        public class AchievementObjectiveControlFactory : AchievementControlFactory<AchievementObjectivesControl, ObjectivesDescription>
+        {
+            private readonly AchievementService achievementService;
+            private readonly ItemDetailWindowFactory itemDetailWindowFactory;
+
+            public AchievementObjectiveControlFactory(AchievementService achievementService, ItemDetailWindowFactory itemDetailWindowFactory)
+            {
+                this.achievementService = achievementService;
+                this.itemDetailWindowFactory = itemDetailWindowFactory;
+            }
+
+            protected override AchievementObjectivesControl CreateInternal(Achievement achievement, ObjectivesDescription description)
+                => new AchievementObjectivesControl(achievement, this.itemDetailWindowFactory, description, this.achievementService);
+        }
+
+        public interface IAchievementControl
+        {
+            void BuildControl();
+
+            Point Size { get; set; }
+        }
+
+        public class AchievementTextControl : FlowPanel, IAchievementControl
+        {
+            private readonly Achievement achievement;
+            private readonly StringDescription description;
+
+            public AchievementTextControl(Achievement achievement, StringDescription description)
+            {
+                this.achievement = achievement;
+                this.description = description;
+
+                this.FlowDirection = ControlFlowDirection.TopToBottom;
+            }
+
+            public void BuildControl()
+            {
+                if (!string.IsNullOrEmpty(this.description.GameText))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Text = this.description.GameText,
+                        AutoSizeHeight = true,
+                        Width = this.ContentRegion.Width,
+                        WrapText = true,
+                    };
+                }
+
+                if (!string.IsNullOrEmpty(this.description.GameHint))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Width = this.ContentRegion.Width,
+                        Text = this.description.GameHint,
+                        TextColor = Microsoft.Xna.Framework.Color.LightGray,
+                        AutoSizeHeight = true,
+                        WrapText = true,
+                    };
+                }
+            }
+        }
+
+        public class AchievementCollectionControl : FlowPanel, IAchievementControl
+        {
+            private readonly Achievement achievement;
+            private readonly ItemDetailWindowFactory itemDetailWindowFactory;
+            private readonly CollectionDescription description;
+            private readonly AchievementService achievementService;
+            private readonly CollectionAchievementTable achievementDetails;
+
+            public AchievementCollectionControl(Achievement achievement, ItemDetailWindowFactory itemDetailWindowFactory, CollectionDescription description, AchievementService achievementService)
+            {
+                this.achievement = achievement;
+                this.itemDetailWindowFactory = itemDetailWindowFactory;
+                this.description = description;
+                this.achievementService = achievementService;
+                this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
+
+                this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
+
+            }
+
+            public void BuildControl()
+            {
+                if (!string.IsNullOrEmpty(this.description.GameText))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Text = this.description.GameText,
+                        AutoSizeHeight = true,
+                        Width = this.ContentRegion.Width,
+                        WrapText = true,
+                    };
+                }
+
+                if (!string.IsNullOrEmpty(this.description.GameHint))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Text = this.description.GameHint,
+                        TextColor = Microsoft.Xna.Framework.Color.LightGray,
+                        Width = this.ContentRegion.Width,
+                        AutoSizeHeight = true,
+                        WrapText = true,
+                    };
+                }
+
+                var panel = new FlowPanel()
+                {
+                    Parent = this,
+                    FlowDirection = ControlFlowDirection.LeftToRight,
+                    Width = this.ContentRegion.Width,
+                    HeightSizingMode = SizingMode.AutoSize,
+                };
+
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        int counter = 0;
+                        foreach (var item in this.description.EntryList)
+                        {
+                            var tint = !this.achievementService.HasFinishedAchievementBit(achievement.Id, item.Id);
+                            var texture = this.achievementService.GetImage(item.ImageUrl);
+
+                            var image = new Image()
+                            {
+                                Parent = panel,
+                                Width = 64,
+                                Height = 64,
+                                Texture = texture,
+                            };
+
+                            if (tint)
+                            {
+                                image.Tint = Microsoft.Xna.Framework.Color.Gray;
+                            }
+
+                            var index = counter;
+                            image.Click += (s, eventArgs) =>
+                            {
+                                var itemWindow = itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
+                                itemWindow.Parent = GameService.Graphics.SpriteScreen;
+                                itemWindow.Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2);
+                                itemWindow.ToggleWindow();
+                            };
+                            counter++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw;
+                    }
+                });
+            }
+        }
+
+        public class AchievementObjectivesControl : FlowPanel, IAchievementControl
+        {
+            private readonly Achievement achievement;
+            private readonly ItemDetailWindowFactory itemDetailWindowFactory;
+            private readonly ObjectivesDescription description;
+            private readonly AchievementService achievementService;
+            private readonly CollectionAchievementTable achievementDetails;
+
+            public AchievementObjectivesControl(Achievement achievement, ItemDetailWindowFactory itemDetailWindowFactory, ObjectivesDescription description, AchievementService achievementService)
+            {
+                this.achievement = achievement;
+                this.itemDetailWindowFactory = itemDetailWindowFactory;
+                this.description = description;
+                this.achievementService = achievementService;
+                this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
+
+                this.FlowDirection = ControlFlowDirection.LeftToRight;
+            }
+
+            public void BuildControl()
+            {
+                if (!string.IsNullOrEmpty(this.description.GameText))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Text = this.description.GameText,
+                        AutoSizeHeight = true,
+                        Width = this.ContentRegion.Width,
+                        WrapText = true,
+                    };
+                }
+
+                if (!string.IsNullOrEmpty(this.description.GameHint))
+                {
+                    new Label()
+                    {
+                        Parent = this,
+                        Text = this.description.GameHint,
+                        TextColor = Microsoft.Xna.Framework.Color.LightGray,
+                        Width = this.ContentRegion.Width,
+                        AutoSizeHeight = true,
+                        WrapText = true,
+                    };
+                }
+
+                var panel = new FlowPanel()
+                {
+                    Parent = this,
+                    FlowDirection = ControlFlowDirection.LeftToRight,
+                    Width = this.ContentRegion.Width,
+                    HeightSizingMode = SizingMode.AutoSize,
+                    ControlPadding = new Vector2(10f),
+                };
+
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        for (int i = 0; i < this.description.EntryList.Count; i++)
+                        {
+                            var label = new Label()
+                            {
+                                Parent = panel,
+                                Width = 64,
+                                Height = 64,
+                                Text = (i + 1).ToString(),
+                                Font = Content.DefaultFont18,
+                                VerticalAlignment = VerticalAlignment.Middle,
+                                HorizontalAlignment = HorizontalAlignment.Center,
+                                BackgroundColor = Microsoft.Xna.Framework.Color.DarkGray,
+                            };
+
+                            var index = i;
+                            label.Click += (s, eventArgs) =>
+                            {
+                                var itemWindow = itemDetailWindowFactory.Create(this.description.EntryList[index].DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
+                                itemWindow.Parent = GameService.Graphics.SpriteScreen;
+                                itemWindow.Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2);
+                                itemWindow.ToggleWindow();
+                            };
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw;
+                    }
+                });
+            }
+        }
+
 
         public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
         {

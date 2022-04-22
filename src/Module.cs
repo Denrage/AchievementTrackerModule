@@ -41,7 +41,7 @@ namespace Denrage.AchievementTrackerModule
             achievementApiService = new AchievementApiService(Gw2ApiManager);
             achievementListItemFactory = new AchievementListItemFactory(achievementTrackerService);
             achievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(Gw2ApiManager, achievementListItemFactory);
-            achievementService = new AchievementService(this.ContentsManager);
+            achievementService = new AchievementService(this.ContentsManager, this.Gw2ApiManager);
             windows = new List<AchievementTrackWindow>();
         }
 
@@ -70,7 +70,7 @@ namespace Denrage.AchievementTrackerModule
 
         private void AchievementTrackerService_AchievementTracked(Achievement achievement)
         {
-            var trackWindow = new AchievementTrackWindow(ContentsManager, achievement, Gw2ApiManager, this.achievementService)
+            var trackWindow = new AchievementTrackWindow(ContentsManager, achievement, this.achievementService, new AchievementTrackWindow.AchievementControlProvider(this.achievementService, new ItemDetailWindowFactory(this.ContentsManager, this.achievementService)))
             {
                 Parent = GameService.Graphics.SpriteScreen,
                 Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2),
