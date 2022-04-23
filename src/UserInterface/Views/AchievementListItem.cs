@@ -1,27 +1,10 @@
 ﻿using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
+using Denrage.AchievementTrackerModule.Interfaces;
 using Gw2Sharp.WebApi.V2.Models;
 
-namespace Denrage.AchievementTrackerModule
+namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {
-    public interface IAchievementListItemFactory
-    {
-        AchievementListItem Create(Achievement achievement);
-    }
-
-    public class AchievementListItemFactory : IAchievementListItemFactory
-    {
-        private readonly IAchievementTrackerService achievementTrackerService;
-
-        public AchievementListItemFactory(IAchievementTrackerService achievementTrackerService)
-        {
-            this.achievementTrackerService = achievementTrackerService;
-        }
-
-        public AchievementListItem Create(Achievement achievement)
-            => new AchievementListItem(achievement, this.achievementTrackerService);
-    }
-
     public class AchievementListItem : View
     {
         private readonly IAchievementTrackerService achievementTrackerService;
@@ -44,11 +27,10 @@ namespace Denrage.AchievementTrackerModule
                 ShowToggleButton = true,
             };
 
-            new GlowButton()
+            _ = new GlowButton()
             {
                 Parent = button,
             };
         }
     }
-
 }

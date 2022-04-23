@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-
 namespace Denrage.AchievementTrackerModule.Models.Achievement
 {
     public class CollectionAchievementTableEntryConverter : JsonConverter<CollectionAchievementTable.CollectionAchievementTableEntry>
@@ -36,6 +35,7 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
                 {
                     throw new JsonException();
                 }
+
                 if (!jsonReader.Read() || jsonReader.TokenType != JsonTokenType.StartObject)
                 {
                     throw new JsonException();
@@ -43,12 +43,7 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
 
                 var result = (T)JsonSerializer.Deserialize(ref jsonReader, typeof(T));
 
-                if (result is null)
-                {
-                    throw new JsonException();
-                }
-
-                return result;
+                return result is null ? throw new JsonException() : (CollectionAchievementTable.CollectionAchievementTableEntry)result;
             }
 
             CollectionAchievementTable.CollectionAchievementTableEntry entry;
@@ -82,12 +77,7 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
                     break;
             }
 
-            if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
-            {
-                throw new JsonException();
-            }
-
-            return entry;
+            return !reader.Read() || reader.TokenType != JsonTokenType.EndObject ? throw new JsonException() : entry;
         }
 
         public override void Write(Utf8JsonWriter writer, CollectionAchievementTable.CollectionAchievementTableEntry value, JsonSerializerOptions options)
@@ -95,14 +85,12 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
             void WriteTypeDiscriminator<T>(Utf8JsonWriter jsonWriter, T reward, TypeDiscriminator typeDiscriminator)
                 where T : CollectionAchievementTable.CollectionAchievementTableEntry
             {
-
                 jsonWriter.WriteNumber(nameof(TypeDiscriminator), (int)typeDiscriminator);
                 jsonWriter.WritePropertyName(TypeValuePropertyName);
                 JsonSerializer.Serialize(jsonWriter, reward);
             }
 
             writer.WriteStartObject();
-
 
             switch (value)
             {

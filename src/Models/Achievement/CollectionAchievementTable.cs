@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-
 namespace Denrage.AchievementTrackerModule.Models.Achievement
 {
     [DebuggerDisplay("{Name} Columns: {ColumnNames.Length} Rows: {Entries.Count}")]

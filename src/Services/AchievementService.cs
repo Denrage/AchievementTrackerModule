@@ -1,17 +1,19 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Modules.Managers;
+using Denrage.AchievementTrackerModule.Interfaces;
 using Flurl.Http;
 using Gw2Sharp.WebApi.V2.Models;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Denrage.AchievementTrackerModule
+namespace Denrage.AchievementTrackerModule.Services
 {
-    // TODO: Interface
-    public class AchievementService
+    public class AchievementService : IAchievementService
     {
         private readonly ContentsManager contentsManager;
         private readonly Gw2ApiManager gw2ApiManager;
@@ -37,26 +39,19 @@ namespace Denrage.AchievementTrackerModule
 
             using (var achievements = this.contentsManager.GetFileStream("achievement_data.json"))
             {
-                this.Achievements = (await System.Text.Json.JsonSerializer.DeserializeAsync<List<Models.Achievement.AchievementTableEntry>>(achievements, serializerOptions)).AsReadOnly();
+                this.Achievements = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.AchievementTableEntry>>(achievements, serializerOptions)).AsReadOnly();
             }
 
             using (var achievementDetails = this.contentsManager.GetFileStream("achievement_tables.json"))
             {
-                this.AchievementDetails = (await System.Text.Json.JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
+                this.AchievementDetails = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
             }
 
             await this.LoadPlayerAchievements();
         }
 
         public bool HasFinishedAchievement(int achievementId)
-        {
-            if (this.PlayerAchievements is null)
-            {
-                return false;
-            }
-
-            return this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId) != null;
-        }
+            => !(this.PlayerAchievements is null) && this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId) != null;
 
         public bool HasFinishedAchievementBit(int achievementId, int itemId)
         {
@@ -67,12 +62,7 @@ namespace Denrage.AchievementTrackerModule
 
             var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
 
-            if (achievement is null)
-            {
-                return false;
-            }
-
-            return achievement.Bits?.Contains(itemId) ?? false;
+            return !(achievement is null) && (achievement.Bits?.Contains(itemId) ?? false);
         }
 
         public async Task LoadPlayerAchievements()
@@ -84,41 +74,33 @@ namespace Denrage.AchievementTrackerModule
         }
 
         public AsyncTexture2D GetImage(string imageUrl)
-        {
-            var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
+            => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync());
 
-            Task.Run(async () =>
-            {
-                var imageStream = await ("https://wiki.guildwars2.com" + imageUrl).WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36").GetStreamAsync();
-
-
-                GameService.Graphics.QueueMainThreadRender(_ =>
-                {
-                    texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
-                    imageStream.Close();
-                });
-            });
-
-            return texture;
-        }
-
-        // TODO: Merge with above
         public AsyncTexture2D GetDirectImageLink(string imagePath)
         {
+            return imagePath.Contains("File:")
+                ? this.GetImageInternal(async () =>
+                {
+                    var source = await this.DownloadWikiContent(imagePath).GetStringAsync();
+
+                    var fillImageStartIndex = source.IndexOf("fullImageLink");
+                    var hrefStartIndex = source.IndexOf("href=", fillImageStartIndex);
+                    var linkStartIndex = source.IndexOf("\"", hrefStartIndex) + 1;
+                    var linkEndIndex = source.IndexOf("\"", linkStartIndex);
+                    var link = source.Substring(linkStartIndex, linkEndIndex - linkStartIndex);
+
+                    return await this.DownloadWikiContent(link).GetStreamAsync();
+                })
+                : this.GetImage(imagePath);
+        }
+
+        private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream)
+        {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
 
-            Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
-                var source = await ("https://wiki.guildwars2.com" + imagePath).WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36").GetStringAsync();
-
-                var fillImageStartIndex = source.IndexOf("fullImageLink");
-                var hrefStartIndex = source.IndexOf("href=", fillImageStartIndex);
-                var linkStartIndex = source.IndexOf("\"", hrefStartIndex) + 1;
-                var linkEndIndex = source.IndexOf("\"", linkStartIndex);
-                var link = source.Substring(linkStartIndex, linkEndIndex - linkStartIndex);
-
-                var imageStream = await ("https://wiki.guildwars2.com" + link).WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36").GetStreamAsync();
-
+                var imageStream = await getImageStream();
 
                 GameService.Graphics.QueueMainThreadRender(_ =>
                 {
@@ -129,6 +111,10 @@ namespace Denrage.AchievementTrackerModule
 
             return texture;
         }
-    }
 
+        private IFlurlRequest DownloadWikiContent(string url)
+            => ("https://wiki.guildwars2.com" + url)
+                    .WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36");
+
+    }
 }
