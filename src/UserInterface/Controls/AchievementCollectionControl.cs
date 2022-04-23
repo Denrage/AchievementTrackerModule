@@ -72,9 +72,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             _ = Task.Run(() =>
             {
                 var counter = 0;
+                var finishedAchievement = this.achievementService.HasFinishedAchievement(this.achievement.Id);
+
                 foreach (var item in this.description.EntryList)
                 {
-                    var tint = !this.achievementService.HasFinishedAchievementBit(this.achievement.Id, item.Id);
+                    var tint = !(finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, counter));
                     var texture = this.achievementService.GetImage(item.ImageUrl);
 
                     var image = new Image()
@@ -85,10 +87,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         Texture = texture,
                     };
 
-                    if (tint)
-                    {
-                        image.Tint = Microsoft.Xna.Framework.Color.Gray;
-                    }
+                    image.Tint = tint ? Microsoft.Xna.Framework.Color.DarkGray : Microsoft.Xna.Framework.Color.Green;
 
                     var index = counter;
                     image.Click += (s, eventArgs) =>

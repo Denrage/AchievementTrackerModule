@@ -51,9 +51,6 @@ namespace Denrage.AchievementTrackerModule.Services
         }
 
         public bool HasFinishedAchievement(int achievementId)
-            => !(this.PlayerAchievements is null) && this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId) != null;
-
-        public bool HasFinishedAchievementBit(int achievementId, int itemId)
         {
             if (this.PlayerAchievements is null)
             {
@@ -62,7 +59,19 @@ namespace Denrage.AchievementTrackerModule.Services
 
             var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
 
-            return !(achievement is null) && (achievement.Bits?.Contains(itemId) ?? false);
+            return !(achievement is null) && achievement.Done;
+        }
+
+        public bool HasFinishedAchievementBit(int achievementId, int positionIndex)
+        {
+            if (this.PlayerAchievements is null)
+            {
+                return false;
+            }
+
+            var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
+
+            return !(achievement is null) && (achievement.Bits?.Contains(positionIndex) ?? false);
         }
 
         public async Task LoadPlayerAchievements()
