@@ -12,7 +12,7 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
 
         public string Link { get; set; } = null;
 
-        public bool HasLink => !string.IsNullOrEmpty(Link);
+        public bool HasLink => !string.IsNullOrEmpty(this.Link);
 
         public string Prerequisite { get; set; } = null;
 

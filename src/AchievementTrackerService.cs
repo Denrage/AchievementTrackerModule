@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Gw2Sharp.WebApi.V2.Models;
+using System;
 using System.Collections.Generic;
-using Gw2Sharp.WebApi.V2.Models;
 
 namespace Denrage.AchievementTrackerModule
 {
@@ -21,19 +21,16 @@ namespace Denrage.AchievementTrackerModule
 
         public AchievementTrackerService()
         {
-            activeAchievements = new List<Achievement>();
+            this.activeAchievements = new List<Achievement>();
         }
 
         public void TrackAchievement(Achievement achievement)
         {
-            activeAchievements.Add(achievement);
+            this.activeAchievements.Add(achievement);
             AchievementTracked?.Invoke(achievement);
         }
 
-        public void RemoveAchievement(Achievement achievement)
-        {
-            activeAchievements.Remove(achievement);
-        }
+        public void RemoveAchievement(Achievement achievement) => this.activeAchievements.Remove(achievement);
     }
 
 }

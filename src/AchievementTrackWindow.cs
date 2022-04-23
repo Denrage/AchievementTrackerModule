@@ -1,18 +1,14 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
-using Microsoft.Xna.Framework;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using Gw2Sharp.WebApi.V2.Models;
-using Microsoft.Xna.Framework.Graphics;
-using System.Net;
-using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Text.Json.Serialization;
-using Flurl.Http;
 using Denrage.AchievementTrackerModule.Models.Achievement;
+using Gw2Sharp.WebApi.V2.Models;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
@@ -30,17 +26,17 @@ namespace Denrage.AchievementTrackerModule
             this.achievement = achievement;
             this.achievementService = achievementService;
             this.achievementControlProvider = achievementControlProvider;
-            texture = this.contentsManager.GetTexture("156390.png");
-            BuildWindow();
+            this.texture = this.contentsManager.GetTexture("156390.png");
+            this.BuildWindow();
         }
 
         private void BuildWindow()
         {
-            Title = achievement.Name;
-            ConstructWindow(texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 7 * 74, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 7 * 74, 600 - 30));
+            this.Title = this.achievement.Name;
+            this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 7 * 74, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 7 * 74, 600 - 30));
 
 
-            Control control = this.achievementControlProvider.GetAchievementControl(this.achievement, this.achievementService.Achievements.FirstOrDefault(x => x.Id == this.achievement.Id).Description, this.ContentRegion.Size);
+            var control = this.achievementControlProvider.GetAchievementControl(this.achievement, this.achievementService.Achievements.FirstOrDefault(x => x.Id == this.achievement.Id).Description, this.ContentRegion.Size);
 
             if (control is null)
             {
@@ -51,14 +47,11 @@ namespace Denrage.AchievementTrackerModule
 
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-        }
+        protected override void OnShown(EventArgs e) => base.OnShown(e);
 
         public class AchievementControlProvider
         {
-            private Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
+            private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
             public AchievementControlProvider(AchievementService achievementService, ItemDetailWindowFactory itemDetailWindowFactory)
             {
@@ -69,7 +62,7 @@ namespace Denrage.AchievementTrackerModule
 
             public Control GetAchievementControl(Achievement achievement, AchievementTableEntryDescription description, Point size)
             {
-                if (this.mapping.TryGetValue(description.GetType(), out AchievementControlFactory factory))
+                if (this.mapping.TryGetValue(description.GetType(), out var factory))
                 {
                     return factory.Create(achievement, description, size);
                 }
@@ -258,10 +251,10 @@ namespace Denrage.AchievementTrackerModule
                 {
                     try
                     {
-                        int counter = 0;
+                        var counter = 0;
                         foreach (var item in this.description.EntryList)
                         {
-                            var tint = !this.achievementService.HasFinishedAchievementBit(achievement.Id, item.Id);
+                            var tint = !this.achievementService.HasFinishedAchievementBit(this.achievement.Id, item.Id);
                             var texture = this.achievementService.GetImage(item.ImageUrl);
 
                             var image = new Image()
@@ -280,7 +273,7 @@ namespace Denrage.AchievementTrackerModule
                             var index = counter;
                             image.Click += (s, eventArgs) =>
                             {
-                                var itemWindow = itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
+                                var itemWindow = this.itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
                                 itemWindow.Parent = GameService.Graphics.SpriteScreen;
                                 itemWindow.Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2);
                                 itemWindow.ToggleWindow();
@@ -355,7 +348,7 @@ namespace Denrage.AchievementTrackerModule
                 {
                     try
                     {
-                        for (int i = 0; i < this.description.EntryList.Count; i++)
+                        for (var i = 0; i < this.description.EntryList.Count; i++)
                         {
                             var label = new Label()
                             {
@@ -372,7 +365,7 @@ namespace Denrage.AchievementTrackerModule
                             var index = i;
                             label.Click += (s, eventArgs) =>
                             {
-                                var itemWindow = itemDetailWindowFactory.Create(this.description.EntryList[index].DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
+                                var itemWindow = this.itemDetailWindowFactory.Create(this.description.EntryList[index].DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
                                 itemWindow.Parent = GameService.Graphics.SpriteScreen;
                                 itemWindow.Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2);
                                 itemWindow.ToggleWindow();
@@ -391,7 +384,7 @@ namespace Denrage.AchievementTrackerModule
         public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
         {
             spriteBatch.DrawOnCtrl(this,
-                                   texture,
+                                   this.texture,
                                    bounds);
             base.PaintBeforeChildren(spriteBatch, bounds);
         }

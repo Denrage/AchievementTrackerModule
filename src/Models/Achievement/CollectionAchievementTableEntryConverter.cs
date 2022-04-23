@@ -52,7 +52,7 @@ namespace Denrage.AchievementTrackerModule.Models.Achievement
             }
 
             CollectionAchievementTable.CollectionAchievementTableEntry entry;
-            TypeDiscriminator typeDiscriminator = (TypeDiscriminator)reader.GetInt32();
+            var typeDiscriminator = (TypeDiscriminator)reader.GetInt32();
 
             switch (typeDiscriminator)
             {

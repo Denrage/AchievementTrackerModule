@@ -1,11 +1,11 @@
 ﻿using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
+using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using Gw2Sharp.WebApi.V2.Models;
+using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
@@ -26,7 +26,7 @@ namespace Denrage.AchievementTrackerModule
         }
 
         public AchievementCategoryOverview Create(AchievementCategory category)
-            => new AchievementCategoryOverview(category, gw2ApiManager, achievementListItemFactory);
+            => new AchievementCategoryOverview(category, this.gw2ApiManager, this.achievementListItemFactory);
     }
 
     public class AchievementCategoryOverview : View
@@ -47,7 +47,7 @@ namespace Denrage.AchievementTrackerModule
         {
             var panel = new FlowPanel()
             {
-                Title = category.Name,
+                Title = this.category.Name,
                 ShowBorder = true,
                 Parent = buildPanel,
                 Size = buildPanel.ContentRegion.Size,
@@ -55,7 +55,7 @@ namespace Denrage.AchievementTrackerModule
                 FlowDirection = ControlFlowDirection.LeftToRight,
             };
 
-            foreach (var achievement in achievements)
+            foreach (var achievement in this.achievements)
             {
                 var viewContainer = new ViewContainer()
                 {
@@ -64,13 +64,13 @@ namespace Denrage.AchievementTrackerModule
                     Parent = panel,
                 };
 
-                viewContainer.Show(achievementListItemFactory.Create(achievement));
+                viewContainer.Show(this.achievementListItemFactory.Create(achievement));
             }
         }
 
         protected override async Task<bool> Load(IProgress<string> progress)
         {
-            achievements = await apiManager.Gw2ApiClient.V2.Achievements.ManyAsync(category.Achievements);
+            this.achievements = await this.apiManager.Gw2ApiClient.V2.Achievements.ManyAsync(this.category.Achievements);
             return true;
         }
     }

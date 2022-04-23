@@ -1,15 +1,16 @@
-﻿using Blish_HUD.Modules.Managers;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text.Json;
+﻿using Blish_HUD;
 using Blish_HUD.Content;
-using Blish_HUD;
+using Blish_HUD.Modules.Managers;
 using Flurl.Http;
 using Gw2Sharp.WebApi.V2.Models;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
+    // TODO: Interface
     public class AchievementService
     {
         private readonly ContentsManager contentsManager;
@@ -44,7 +45,7 @@ namespace Denrage.AchievementTrackerModule
                 this.AchievementDetails = (await System.Text.Json.JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
             }
 
-            await LoadPlayerAchievements();
+            await this.LoadPlayerAchievements();
         }
 
         public bool HasFinishedAchievement(int achievementId)
@@ -101,6 +102,7 @@ namespace Denrage.AchievementTrackerModule
             return texture;
         }
 
+        // TODO: Merge with above
         public AsyncTexture2D GetDirectImageLink(string imagePath)
         {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
@@ -114,7 +116,7 @@ namespace Denrage.AchievementTrackerModule
                 var linkStartIndex = source.IndexOf("\"", hrefStartIndex) + 1;
                 var linkEndIndex = source.IndexOf("\"", linkStartIndex);
                 var link = source.Substring(linkStartIndex, linkEndIndex - linkStartIndex);
-                
+
                 var imageStream = await ("https://wiki.guildwars2.com" + link).WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36").GetStreamAsync();
 
 

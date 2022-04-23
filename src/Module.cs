@@ -1,16 +1,13 @@
 ﻿using Blish_HUD;
-using Blish_HUD.Controls;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
-using Gw2Sharp.WebApi.V2.Models;
-using System.Text.Json.Serialization;
-using Gw2Sharp.WebApi.V2.Clients;
-using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule
 {
@@ -26,10 +23,10 @@ namespace Denrage.AchievementTrackerModule
         private readonly List<AchievementTrackWindow> windows;
 
         #region Service Managers
-        internal SettingsManager SettingsManager => ModuleParameters.SettingsManager;
-        internal ContentsManager ContentsManager => ModuleParameters.ContentsManager;
-        internal DirectoriesManager DirectoriesManager => ModuleParameters.DirectoriesManager;
-        internal Gw2ApiManager Gw2ApiManager => ModuleParameters.Gw2ApiManager;
+        internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
+        internal ContentsManager ContentsManager => this.ModuleParameters.ContentsManager;
+        internal DirectoriesManager DirectoriesManager => this.ModuleParameters.DirectoriesManager;
+        internal Gw2ApiManager Gw2ApiManager => this.ModuleParameters.Gw2ApiManager;
         #endregion
 
         [ImportingConstructor]
@@ -37,12 +34,12 @@ namespace Denrage.AchievementTrackerModule
             : base(moduleParameters)
         {
 
-            achievementTrackerService = new AchievementTrackerService();
-            achievementApiService = new AchievementApiService(Gw2ApiManager);
-            achievementListItemFactory = new AchievementListItemFactory(achievementTrackerService);
-            achievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(Gw2ApiManager, achievementListItemFactory);
-            achievementService = new AchievementService(this.ContentsManager, this.Gw2ApiManager);
-            windows = new List<AchievementTrackWindow>();
+            this.achievementTrackerService = new AchievementTrackerService();
+            this.achievementApiService = new AchievementApiService(this.Gw2ApiManager);
+            this.achievementListItemFactory = new AchievementListItemFactory(this.achievementTrackerService);
+            this.achievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(this.Gw2ApiManager, this.achievementListItemFactory);
+            this.achievementService = new AchievementService(this.ContentsManager, this.Gw2ApiManager);
+            this.windows = new List<AchievementTrackWindow>();
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -52,7 +49,7 @@ namespace Denrage.AchievementTrackerModule
 
         protected override void Initialize()
         {
-            Gw2ApiManager.SubtokenUpdated += (sender, args) =>
+            this.Gw2ApiManager.SubtokenUpdated += (sender, args) =>
             {
 
             };
@@ -60,17 +57,17 @@ namespace Denrage.AchievementTrackerModule
 
         protected override async Task LoadAsync()
         {
-            await achievementApiService.LoadAsync();
+            await this.achievementApiService.LoadAsync();
 
             await this.achievementService.LoadAsync();
 
-            achievementTrackerService.AchievementTracked += AchievementTrackerService_AchievementTracked;
-            GameService.Overlay.BlishHudWindow.AddTab("AchievementTracker", ContentsManager.GetTexture("243.png"), () => new AchievementTrackerView(achievementApiService, achievementCategoryOverviewFactory));
+            this.achievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
+            GameService.Overlay.BlishHudWindow.AddTab("AchievementTracker", this.ContentsManager.GetTexture("243.png"), () => new AchievementTrackerView(this.achievementApiService, this.achievementCategoryOverviewFactory));
         }
 
         private void AchievementTrackerService_AchievementTracked(Achievement achievement)
         {
-            var trackWindow = new AchievementTrackWindow(ContentsManager, achievement, this.achievementService, new AchievementTrackWindow.AchievementControlProvider(this.achievementService, new ItemDetailWindowFactory(this.ContentsManager, this.achievementService)))
+            var trackWindow = new AchievementTrackWindow(this.ContentsManager, achievement, this.achievementService, new AchievementTrackWindow.AchievementControlProvider(this.achievementService, new ItemDetailWindowFactory(this.ContentsManager, this.achievementService, new AchievementTableEntryProvider(this.achievementService))))
             {
                 Parent = GameService.Graphics.SpriteScreen,
                 Location = GameService.Graphics.SpriteScreen.Size / new Point(2) - new Point(256, 178) / new Point(2),
@@ -78,15 +75,13 @@ namespace Denrage.AchievementTrackerModule
 
             trackWindow.ToggleWindow();
 
-            windows.Add(trackWindow);
+            this.windows.Add(trackWindow);
         }
 
-        protected override void OnModuleLoaded(EventArgs e)
-        {
+        protected override void OnModuleLoaded(EventArgs e) =>
 
             // Base handler must be called
             base.OnModuleLoaded(e);
-        }
 
         protected override void Update(GameTime gameTime)
         {
