@@ -31,7 +31,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
-
+            this.ControlPadding = new Vector2(10f);
         }
 
         public void BuildControl()
@@ -66,6 +66,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 Parent = this,
                 FlowDirection = ControlFlowDirection.LeftToRight,
                 Width = this.ContentRegion.Width,
+                ControlPadding = new Vector2(10f),
                 HeightSizingMode = SizingMode.AutoSize,
             };
 

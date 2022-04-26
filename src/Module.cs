@@ -20,7 +20,7 @@ namespace Denrage.AchievementTrackerModule
         // TODO: Logging
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
-        private readonly List<AchievementTrackWindow> windows;
+        private AchievementTrackWindow window;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -34,7 +34,6 @@ namespace Denrage.AchievementTrackerModule
             : base(moduleParameters)
         {
             this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager);
-            this.windows = new List<AchievementTrackWindow>();
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -65,19 +64,19 @@ namespace Denrage.AchievementTrackerModule
 
         private void AchievementTrackerService_AchievementTracked(Achievement achievement)
         {
-            var trackWindow = new AchievementTrackWindow(
-                this.ContentsManager,
-                achievement,
-                this.dependencyInjectionContainer.AchievementService,
-                this.dependencyInjectionContainer.AchievementControlProvider)
+            if (this.window is null)
             {
-                Parent = GameService.Graphics.SpriteScreen,
-                Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),
-            };
+                this.window = new AchievementTrackWindow(this.ContentsManager, this.dependencyInjectionContainer.AchievementTrackerService, this.dependencyInjectionContainer.AchievementControlProvider, this.dependencyInjectionContainer.AchievementService, this.dependencyInjectionContainer.AchievementDetailsWindowFactory)
+                {
+                    Parent = GameService.Graphics.SpriteScreen,
+                    Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),
+                };
+            }
 
-            trackWindow.ToggleWindow();
-
-            this.windows.Add(trackWindow);
+            if (!this.window.Visible)
+            {
+                this.window.Show();
+            }
         }
 
         protected override void OnModuleLoaded(EventArgs e) =>

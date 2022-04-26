@@ -11,6 +11,10 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public event Action<Achievement> AchievementTracked;
 
+        public event Action<Achievement> AchievementUntracked;
+
+        public IReadOnlyList<Achievement> ActiveAchievements => this.activeAchievements.AsReadOnly();
+
         public AchievementTrackerService()
         {
             this.activeAchievements = new List<Achievement>();
@@ -19,10 +23,13 @@ namespace Denrage.AchievementTrackerModule.Services
         public void TrackAchievement(Achievement achievement)
         {
             this.activeAchievements.Add(achievement);
-            AchievementTracked?.Invoke(achievement);
+            this.AchievementTracked?.Invoke(achievement);
         }
 
         public void RemoveAchievement(Achievement achievement)
-            => this.activeAchievements.Remove(achievement);
+        {
+            _ = this.activeAchievements.Remove(achievement);
+            this.AchievementUntracked?.Invoke(achievement);
+        }
     }
 }

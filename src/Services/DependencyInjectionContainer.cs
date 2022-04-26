@@ -28,6 +28,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IItemDetailWindowFactory ItemDetailWindowFactory { get; set; }
 
+        public IAchievementDetailsWindowFactory AchievementDetailsWindowFactory { get; set; }
+
         public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager)
         {
             this.gw2ApiManager = gw2ApiManager;
@@ -46,7 +48,8 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(this.gw2ApiManager, this.AchievementListItemFactory);
             this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.AchievementService);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider);
-            this.AchievementControlProvider = new AchievementTrackWindow.AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory);
+            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory);
+            this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider);
 
             await apiService.LoadAsync();
             await achievementService.LoadAsync();

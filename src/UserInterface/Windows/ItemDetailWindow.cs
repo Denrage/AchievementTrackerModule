@@ -42,7 +42,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private void BuildWindow()
         {
             this.Title = this.name;
-            this.ConstructWindow(this.texture, new Rectangle(0, 0, 300, 400), new Rectangle(0, 30, 300, 400 - 30));
+            this.ConstructWindow(this.texture, new Rectangle(0, 0, 600, 400), new Rectangle(0, 30, 600, 400 - 30));
 
             var panel = new FlowPanel()
             {

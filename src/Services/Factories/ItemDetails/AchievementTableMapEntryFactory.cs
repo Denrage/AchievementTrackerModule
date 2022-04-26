@@ -17,8 +17,9 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
             => new Image()
             {
                 Texture = this.achievementService.GetDirectImageLink(entry.ImageLink),
-                Width = 120,
-                Height = 120,
+                Width = 250,
+                Height = 250,
             };
     }
 }
+ 

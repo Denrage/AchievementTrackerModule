@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
 {
     public abstract class AchievementControlFactory<T, TDescription> : AchievementControlFactory, IControlFactory<T, TDescription>
-        where T : Control, IAchievementControl
+        where T : Panel, IAchievementControl
     {
         protected abstract T CreateInternal(Achievement achievement, TDescription description);
 
@@ -16,7 +16,8 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
         public T Create(Achievement achievement, TDescription description, Point size)
         {
             var control = this.CreateInternal(achievement, description);
-            control.Size = size;
+            control.Width = size.X;
+            control.HeightSizingMode = SizingMode.AutoSize;
             control.BuildControl();
 
             return control;
