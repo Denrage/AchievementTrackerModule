@@ -146,13 +146,5 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             };
 
         }
-
-        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
-        {
-            //spriteBatch.DrawOnCtrl(this,
-            //                       this.texture,
-            //                       bounds);
-            base.PaintBeforeChildren(spriteBatch, bounds);
-        }
     }
 }

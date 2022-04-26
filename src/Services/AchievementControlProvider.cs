@@ -1,4 +1,5 @@
 ﻿using Blish_HUD.Controls;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.Services.Factories.AchievementControl;
@@ -13,10 +14,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     {
         private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
-        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowFactory itemDetailWindowFactory)
+        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowFactory itemDetailWindowFactory, ContentsManager contentsManager)
         {
             this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory());
-            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowFactory));
+            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowFactory, contentsManager));
             this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowFactory));
         }
 

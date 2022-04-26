@@ -48,7 +48,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(this.gw2ApiManager, this.AchievementListItemFactory);
             this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.AchievementService);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider);
-            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory);
+            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory, this.contentsManager);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider);
 
             await apiService.LoadAsync();

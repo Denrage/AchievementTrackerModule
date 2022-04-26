@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
@@ -13,6 +14,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     {
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IAchievementService achievementService;
+        private readonly ContentsManager contentsManager;
         private readonly Achievement achievement;
         private readonly CollectionDescription description;
         private readonly CollectionAchievementTable achievementDetails;
@@ -20,18 +22,19 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         public AchievementCollectionControl(
             IItemDetailWindowFactory itemDetailWindowFactory,
             IAchievementService achievementService,
+            ContentsManager contentsManager,
             Achievement achievement,
             CollectionDescription description)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;
             this.achievementService = achievementService;
-
+            this.contentsManager = contentsManager;
             this.achievement = achievement;
             this.description = description;
 
             this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
-            this.ControlPadding = new Vector2(10f);
+            //this.ControlPadding = new Vector2(3f);
         }
 
         public void BuildControl()
@@ -66,7 +69,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 Parent = this,
                 FlowDirection = ControlFlowDirection.LeftToRight,
                 Width = this.ContentRegion.Width,
-                ControlPadding = new Vector2(10f),
+                //ControlPadding = new Vector2(0.1f),
                 HeightSizingMode = SizingMode.AutoSize,
             };
 
@@ -80,13 +83,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     var tint = !(finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, counter));
                     var texture = this.achievementService.GetImage(item.ImageUrl);
 
-                    var image = new Image()
+                    var imagePanel = new Panel()
                     {
                         Parent = panel,
+                        BackgroundTexture = this.contentsManager.GetTexture("collection_item_background.png"),
+                        Width = 84,
+                        Height = 84,
+                    };
+
+                    var image = new Image()
+                    {
+                        Parent = imagePanel,
                         Width = 64,
                         Height = 64,
                         Texture = texture,
+                        ZIndex = 1,
                     };
+
+                    image.Location = new Point((imagePanel.Width - image.Width) / 2, (imagePanel.Height - image.Height) / 2);
 
                     image.Tint = tint ? Microsoft.Xna.Framework.Color.DarkGray : Microsoft.Xna.Framework.Color.Green;
 
