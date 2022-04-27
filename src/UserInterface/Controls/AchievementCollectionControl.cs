@@ -34,7 +34,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
-            //this.ControlPadding = new Vector2(3f);
+            this.ControlPadding = new Vector2(7f);
         }
 
         public void BuildControl()
@@ -69,7 +69,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 Parent = this,
                 FlowDirection = ControlFlowDirection.LeftToRight,
                 Width = this.ContentRegion.Width,
-                //ControlPadding = new Vector2(0.1f),
+                ControlPadding = new Vector2(7f),
                 HeightSizingMode = SizingMode.AutoSize,
             };
 
@@ -87,8 +87,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     {
                         Parent = panel,
                         BackgroundTexture = this.contentsManager.GetTexture("collection_item_background.png"),
-                        Width = 84,
-                        Height = 84,
+                        Width = 71,
+                        Height = 71,
                     };
 
                     var image = new Image()

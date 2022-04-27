@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
@@ -13,21 +14,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     {
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IAchievementService achievementService;
+        private readonly ContentsManager contentsManager;
         private readonly ObjectivesDescription description;
         private readonly CollectionAchievementTable achievementDetails;
 
         public AchievementObjectivesControl(
             IItemDetailWindowFactory itemDetailWindowFactory,
             IAchievementService achievementService,
+            ContentsManager contentsManager,
             Achievement achievement,
             ObjectivesDescription description)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;
             this.achievementService = achievementService;
-
+            this.contentsManager = contentsManager;
             this.description = description;
             this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
-            this.FlowDirection = ControlFlowDirection.LeftToRight;
+            this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
+            this.ControlPadding = new Vector2(7f);
         }
 
         public void BuildControl()
@@ -63,23 +67,31 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 FlowDirection = ControlFlowDirection.LeftToRight,
                 Width = this.ContentRegion.Width,
                 HeightSizingMode = SizingMode.AutoSize,
-                ControlPadding = new Vector2(10f),
+                ControlPadding = new Vector2(7f),
             };
 
             _ = Task.Run(() =>
             {
                 for (var i = 0; i < this.description.EntryList.Count; i++)
                 {
-                    var label = new Label()
+                    var imagePanel = new Panel()
                     {
                         Parent = panel,
+                        BackgroundTexture = this.contentsManager.GetTexture("collection_item_background.png"),
+                        Width = 71,
+                        Height = 71,
+                    };
+
+                    var label = new Label()
+                    {
+                        Parent = imagePanel,
                         Width = 64,
                         Height = 64,
                         Text = (i + 1).ToString(),
                         Font = Content.DefaultFont18,
                         VerticalAlignment = VerticalAlignment.Middle,
                         HorizontalAlignment = HorizontalAlignment.Center,
-                        BackgroundColor = Microsoft.Xna.Framework.Color.DarkGray,
+                        ZIndex = 1,
                     };
 
                     var index = i;

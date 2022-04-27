@@ -18,7 +18,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         {
             this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory());
             this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowFactory, contentsManager));
-            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowFactory));
+            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowFactory, contentsManager));
         }
 
         public Control GetAchievementControl(Achievement achievement, AchievementTableEntryDescription description, Point size)

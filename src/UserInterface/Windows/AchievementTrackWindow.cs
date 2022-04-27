@@ -74,7 +74,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Width = 32,
                 Height = 32,
                 Texture = this.contentsManager.GetTexture("605019.png"),
-                BackgroundColor = Microsoft.Xna.Framework.Color.White,
             };
 
             trackButton.Location = new Microsoft.Xna.Framework.Point(panel.ContentRegion.Width - trackButton.Width, 0);
@@ -89,7 +88,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Width = 32,
                 Height = 32,
                 Texture = this.contentsManager.GetTexture("pop_out.png"),
-                BackgroundColor = Microsoft.Xna.Framework.Color.White,
             };
 
             detachButton.Click += (s, e) =>
@@ -142,7 +140,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 CanScroll = true,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Size = this.ContentRegion.Size,
-                
+                ControlPadding = new Vector2(7f),  
             };
 
         }
