@@ -61,8 +61,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 FlowDirection = ControlFlowDirection.LeftToRight,
             };
 
-            //foreach (var achievement in this.achievements.Where(x => !this.achievementService.HasFinishedAchievement(x.Id)).OrderBy(x => x.Name))
-            foreach (var achievement in this.achievements.OrderBy(x => x.Name))
+            foreach (var achievement in this.achievements.Select(x => (this.achievementService.HasFinishedAchievement(x.Id), x)).OrderBy(x => x.Item1).ThenBy(x => x.x.Name).Select(x => x.x))
             {
                 var viewContainer = new ViewContainer()
                 {
