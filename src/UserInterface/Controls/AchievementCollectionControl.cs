@@ -107,7 +107,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     var index = counter;
                     image.Click += (s, eventArgs) =>
                     {
-                        var itemWindow = this.itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index]);
+                        var itemWindow = this.itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index], this.achievementDetails.Link);
                         itemWindow.Parent = GameService.Graphics.SpriteScreen;
                         itemWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
                         itemWindow.ToggleWindow();

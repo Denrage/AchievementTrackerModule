@@ -2,9 +2,11 @@
 using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Linq;
 using static Denrage.AchievementTrackerModule.Models.Achievement.CollectionAchievementTable;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Windows
@@ -12,10 +14,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     public class ItemDetailWindow : WindowBase2
     {
         private const int PADDING = 15;
-        
+
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly IAchievementTableEntryProvider achievementTableEntryProvider;
+        private readonly string achievementLink;
         private readonly string name;
         private readonly string[] columns;
         private readonly List<CollectionAchievementTableEntry> item;
@@ -25,6 +28,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             ContentsManager contentsManager,
             IAchievementService achievementService,
             IAchievementTableEntryProvider achievementTableEntryProvider,
+            string achievementLink,
             string name,
             string[] columns,
             List<CollectionAchievementTableEntry> item)
@@ -32,6 +36,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.achievementTableEntryProvider = achievementTableEntryProvider;
+            this.achievementLink = achievementLink;
             this.texture = this.contentsManager.GetTexture("item_detail_background.png");
 
             this.name = name;
@@ -58,7 +63,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 ControlPadding = new Vector2(10f),
             };
 
-            _ = new Label()
+            var itemTitle = new Label()
             {
                 Parent = panel,
                 Width = panel.ContentRegion.Width,
@@ -67,6 +72,26 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 WrapText = true,
                 Font = Content.DefaultFont18,
             };
+
+            var item = this.item.OfType<CollectionAchievementTableItemEntry>().FirstOrDefault();
+            var link = this.achievementLink;
+
+            if (item != null)
+            {
+                link = item.Link;
+            }
+
+            if (!string.IsNullOrEmpty(link))
+            {
+                itemTitle.MouseEntered += (o, e) => itemTitle.TextColor = Color.LightBlue;
+                itemTitle.MouseLeft += (o, e) => itemTitle.TextColor = Color.White;
+                itemTitle.LeftMouseButtonPressed += (o, e) => itemTitle.TextColor = new Color(206, 174, 250);
+                itemTitle.LeftMouseButtonReleased += (o, e) =>
+                {
+                    itemTitle.TextColor = Color.LightBlue;
+                    _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + link);
+                };
+            }
 
             for (var i = 0; i < this.item.Count; i++)
             {

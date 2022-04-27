@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using System.Collections.Generic;
 using static Denrage.AchievementTrackerModule.Models.Achievement.CollectionAchievementTable;
@@ -19,7 +20,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
             this.achievementTableEntryProvider = achievementTableEntryProvider;
         }
 
-        public ItemDetailWindow Create(string name, string[] columns, List<CollectionAchievementTableEntry> item)
-            => new ItemDetailWindow(this.contentsManager, this.achievementService, this.achievementTableEntryProvider, name, columns, item);
+        public ItemDetailWindow Create(string name, string[] columns, List<CollectionAchievementTableEntry> item, string achievementLink)
+            => new ItemDetailWindow(this.contentsManager, this.achievementService, this.achievementTableEntryProvider, achievementLink, name, columns, item);
     }
 }
