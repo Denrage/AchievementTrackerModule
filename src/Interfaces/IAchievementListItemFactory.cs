@@ -5,6 +5,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 {
     public interface IAchievementListItemFactory
     {
-        AchievementListItem Create(Achievement achievement);
+        AchievementListItem Create(Achievement achievement, string icon);
     }
 }

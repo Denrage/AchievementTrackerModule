@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Modules.Managers;
+﻿using Blish_HUD;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services.Factories;
 using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
@@ -11,6 +12,7 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly Gw2ApiManager gw2ApiManager;
         private readonly ContentsManager contentsManager;
+        private readonly ContentService contentService;
 
         public IAchievementTrackerService AchievementTrackerService { get; set; }
 
@@ -30,10 +32,11 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IAchievementDetailsWindowFactory AchievementDetailsWindowFactory { get; set; }
 
-        public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager)
+        public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager, ContentService contentService)
         {
             this.gw2ApiManager = gw2ApiManager;
             this.contentsManager = contentsManager;
+            this.contentService = contentService;
         }
 
         public async Task InitializeAsync()
@@ -44,8 +47,8 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementApiService = apiService;
 
             this.AchievementTrackerService = new AchievementTrackerService();
-            this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService);
-            this.AchievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(this.gw2ApiManager, this.AchievementListItemFactory);
+            this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService);
+            this.AchievementCategoryOverviewFactory = new AchievementCategoryOverviewFactory(this.gw2ApiManager, this.AchievementListItemFactory, this.AchievementService);
             this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.AchievementService);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider);
             this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory, this.contentsManager);

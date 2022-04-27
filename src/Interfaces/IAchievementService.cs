@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Content;
 using Denrage.AchievementTrackerModule.Models.Achievement;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,6 +11,8 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         IReadOnlyList<AchievementTableEntry> Achievements { get; }
 
         IReadOnlyList<CollectionAchievementTable> AchievementDetails { get; }
+
+        event Action PlayerAchievementsLoaded;
 
         Task<string> GetDirectImageLink(string imagePath);
         

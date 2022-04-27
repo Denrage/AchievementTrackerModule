@@ -6,6 +6,7 @@ using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
@@ -15,13 +16,37 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly AchievementCategory category;
         private readonly Gw2ApiManager apiManager;
         private readonly IAchievementListItemFactory achievementListItemFactory;
+        private readonly IAchievementService achievementService;
+        private readonly List<(int AchievementId, ViewContainer Card)> achievementCards;
         private IEnumerable<Achievement> achievements;
 
-        public AchievementCategoryOverview(AchievementCategory category, Gw2ApiManager apiManager, IAchievementListItemFactory achievementListItemFactory)
+        public AchievementCategoryOverview(AchievementCategory category, Gw2ApiManager apiManager, IAchievementListItemFactory achievementListItemFactory, IAchievementService achievementService)
         {
             this.category = category;
             this.apiManager = apiManager;
             this.achievementListItemFactory = achievementListItemFactory;
+            this.achievementService = achievementService;
+            this.achievementCards = new List<(int AchievementId, ViewContainer Card)>();
+
+            this.achievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
+        }
+
+        private void AchievementService_PlayerAchievementsLoaded()
+        {
+            var itemsToRemove = new List<(int AchievementId, ViewContainer Card)>();
+            foreach (var item in this.achievementCards)
+            {
+                if (this.achievementService.HasFinishedAchievement(item.AchievementId))
+                {
+                    item.Card.Dispose();
+                    itemsToRemove.Add(item);
+                }
+            }
+
+            foreach (var item in itemsToRemove)
+            {
+                _ = this.achievementCards.Remove(item);
+            }
         }
 
         protected override void Build(Container buildPanel)
@@ -36,7 +61,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 FlowDirection = ControlFlowDirection.LeftToRight,
             };
 
-            foreach (var achievement in this.achievements)
+            //foreach (var achievement in this.achievements.Where(x => !this.achievementService.HasFinishedAchievement(x.Id)).OrderBy(x => x.Name))
+            foreach (var achievement in this.achievements.OrderBy(x => x.Name))
             {
                 var viewContainer = new ViewContainer()
                 {
@@ -45,7 +71,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                     Parent = panel,
                 };
 
-                viewContainer.Show(this.achievementListItemFactory.Create(achievement));
+                viewContainer.Show(this.achievementListItemFactory.Create(achievement, this.category.Icon));
             }
         }
 

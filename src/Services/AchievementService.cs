@@ -24,6 +24,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IReadOnlyList<Models.Achievement.CollectionAchievementTable> AchievementDetails { get; private set; }
 
+        public event Action PlayerAchievementsLoaded;
+
         public AchievementService(ContentsManager contentsManager, Gw2ApiManager gw2ApiManager)
         {
             this.contentsManager = contentsManager;
@@ -79,6 +81,7 @@ namespace Denrage.AchievementTrackerModule.Services
             if (this.PlayerAchievements == null && this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
             {
                 this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync();
+                _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke());
             }
         }
 

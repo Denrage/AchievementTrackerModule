@@ -1,4 +1,6 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Content;
+using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Gw2Sharp.WebApi.V2.Models;
@@ -8,12 +10,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
     public class AchievementListItem : View
     {
         private readonly IAchievementTrackerService achievementTrackerService;
+        private readonly ContentService contentService;
+        private readonly string icon;
         private readonly Achievement achievement;
 
-        public AchievementListItem(Achievement achievement, IAchievementTrackerService achievementTrackerService)
+        public AchievementListItem(Achievement achievement, IAchievementTrackerService achievementTrackerService, ContentService contentService, string icon)
         {
             this.achievement = achievement;
             this.achievementTrackerService = achievementTrackerService;
+            this.contentService = contentService;
+            this.icon = icon;
         }
 
         protected override void Build(Container buildPanel)
@@ -25,11 +31,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Text = this.achievement.Name,
                 Parent = buildPanel,
                 ShowToggleButton = true,
-            };
-
-            _ = new GlowButton()
-            {
-                Parent = button,
+                Icon = this.contentService.GetRenderServiceTexture(this.icon),
             };
         }
     }

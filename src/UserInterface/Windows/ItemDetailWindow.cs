@@ -61,6 +61,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Location = new Point(PADDING, 0),
                 Height = this.ContentRegion.Height,
                 ControlPadding = new Vector2(10f),
+                CanScroll = true,
             };
 
             var itemTitle = new Label()

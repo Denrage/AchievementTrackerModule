@@ -54,10 +54,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             foreach (var group in this.achievementApiService.AchievementGroups.OrderBy(x => x.Order))
             {
                 var menuItem = menu.AddMenuItem(group.Name);
-                foreach (var categoryId in group.Categories)
+                foreach (var category in group.Categories.Select(x => this.categories[x]).OrderBy(x => x.Order))
                 {
-                    var category = this.categories[categoryId];
-
                     var innerMenuItem = new MenuItem(category.Name)
                     {
                         Parent = menuItem

@@ -33,7 +33,7 @@ namespace Denrage.AchievementTrackerModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters)
             : base(moduleParameters)
         {
-            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager);
+            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content);
         }
 
         protected override void DefineSettings(SettingCollection settings)
