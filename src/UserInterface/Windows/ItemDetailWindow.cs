@@ -11,6 +11,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 {
     public class ItemDetailWindow : WindowBase2
     {
+        private const int PADDING = 15;
+        
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly IAchievementTableEntryProvider achievementTableEntryProvider;
@@ -30,7 +32,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.achievementTableEntryProvider = achievementTableEntryProvider;
-            this.texture = this.contentsManager.GetTexture("156390.png");
+            this.texture = this.contentsManager.GetTexture("item_detail_background.png");
 
             this.name = name;
             this.columns = columns;
@@ -41,7 +43,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         private void BuildWindow()
         {
-            this.Title = this.name;
+            // TODO: Localization
+            this.Title = "Item Details";
             this.ConstructWindow(this.texture, new Rectangle(0, 0, 600, 400), new Rectangle(0, 30, 600, 400 - 30));
 
             var panel = new FlowPanel()
@@ -49,6 +52,20 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Parent = this,
                 Size = this.ContentRegion.Size,
                 FlowDirection = ControlFlowDirection.TopToBottom,
+                Width = this.ContentRegion.Width - (PADDING * 2),
+                Location = new Point(PADDING, 0),
+                Height = this.ContentRegion.Height,
+                ControlPadding = new Vector2(10f),
+            };
+
+            _ = new Label()
+            {
+                Parent = panel,
+                Width = panel.ContentRegion.Width,
+                Text = this.name,
+                AutoSizeHeight = true,
+                WrapText = true,
+                Font = Content.DefaultFont18,
             };
 
             for (var i = 0; i < this.item.Count; i++)
@@ -63,7 +80,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 var label = new Label()
                 {
                     Parent = innerPannel,
-                    Width = (int)System.Math.Floor(0.3 * innerPannel.ContentRegion.Width),
+                    Width = (int)System.Math.Floor(0.15 * innerPannel.ContentRegion.Width),
                     Text = this.columns[i],
                 };
 
