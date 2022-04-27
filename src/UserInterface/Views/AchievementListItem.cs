@@ -10,14 +10,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
     public class AchievementListItem : View
     {
         private readonly IAchievementTrackerService achievementTrackerService;
+        private readonly IAchievementService achievementService;
         private readonly ContentService contentService;
         private readonly string icon;
         private readonly Achievement achievement;
 
-        public AchievementListItem(Achievement achievement, IAchievementTrackerService achievementTrackerService, ContentService contentService, string icon)
+        public AchievementListItem(Achievement achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, string icon)
         {
             this.achievement = achievement;
             this.achievementTrackerService = achievementTrackerService;
+            this.achievementService = achievementService;
             this.contentService = contentService;
             this.icon = icon;
         }
@@ -33,6 +35,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 ShowToggleButton = true,
                 Icon = this.contentService.GetRenderServiceTexture(this.icon),
             };
+
+            if (this.achievementService.HasFinishedAchievement(this.achievement.Id))
+            {
+                button.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
+            }
         }
     }
 }

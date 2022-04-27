@@ -9,14 +9,16 @@ namespace Denrage.AchievementTrackerModule.Services.Factories
     {
         private readonly IAchievementTrackerService achievementTrackerService;
         private readonly ContentService contentService;
+        private readonly IAchievementService achievementService;
 
-        public AchievementListItemFactory(IAchievementTrackerService achievementTrackerService, ContentService contentService)
+        public AchievementListItemFactory(IAchievementTrackerService achievementTrackerService, ContentService contentService, IAchievementService achievementService)
         {
             this.achievementTrackerService = achievementTrackerService;
             this.contentService = contentService;
+            this.achievementService = achievementService;
         }
 
         public AchievementListItem Create(Achievement achievement, string icon)
-            => new AchievementListItem(achievement, this.achievementTrackerService, this.contentService, icon);
+            => new AchievementListItem(achievement, this.achievementTrackerService, this.achievementService, this.contentService, icon);
     }
 }
