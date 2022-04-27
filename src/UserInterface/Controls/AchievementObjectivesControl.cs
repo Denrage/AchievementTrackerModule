@@ -15,6 +15,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IAchievementService achievementService;
         private readonly ContentsManager contentsManager;
+        private readonly Achievement achievement;
         private readonly ObjectivesDescription description;
         private readonly CollectionAchievementTable achievementDetails;
 
@@ -28,6 +29,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             this.itemDetailWindowFactory = itemDetailWindowFactory;
             this.achievementService = achievementService;
             this.contentsManager = contentsManager;
+            this.achievement = achievement;
             this.description = description;
             this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
@@ -72,6 +74,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             _ = Task.Run(() =>
             {
+                var finishedAchievement = this.achievementService.HasFinishedAchievement(this.achievement.Id);
+
                 for (var i = 0; i < this.description.EntryList.Count; i++)
                 {
                     var imagePanel = new Panel()
@@ -93,6 +97,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         HorizontalAlignment = HorizontalAlignment.Center,
                         ZIndex = 1,
                     };
+
+                    label.Location = new Point((imagePanel.Width - label.Width) / 2, (imagePanel.Height - label.Height) / 2);
+
+                    if (finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, i))
+                    {
+                        label.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
+                    }
 
                     var index = i;
                     label.Click += (s, eventArgs) =>

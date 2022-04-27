@@ -102,7 +102,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     image.Location = new Point((imagePanel.Width - image.Width) / 2, (imagePanel.Height - image.Height) / 2);
 
-                    image.Tint = tint ? Microsoft.Xna.Framework.Color.DarkGray : Microsoft.Xna.Framework.Color.Green;
+                    if (tint)
+                    {
+                        image.Tint = Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
+                    }
 
                     var index = counter;
                     image.Click += (s, eventArgs) =>
