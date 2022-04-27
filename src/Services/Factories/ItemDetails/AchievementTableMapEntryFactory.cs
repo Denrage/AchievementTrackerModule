@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Controls;
 using Denrage.AchievementTrackerModule.Interfaces;
+using System.Threading.Tasks;
 using static Denrage.AchievementTrackerModule.Models.Achievement.CollectionAchievementTable;
 
 namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
@@ -14,12 +15,19 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
         }
 
         protected override Control CreateInternal(CollectionAchievementTableMapEntry entry)
-            => new Image()
+        {
+            var result = new Image()
             {
-                Texture = this.achievementService.GetDirectImageLink(entry.ImageLink),
+                Texture = this.achievementService.GetImageFromIndirectLink(entry.ImageLink),
                 Width = 250,
                 Height = 250,
             };
+
+            result.LeftMouseButtonReleased += (o, e) 
+                => _ = Task.Run(async () => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + await this.achievementService.GetDirectImageLink(entry.ImageLink)));
+
+            return result;
+        }
     }
 }
  

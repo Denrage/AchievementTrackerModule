@@ -85,23 +85,26 @@ namespace Denrage.AchievementTrackerModule.Services
         public AsyncTexture2D GetImage(string imageUrl)
             => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync());
 
-        public AsyncTexture2D GetDirectImageLink(string imagePath)
+        public async Task<string> GetDirectImageLink(string imagePath)
         {
-            return imagePath.Contains("File:")
-                ? this.GetImageInternal(async () =>
-                {
-                    var source = await this.DownloadWikiContent(imagePath).GetStringAsync();
+            if (imagePath.Contains("File:"))
+            {
+                var source = await this.DownloadWikiContent(imagePath).GetStringAsync();
 
-                    var fillImageStartIndex = source.IndexOf("fullImageLink");
-                    var hrefStartIndex = source.IndexOf("href=", fillImageStartIndex);
-                    var linkStartIndex = source.IndexOf("\"", hrefStartIndex) + 1;
-                    var linkEndIndex = source.IndexOf("\"", linkStartIndex);
-                    var link = source.Substring(linkStartIndex, linkEndIndex - linkStartIndex);
+                var fillImageStartIndex = source.IndexOf("fullImageLink");
+                var hrefStartIndex = source.IndexOf("href=", fillImageStartIndex);
+                var linkStartIndex = source.IndexOf("\"", hrefStartIndex) + 1;
+                var linkEndIndex = source.IndexOf("\"", linkStartIndex);
+                var link = source.Substring(linkStartIndex, linkEndIndex - linkStartIndex);
 
-                    return await this.DownloadWikiContent(link).GetStreamAsync();
-                })
-                : this.GetImage(imagePath);
+                return link;
+            }
+
+            return imagePath;
         }
+
+        public AsyncTexture2D GetImageFromIndirectLink(string imagePath) 
+            => _ = this.GetImageInternal(async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync());
 
         private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream)
         {

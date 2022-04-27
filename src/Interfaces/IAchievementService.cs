@@ -11,10 +11,14 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 
         IReadOnlyList<CollectionAchievementTable> AchievementDetails { get; }
 
-        AsyncTexture2D GetDirectImageLink(string imagePath);
-
+        Task<string> GetDirectImageLink(string imagePath);
+        
         AsyncTexture2D GetImage(string imageUrl);
+        
+        AsyncTexture2D GetImageFromIndirectLink(string imagePath);
+        
         bool HasFinishedAchievement(int achievementId);
+        
         bool HasFinishedAchievementBit(int achievementId, int positionIndex);
 
         Task LoadPlayerAchievements();
