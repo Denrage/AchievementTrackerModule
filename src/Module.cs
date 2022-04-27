@@ -54,7 +54,7 @@ namespace Denrage.AchievementTrackerModule
 
             _ = GameService.Overlay.BlishHudWindow.AddTab(
                 "AchievementTracker",
-                this.ContentsManager.GetTexture("243.png"),
+                this.ContentsManager.GetTexture("achievement_icon.png"),
                 () => new AchievementTrackerView(
                     this.dependencyInjectionContainer.AchievementApiService,
                     this.dependencyInjectionContainer.AchievementCategoryOverviewFactory));
