@@ -111,11 +111,8 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 var imageStream = await getImageStream();
 
-                GameService.Graphics.QueueMainThreadRender(_ =>
-                {
-                    texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
-                    imageStream.Close();
-                });
+                texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
+                imageStream.Close();
             });
 
             return texture;
