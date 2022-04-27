@@ -56,7 +56,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             {
                 Parent = this,
                 Size = this.ContentRegion.Size,
-                FlowDirection = ControlFlowDirection.TopToBottom,
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Width = this.ContentRegion.Width - (PADDING * 2),
                 Location = new Point(PADDING, 0),
                 Height = this.ContentRegion.Height,
