@@ -8,8 +8,11 @@ using System.Linq;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 {
+    // TODO: Add minimum and maximum size
     public class AchievementDetailsWindow : WindowBase2
     {
+        private const int PADDING = 15;
+
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly IAchievementControlProvider achievementControlProvider;
@@ -27,35 +30,56 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.achievementControlProvider = achievementControlProvider;
             this.achievement = achievement;
 
-            this.texture = this.contentsManager.GetTexture("156390.png");
+            this.texture = this.contentsManager.GetTexture("achievement_details_background.png");
             this.BuildWindow();
         }
 
         private void BuildWindow()
         {
-            this.Title = this.achievement.Name;
+            // TODO: Localization
+            this.Title = "Achievement Details";
             this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 600 - 30));
+
+            var flowPanel = new FlowPanel()
+            {
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
+                Width = this.ContentRegion.Width - (PADDING * 2),
+                Location = new Microsoft.Xna.Framework.Point(PADDING, 0),
+                Height = this.ContentRegion.Height,
+                CanScroll = true,
+                Parent = this,
+                ControlPadding = new Microsoft.Xna.Framework.Vector2(10f),
+            };
+
+            _ = new Label()
+            {
+                Text = this.achievement.Name,
+                Parent = flowPanel,
+                AutoSizeHeight = true,
+                WrapText = true,
+                Width = flowPanel.ContentRegion.Width,
+                Font = Content.DefaultFont18,
+                Padding = new Thickness(0, 0, 20, 0),
+            };
+
+            var panel = new Panel()
+            {
+                Width = flowPanel.ContentRegion.Width,
+                Parent = flowPanel,
+                HeightSizingMode = SizingMode.AutoSize,
+            };
 
             var control = this.achievementControlProvider.GetAchievementControl(
                 this.achievement,
                 this.achievementService.Achievements.FirstOrDefault(x => x.Id == this.achievement.Id).Description,
-                this.ContentRegion.Size);
+                panel.ContentRegion.Size);
 
             if (control is null)
             {
                 return;
             }
 
-            control.Parent = this;
-
-        }
-
-        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle bounds)
-        {
-            spriteBatch.DrawOnCtrl(this,
-                                   this.texture,
-                                   bounds);
-            base.PaintBeforeChildren(spriteBatch, bounds);
+            control.Parent = panel;
         }
     }
 }
