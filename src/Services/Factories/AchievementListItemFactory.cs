@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Views;
 using Gw2Sharp.WebApi.V2.Models;
 
@@ -18,7 +19,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories
             this.achievementService = achievementService;
         }
 
-        public AchievementListItem Create(Achievement achievement, string icon)
+        public AchievementListItem Create(AchievementTableEntry achievement, string icon)
             => new AchievementListItem(achievement, this.achievementTrackerService, this.achievementService, this.contentService, icon);
     }
 }

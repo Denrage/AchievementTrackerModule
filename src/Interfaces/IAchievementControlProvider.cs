@@ -7,6 +7,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 {
     public interface IAchievementControlProvider
     {
-        Control GetAchievementControl(Achievement achievement, AchievementTableEntryDescription description, Point size);
+        Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description, Point size);
     }
 }

@@ -2,6 +2,7 @@
 using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
@@ -16,12 +17,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly IAchievementControlProvider achievementControlProvider;
-        private readonly Achievement achievement;
+        private readonly AchievementTableEntry achievement;
         private readonly Texture2D texture;
 
         public AchievementDetailsWindow(
             ContentsManager contentsManager,
-            Achievement achievement,
+            AchievementTableEntry achievement,
             IAchievementService achievementService,
             IAchievementControlProvider achievementControlProvider)
         {

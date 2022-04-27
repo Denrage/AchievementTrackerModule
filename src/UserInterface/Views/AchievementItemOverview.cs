@@ -2,6 +2,7 @@
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
@@ -11,21 +12,20 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {
-    public class AchievementCategoryOverview : View
+    public class AchievementItemOverview : View
     {
-        private readonly AchievementCategory category;
-        private readonly Gw2ApiManager apiManager;
-        private readonly IAchievementListItemFactory achievementListItemFactory;
-        private readonly IAchievementService achievementService;
         private readonly List<(int AchievementId, ViewContainer Card)> achievementCards;
-        private IEnumerable<Achievement> achievements;
+        private readonly IAchievementService achievementService;
+        private readonly IEnumerable<(AchievementCategory Category, AchievementTableEntry Achievement)> achievements;
+        private readonly IAchievementListItemFactory achievementListItemFactory;
+        private readonly string title;
 
-        public AchievementCategoryOverview(AchievementCategory category, Gw2ApiManager apiManager, IAchievementListItemFactory achievementListItemFactory, IAchievementService achievementService)
+        public AchievementItemOverview(IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements, string title, IAchievementService achievementService, IAchievementListItemFactory achievementListItemFactory)
         {
-            this.category = category;
-            this.apiManager = apiManager;
-            this.achievementListItemFactory = achievementListItemFactory;
+            this.achievements = achievements;
+            this.title = title;
             this.achievementService = achievementService;
+            this.achievementListItemFactory = achievementListItemFactory;
             this.achievementCards = new List<(int AchievementId, ViewContainer Card)>();
 
             this.achievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
@@ -53,7 +53,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         {
             var panel = new FlowPanel()
             {
-                Title = this.category.Name,
+                Title = this.title,
                 ShowBorder = true,
                 Parent = buildPanel,
                 Size = buildPanel.ContentRegion.Size,
@@ -61,7 +61,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 FlowDirection = ControlFlowDirection.LeftToRight,
             };
 
-            foreach (var achievement in this.achievements.Select(x => (this.achievementService.HasFinishedAchievement(x.Id), x)).OrderBy(x => x.Item1).ThenBy(x => x.x.Name).Select(x => x.x))
+            foreach (var achievement in this.achievements.Select(x => (this.achievementService.HasFinishedAchievement(x.Achievement.Id), x)).OrderBy(x => x.Item1).ThenBy(x => x.x.Category.Name).ThenBy(x => x.x.Achievement.Name).Select(x => x.x))
             {
                 var viewContainer = new ViewContainer()
                 {
@@ -70,14 +70,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                     Parent = panel,
                 };
 
-                viewContainer.Show(this.achievementListItemFactory.Create(achievement, this.category.Icon));
+                viewContainer.Show(this.achievementListItemFactory.Create(achievement.Achievement, achievement.Category.Icon));
             }
-        }
-
-        protected override async Task<bool> Load(IProgress<string> progress)
-        {
-            this.achievements = await this.apiManager.Gw2ApiClient.V2.Achievements.ManyAsync(this.category.Achievements);
-            return true;
         }
     }
 }

@@ -3,6 +3,7 @@ using Blish_HUD.Content;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
@@ -13,9 +14,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly IAchievementService achievementService;
         private readonly ContentService contentService;
         private readonly string icon;
-        private readonly Achievement achievement;
+        private readonly AchievementTableEntry achievement;
 
-        public AchievementListItem(Achievement achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, string icon)
+        public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, string icon)
         {
             this.achievement = achievement;
             this.achievementTrackerService = achievementTrackerService;
@@ -26,7 +27,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
         protected override void Build(Container buildPanel)
         {
-            buildPanel.Click += (s, e) => this.achievementTrackerService.TrackAchievement(this.achievement);
+            buildPanel.Click += (s, e) => this.achievementTrackerService.TrackAchievement(this.achievement.Id);
 
             var button = new DetailsButton()
             {

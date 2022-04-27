@@ -6,14 +6,14 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 {
     public interface IAchievementTrackerService
     {
-        IReadOnlyList<Achievement> ActiveAchievements { get; }
+        IReadOnlyList<int> ActiveAchievements { get; }
 
-        event Action<Achievement> AchievementTracked;
+        event Action<int> AchievementTracked;
 
-        event Action<Achievement> AchievementUntracked;
+        event Action<int> AchievementUntracked;
 
-        void RemoveAchievement(Achievement achievement);
+        void RemoveAchievement(int achievement);
 
-        void TrackAchievement(Achievement achievement);
+        void TrackAchievement(int achievement);
     }
 }

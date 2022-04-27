@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Gw2Sharp.WebApi.V2.Models;
 using System;
@@ -23,7 +24,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories
             this.achievementControlProvider = achievementControlProvider;
         }
 
-        public AchievementDetailsWindow Create(Achievement achievement)
+        public AchievementDetailsWindow Create(AchievementTableEntry achievement)
             => new AchievementDetailsWindow(this.contentsManager, achievement, this.achievementService, this.achievementControlProvider);
     }
 }

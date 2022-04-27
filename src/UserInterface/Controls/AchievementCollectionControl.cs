@@ -15,7 +15,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IAchievementService achievementService;
         private readonly ContentsManager contentsManager;
-        private readonly Achievement achievement;
+        private readonly AchievementTableEntry achievement;
         private readonly CollectionDescription description;
         private readonly CollectionAchievementTable achievementDetails;
 
@@ -23,7 +23,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IItemDetailWindowFactory itemDetailWindowFactory,
             IAchievementService achievementService,
             ContentsManager contentsManager,
-            Achievement achievement,
+            AchievementTableEntry achievement,
             CollectionDescription description)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;

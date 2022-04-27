@@ -20,8 +20,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly IAchievementService achievementService;
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
         private readonly Texture2D texture;
-        private readonly Dictionary<Gw2Sharp.WebApi.V2.Models.Achievement, Panel> trackedAchievements = new Dictionary<Gw2Sharp.WebApi.V2.Models.Achievement, Panel>();
-        private readonly Dictionary<Gw2Sharp.WebApi.V2.Models.Achievement, AchievementDetailsWindow> detachedWindows = new Dictionary<Gw2Sharp.WebApi.V2.Models.Achievement, AchievementDetailsWindow>();
+        private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
+        private readonly Dictionary<int, AchievementDetailsWindow> detachedWindows = new Dictionary<int, AchievementDetailsWindow>();
         
         private FlowPanel flowPanel;
 
@@ -52,9 +52,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             }
         }
 
-        private void AchievementTrackerService_AchievementTracked(Gw2Sharp.WebApi.V2.Models.Achievement achievement)
+        private void AchievementTrackerService_AchievementTracked(int achievementId)
         {
-            if (this.trackedAchievements.ContainsKey(achievement))
+            var achievement = this.achievementService.Achievements.First(x => x.Id == achievementId);
+
+            if (this.trackedAchievements.ContainsKey(achievementId))
             {
                 return;
             }
@@ -79,7 +81,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             trackButton.Location = new Microsoft.Xna.Framework.Point(panel.ContentRegion.Width - trackButton.Width, 0);
 
             trackButton.Click += (s, e) 
-                => this.achievementTrackerService.RemoveAchievement(achievement);
+                => this.achievementTrackerService.RemoveAchievement(achievementId);
 
             var detachButton = new Image()
             {
@@ -97,24 +99,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 trackWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
                 trackWindow.Show();
 
-                this.detachedWindows.Add(achievement, trackWindow);
+                this.detachedWindows.Add(achievementId, trackWindow);
 
                 trackWindow.Hidden += (_, eventArgs) =>
                 {
-                    _ = this.detachedWindows.Remove(achievement);
-                    this.AchievementTrackerService_AchievementTracked(achievement);
+                    _ = this.detachedWindows.Remove(achievementId);
+                    this.AchievementTrackerService_AchievementTracked(achievementId);
                 };
 
-                if (this.trackedAchievements.TryGetValue(achievement, out var trackedPanel))
+                if (this.trackedAchievements.TryGetValue(achievementId, out var trackedPanel))
                 {
-                    _ = this.trackedAchievements.Remove(achievement);
+                    _ = this.trackedAchievements.Remove(achievementId);
                     trackedPanel.Dispose();
                 }
             };
 
             var control = this.achievementControlProvider.GetAchievementControl(
                 achievement, 
-                this.achievementService.Achievements.FirstOrDefault(x => x.Id == achievement.Id).Description,
+                achievement.Description,
                 new Microsoft.Xna.Framework.Point(panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT, panel.ContentRegion.Height));
 
             if (control != null)
@@ -124,7 +126,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 control.Location = new Point(CONTROL_PADDING_LEFT, CONTROL_PADDING_TOP);
             }
 
-            this.trackedAchievements.Add(achievement, panel);
+            this.trackedAchievements.Add(achievementId, panel);
         }
 
         private void BuildWindow()

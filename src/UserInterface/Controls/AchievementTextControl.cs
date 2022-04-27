@@ -7,10 +7,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 {
     public class AchievementTextControl : FlowPanel, IAchievementControl
     {
-        private readonly Achievement achievement;
+        private readonly AchievementTableEntry achievement;
         private readonly StringDescription description;
 
-        public AchievementTextControl(Achievement achievement, StringDescription description)
+        public AchievementTextControl(AchievementTableEntry achievement, StringDescription description)
         {
             this.achievement = achievement;
             this.description = description;

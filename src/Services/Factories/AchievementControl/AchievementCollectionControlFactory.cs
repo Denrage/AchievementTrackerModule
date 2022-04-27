@@ -19,7 +19,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
             this.contentsManager = contentsManager;
         }
 
-        protected override AchievementCollectionControl CreateInternal(Achievement achievement, CollectionDescription description)
+        protected override AchievementCollectionControl CreateInternal(AchievementTableEntry achievement, CollectionDescription description)
             => new AchievementCollectionControl(this.itemDetailWindowFactory, this.achievementService, this.contentsManager, achievement, description);
     }
 }

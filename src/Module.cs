@@ -2,6 +2,7 @@
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.Services;
 using Denrage.AchievementTrackerModule.UserInterface.Views;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
@@ -57,12 +58,14 @@ namespace Denrage.AchievementTrackerModule
                 this.ContentsManager.GetTexture("achievement_icon.png"),
                 () => new AchievementTrackerView(
                     this.dependencyInjectionContainer.AchievementApiService,
-                    this.dependencyInjectionContainer.AchievementCategoryOverviewFactory));
+                    this.dependencyInjectionContainer.AchievementItemOverviewFactory,
+                    this.Gw2ApiManager,
+                    this.dependencyInjectionContainer.AchievementService));
 
             await base.LoadAsync();
         }
 
-        private void AchievementTrackerService_AchievementTracked(Achievement achievement)
+        private void AchievementTrackerService_AchievementTracked(int achievement)
         {
             if (this.window is null)
             {
