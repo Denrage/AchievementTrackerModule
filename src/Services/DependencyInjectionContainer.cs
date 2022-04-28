@@ -17,8 +17,6 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IAchievementTrackerService AchievementTrackerService { get; set; }
 
-        public IAchievementApiService AchievementApiService { get; set; }
-
         public IAchievementListItemFactory AchievementListItemFactory { get; set; }
 
         public IAchievementItemOverviewFactory AchievementItemOverviewFactory { get; set; }
@@ -42,10 +40,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
-            var apiService = new AchievementApiService(this.gw2ApiManager);
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager);
             this.AchievementService = achievementService;
-            this.AchievementApiService = apiService;
 
             this.AchievementTrackerService = new AchievementTrackerService();
             this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService);
@@ -55,7 +51,6 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory, this.contentsManager);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider);
 
-            await apiService.LoadAsync(cancellationToken);
             await achievementService.LoadAsync(cancellationToken);
         }
     }

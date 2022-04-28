@@ -25,6 +25,10 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IReadOnlyList<Models.Achievement.CollectionAchievementTable> AchievementDetails { get; private set; }
 
+        public IEnumerable<AchievementGroup> AchievementGroups { get; private set; }
+
+        public IEnumerable<AchievementCategory> AchievementCategories { get; private set; }
+
         public event Action PlayerAchievementsLoaded;
 
         public AchievementService(ContentsManager contentsManager, Gw2ApiManager gw2ApiManager)
@@ -49,6 +53,9 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 this.AchievementDetails = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
             }
+
+            this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync(cancellationToken);
+            this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync(cancellationToken);
 
             await this.LoadPlayerAchievements(cancellationToken);
         }

@@ -18,7 +18,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
     {
         private readonly SemaphoreSlim searchSemaphore = new SemaphoreSlim(1, 1);
 
-        private readonly IAchievementApiService achievementApiService;
         private readonly IAchievementItemOverviewFactory achievementItemOverviewFactory;
         private readonly IAchievementService achievementService;
         private readonly IDictionary<int, AchievementCategory> categories;
@@ -30,12 +29,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private CancellationTokenSource delayCancellationToken;
         private TextBox searchBar;
 
-        public AchievementTrackerView(IAchievementApiService achievementApiService, IAchievementItemOverviewFactory achievementItemOverviewFactory, IAchievementService achievementService)
+        public AchievementTrackerView(IAchievementItemOverviewFactory achievementItemOverviewFactory, IAchievementService achievementService)
         {
-            this.achievementApiService = achievementApiService;
             this.achievementItemOverviewFactory = achievementItemOverviewFactory;
             this.achievementService = achievementService;
-            this.categories = achievementApiService.AchievementCategories.ToDictionary(x => x.Id, y => y);
+            this.categories = achievementService.AchievementCategories.ToDictionary(x => x.Id, y => y);
             this.menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();
         }
 
@@ -78,7 +76,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Location = new Point(menuPanel.Width, 0),
             };
 
-            foreach (var group in this.achievementApiService.AchievementGroups.OrderBy(x => x.Order))
+            foreach (var group in this.achievementService.AchievementGroups.OrderBy(x => x.Order))
             {
                 var menuItem = menu.AddMenuItem(group.Name);
                 foreach (var category in group.Categories.Select(x => this.categories[x]).OrderBy(x => x.Order))

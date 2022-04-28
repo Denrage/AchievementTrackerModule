@@ -21,7 +21,6 @@ namespace Denrage.AchievementTrackerModule
     // TODO: revert to stable blishhud version
     // TODO: improve search performance
     // TODO: Dispose objects
-    // TODO: Merge AchievementApiService & AchievementService
     // TODO: Logging
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
@@ -82,7 +81,6 @@ namespace Denrage.AchievementTrackerModule
                 "AchievementTracker",
                 this.ContentsManager.GetTexture("achievement_icon.png"),
                 () => new AchievementTrackerView(
-                    this.dependencyInjectionContainer.AchievementApiService,
                     this.dependencyInjectionContainer.AchievementItemOverviewFactory,
                     this.dependencyInjectionContainer.AchievementService));
 
