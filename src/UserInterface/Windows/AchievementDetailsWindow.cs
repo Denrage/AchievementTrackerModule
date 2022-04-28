@@ -82,5 +82,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             control.Parent = panel;
         }
+
+        public override void Draw(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle drawBounds, Microsoft.Xna.Framework.Rectangle scissor)
+        {
+            if (GameService.GameIntegration.Gw2Instance.IsInGame && !GameService.Gw2Mumble.UI.IsMapOpen)
+            {
+                base.Draw(spriteBatch, drawBounds, scissor);
+            }
+        }
     }
 }

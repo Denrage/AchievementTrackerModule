@@ -20,7 +20,6 @@ namespace Denrage.AchievementTrackerModule
     // TODO: revert to stable blishhud version
     // TODO: improve search performance
     // TODO: Logging
-    // TODO: Autohide during loadingscreen / map
     // TODO: Handle Exceptions / Failed API-Requests
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module

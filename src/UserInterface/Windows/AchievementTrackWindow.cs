@@ -22,7 +22,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly Texture2D texture;
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
         private readonly Dictionary<int, AchievementDetailsWindow> detachedWindows = new Dictionary<int, AchievementDetailsWindow>();
-        
+
         private FlowPanel flowPanel;
 
         public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowFactory achievementDetailsWindowFactory)
@@ -80,7 +80,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             trackButton.Location = new Point(panel.ContentRegion.Width - trackButton.Width, 0);
 
-            trackButton.Click += (s, e) 
+            trackButton.Click += (s, e)
                 => this.achievementTrackerService.RemoveAchievement(achievementId);
 
             var detachButton = new Image()
@@ -115,7 +115,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             };
 
             var control = this.achievementControlProvider.GetAchievementControl(
-                achievement, 
+                achievement,
                 achievement.Description,
                 new Point(panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT, panel.ContentRegion.Height));
 
@@ -142,7 +142,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 CanScroll = true,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Size = this.ContentRegion.Size,
-                ControlPadding = new Vector2(7f),  
+                ControlPadding = new Vector2(7f),
             };
         }
 
@@ -165,6 +165,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.flowPanel.Dispose();
 
             base.DisposeControl();
+        }
+
+        public override void Draw(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle drawBounds, Microsoft.Xna.Framework.Rectangle scissor)
+        {
+            if (GameService.GameIntegration.Gw2Instance.IsInGame && !GameService.Gw2Mumble.UI.IsMapOpen)
+            {
+                base.Draw(spriteBatch, drawBounds, scissor);
+            }
         }
     }
 }
