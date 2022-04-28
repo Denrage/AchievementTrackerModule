@@ -81,9 +81,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 foreach (var item in this.description.EntryList)
                 {
                     var tint = !(finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, counter));
-                    // TODO: Spinner
-                    var texture = this.achievementService.GetImage(item.ImageUrl);
-
+                    
                     var imagePanel = new Panel()
                     {
                         Parent = panel,
@@ -91,6 +89,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         Width = 71,
                         Height = 71,
                     };
+
+                    var spinner = new LoadingSpinner()
+                    {
+                        Parent = imagePanel,
+                    };
+
+                    spinner.Location = new Point((imagePanel.Width - spinner.Width) / 2, (imagePanel.Height - spinner.Height) / 2);
+
+                    spinner.Show();
+
+                    var texture = this.achievementService.GetImage(item.ImageUrl, () => spinner.Dispose());
 
                     var image = new Image()
                     {

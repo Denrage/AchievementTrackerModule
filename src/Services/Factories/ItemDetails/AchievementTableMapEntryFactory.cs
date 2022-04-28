@@ -16,17 +16,33 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
 
         protected override Control CreateInternal(CollectionAchievementTableMapEntry entry)
         {
-            var result = new Image()
+            var panel = new Panel()
             {
-                Texture = this.achievementService.GetImageFromIndirectLink(entry.ImageLink),
                 Width = 250,
                 Height = 250,
             };
 
+            var spinner = new LoadingSpinner()
+            {
+                Location = new Microsoft.Xna.Framework.Point(panel.Width / 2, panel.Height / 2),
+                Parent = panel,
+            };
+
+            spinner.Show();
+
+            var result = new Image()
+            {
+                Parent = panel,
+                Texture = this.achievementService.GetImageFromIndirectLink(entry.ImageLink, () => spinner.Dispose()),
+                Size = panel.ContentRegion.Size,
+            };
+
+            panel.Resized += (s,e) => result.Size = panel.ContentRegion.Size;
+
             result.LeftMouseButtonReleased += (o, e) 
                 => _ = Task.Run(async () => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + await this.achievementService.GetDirectImageLink(entry.ImageLink)));
 
-            return result;
+            return panel;
         }
     }
 }

@@ -16,10 +16,9 @@ using System.Threading.Tasks;
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: API refresh and mark completed
-    // TODO: Show spinner while loading
     // TODO: Save tracked achievements
     // TODO: CornerIcon to open achievementwindow
-    // TODO: revert preview
+    // TODO: revert to stable blishhud version
     // TODO: Cleanup
     // TODO: Merge AchievementApiService & AchievementService
     // TODO: Logging

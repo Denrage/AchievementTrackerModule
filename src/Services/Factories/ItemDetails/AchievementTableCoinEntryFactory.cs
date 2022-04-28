@@ -5,6 +5,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
 {
     public class AchievementTableCoinEntryFactory : AchievementTableEntryFactory<CollectionAchievementTableCoinEntry>
     {
+        // TODO: Get prices from TradingPost
         protected override Control CreateInternal(CollectionAchievementTableCoinEntry entry)
             => new Label()
             {

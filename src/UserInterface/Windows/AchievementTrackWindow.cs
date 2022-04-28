@@ -78,7 +78,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Texture = this.contentsManager.GetTexture("605019.png"),
             };
 
-            trackButton.Location = new Microsoft.Xna.Framework.Point(panel.ContentRegion.Width - trackButton.Width, 0);
+            trackButton.Location = new Point(panel.ContentRegion.Width - trackButton.Width, 0);
 
             trackButton.Click += (s, e) 
                 => this.achievementTrackerService.RemoveAchievement(achievementId);
@@ -86,7 +86,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             var detachButton = new Image()
             {
                 Parent = panel,
-                Location = new Microsoft.Xna.Framework.Point(trackButton.Location.X, trackButton.Location.Y + trackButton.Size.Y),
+                Location = new Point(trackButton.Location.X, trackButton.Location.Y + trackButton.Size.Y),
                 Width = 32,
                 Height = 32,
                 Texture = this.contentsManager.GetTexture("pop_out.png"),
@@ -117,7 +117,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             var control = this.achievementControlProvider.GetAchievementControl(
                 achievement, 
                 achievement.Description,
-                new Microsoft.Xna.Framework.Point(panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT, panel.ContentRegion.Height));
+                new Point(panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT, panel.ContentRegion.Height));
 
             if (control != null)
             {
@@ -134,7 +134,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             // TODO: Localize
             this.Title = "Tracked Achievements";
             this.Emblem = this.contentsManager.GetTexture("605019.png");
-            this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 800), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 800 - 30));
+            this.ConstructWindow(this.texture, new Rectangle(0, 0, 550, 800), new Rectangle(0, 30, 550, 800 - 30));
 
             this.flowPanel = new FlowPanel()
             {

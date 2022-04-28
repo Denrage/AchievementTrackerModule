@@ -86,8 +86,8 @@ namespace Denrage.AchievementTrackerModule.Services
             }
         }
 
-        public AsyncTexture2D GetImage(string imageUrl)
-            => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync());
+        public AsyncTexture2D GetImage(string imageUrl, Action beforeSwap)
+            => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync(), beforeSwap);
 
         public async Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default)
         {
@@ -107,10 +107,10 @@ namespace Denrage.AchievementTrackerModule.Services
             return imagePath;
         }
 
-        public AsyncTexture2D GetImageFromIndirectLink(string imagePath) 
-            => _ = this.GetImageInternal(async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync());
+        public AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap) 
+            => _ = this.GetImageInternal(async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync(), beforeSwap);
 
-        private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream)
+        private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream, Action beforeSwap)
         {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
 
@@ -118,6 +118,7 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 var imageStream = await getImageStream();
 
+                beforeSwap();
                 texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
                 imageStream.Close();
             });

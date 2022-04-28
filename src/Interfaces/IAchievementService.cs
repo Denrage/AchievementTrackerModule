@@ -17,9 +17,9 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 
         Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default);
         
-        AsyncTexture2D GetImage(string imageUrl);
+        AsyncTexture2D GetImage(string imageUrl, Action beforeSwap);
         
-        AsyncTexture2D GetImageFromIndirectLink(string imagePath);
+        AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap);
         
         bool HasFinishedAchievement(int achievementId);
         

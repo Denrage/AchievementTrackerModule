@@ -115,7 +115,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 if (control != null)
                 {
                     control.Parent = innerPannel;
-                    control.Width = innerPannel.Width - label.Width;
+                    control.Width = innerPannel.Width - label.Width - 15;
                     control.Location = new Point(label.Width, 0);
                 }
             }
