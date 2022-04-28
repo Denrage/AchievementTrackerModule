@@ -20,7 +20,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
         private readonly IAchievementApiService achievementApiService;
         private readonly IAchievementItemOverviewFactory achievementItemOverviewFactory;
-        private readonly Gw2ApiManager gw2ApiManager;
         private readonly IAchievementService achievementService;
         private readonly IDictionary<int, AchievementCategory> categories;
         private readonly IDictionary<MenuItem, AchievementCategory> menuItemCategories;
@@ -31,11 +30,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private CancellationTokenSource delayCancellationToken;
         private TextBox searchBar;
 
-        public AchievementTrackerView(IAchievementApiService achievementApiService, IAchievementItemOverviewFactory achievementItemOverviewFactory, Gw2ApiManager gw2ApiManager, IAchievementService achievementService)
+        public AchievementTrackerView(IAchievementApiService achievementApiService, IAchievementItemOverviewFactory achievementItemOverviewFactory, IAchievementService achievementService)
         {
             this.achievementApiService = achievementApiService;
             this.achievementItemOverviewFactory = achievementItemOverviewFactory;
-            this.gw2ApiManager = gw2ApiManager;
             this.achievementService = achievementService;
             this.categories = achievementApiService.AchievementCategories.ToDictionary(x => x.Id, y => y);
             this.menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();

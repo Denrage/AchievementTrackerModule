@@ -2,6 +2,7 @@
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Interfaces
@@ -14,7 +15,7 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 
         event Action PlayerAchievementsLoaded;
 
-        Task<string> GetDirectImageLink(string imagePath);
+        Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default);
         
         AsyncTexture2D GetImage(string imageUrl);
         
@@ -24,6 +25,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         
         bool HasFinishedAchievementBit(int achievementId, int positionIndex);
 
-        Task LoadPlayerAchievements();
+        Task LoadPlayerAchievements(CancellationToken cancellationToken = default);
     }
 }

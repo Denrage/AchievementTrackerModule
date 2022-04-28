@@ -2,6 +2,7 @@
 using Denrage.AchievementTrackerModule.Interfaces;
 using Gw2Sharp.WebApi.V2.Models;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
@@ -19,10 +20,10 @@ namespace Denrage.AchievementTrackerModule.Services
             this.gw2ApiManager = gw2ApiManager;
         }
 
-        public async Task LoadAsync()
+        public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
-            this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync();
-            this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync();
+            this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync(cancellationToken);
+            this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync(cancellationToken);
         }
     }
 }

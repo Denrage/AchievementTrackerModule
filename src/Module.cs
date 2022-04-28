@@ -15,10 +15,17 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
+    // TODO: API refresh and mark completed
+    // TODO: Show spinner while loading
+    // TODO: Save tracked achievements
+    // TODO: CornerIcon to open achievementwindow
+    // TODO: revert preview
+    // TODO: Cleanup
+    // TODO: Merge AchievementApiService & AchievementService
+    // TODO: Logging
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
     {
-        // TODO: Logging
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
         private AchievementTrackWindow window;
@@ -59,7 +66,6 @@ namespace Denrage.AchievementTrackerModule
                 () => new AchievementTrackerView(
                     this.dependencyInjectionContainer.AchievementApiService,
                     this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                    this.Gw2ApiManager,
                     this.dependencyInjectionContainer.AchievementService));
 
             await base.LoadAsync();

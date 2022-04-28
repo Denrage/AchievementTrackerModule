@@ -81,6 +81,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 foreach (var item in this.description.EntryList)
                 {
                     var tint = !(finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, counter));
+                    // TODO: Spinner
                     var texture = this.achievementService.GetImage(item.ImageUrl);
 
                     var imagePanel = new Panel()

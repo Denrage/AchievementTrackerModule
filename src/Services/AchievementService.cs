@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
@@ -32,7 +33,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.gw2ApiManager = gw2ApiManager;
         }
 
-        public async Task LoadAsync()
+        public async Task LoadAsync(CancellationToken cancellationToken = default)
         {
             var serializerOptions = new JsonSerializerOptions()
             {
@@ -41,7 +42,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
             using (var achievements = this.contentsManager.GetFileStream("achievement_data.json"))
             {
-                this.Achievements = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.AchievementTableEntry>>(achievements, serializerOptions)).AsReadOnly();
+                this.Achievements = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.AchievementTableEntry>>(achievements, serializerOptions, cancellationToken)).AsReadOnly();
             }
 
             using (var achievementDetails = this.contentsManager.GetFileStream("achievement_tables.json"))
@@ -49,7 +50,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 this.AchievementDetails = (await JsonSerializer.DeserializeAsync<List<Models.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
             }
 
-            await this.LoadPlayerAchievements();
+            await this.LoadPlayerAchievements(cancellationToken);
         }
 
         public bool HasFinishedAchievement(int achievementId)
@@ -76,23 +77,23 @@ namespace Denrage.AchievementTrackerModule.Services
             return !(achievement is null) && (achievement.Bits?.Contains(positionIndex) ?? false);
         }
 
-        public async Task LoadPlayerAchievements()
+        public async Task LoadPlayerAchievements(CancellationToken cancellationToken = default)
         {
             if (this.PlayerAchievements == null && this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
             {
-                this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync();
-                _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke());
+                this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync(cancellationToken);
+                _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke(), cancellationToken);
             }
         }
 
         public AsyncTexture2D GetImage(string imageUrl)
             => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync());
 
-        public async Task<string> GetDirectImageLink(string imagePath)
+        public async Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default)
         {
             if (imagePath.Contains("File:"))
             {
-                var source = await this.DownloadWikiContent(imagePath).GetStringAsync();
+                var source = await this.DownloadWikiContent(imagePath).GetStringAsync(cancellationToken);
 
                 var fillImageStartIndex = source.IndexOf("fullImageLink");
                 var hrefStartIndex = source.IndexOf("href=", fillImageStartIndex);

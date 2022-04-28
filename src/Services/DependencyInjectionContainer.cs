@@ -4,6 +4,7 @@ using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services.Factories;
 using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
@@ -39,7 +40,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.contentService = contentService;
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             var apiService = new AchievementApiService(this.gw2ApiManager);
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager);
@@ -54,8 +55,8 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowFactory, this.contentsManager);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider);
 
-            await apiService.LoadAsync();
-            await achievementService.LoadAsync();
+            await apiService.LoadAsync(cancellationToken);
+            await achievementService.LoadAsync(cancellationToken);
         }
     }
 }
