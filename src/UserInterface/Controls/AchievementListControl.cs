@@ -13,24 +13,26 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     public abstract class AchievementListControl<T, TEntry> : FlowPanel, IAchievementControl
         where T : AchievementTableEntryDescription
     {
-        private readonly IItemDetailWindowFactory itemDetailWindowFactory;
+        private readonly IItemDetailWindowManager itemDetailWindowManager;
         private readonly ContentsManager contentsManager;
         private readonly AchievementTableEntry achievement;
         private readonly T description;
         private readonly CollectionAchievementTable achievementDetails;
-        private readonly List<WindowBase2> itemWindows = new List<WindowBase2>();
         private readonly List<Control> itemControls = new List<Control>();
+        private Label gameTextLabel;
+        private Label gameHintLabel;
+        private FlowPanel panel;
 
         protected IAchievementService AchievementService { get; }
 
         public AchievementListControl(
-            IItemDetailWindowFactory itemDetailWindowFactory,
+            IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             T description)
         {
-            this.itemDetailWindowFactory = itemDetailWindowFactory;
+            this.itemDetailWindowManager = itemDetailWindowManager;
             this.AchievementService = achievementService;
             this.contentsManager = contentsManager;
             this.achievement = achievement;
@@ -56,7 +58,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                _ = new Label()
+                this.gameTextLabel = new Label()
                 {
                     Parent = this,
                     Text = this.description.GameText,
@@ -68,7 +70,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                _ = new Label()
+                this.gameHintLabel = new Label()
                 {
                     Parent = this,
                     Text = this.description.GameHint,
@@ -79,7 +81,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 };
             }
 
-            var panel = new FlowPanel()
+            this.panel = new FlowPanel()
             {
                 Parent = this,
                 FlowDirection = ControlFlowDirection.LeftToRight,
@@ -109,18 +111,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     this.ColorControl(control, finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
 
                     var index = i;
-                    control.Click += (s, eventArgs) =>
-                    {
-                        var itemWindow = this.itemDetailWindowFactory.Create(this.GetDisplayName(entries[index]), this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index], this.achievementDetails.Link);
-                        itemWindow.Parent = GameService.Graphics.SpriteScreen;
-                        itemWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
-                        itemWindow.ToggleWindow();
-                        this.itemWindows.Add(itemWindow);
-                    };
+                    control.Click += (s, eventArgs) 
+                    => this.itemDetailWindowManager.CreateAndShowWindow(
+                        this.GetDisplayName(entries[index]), 
+                        this.achievementDetails.ColumnNames, 
+                        this.achievementDetails.Entries[index], 
+                        this.achievementDetails.Link);
 
                     this.itemControls.Add(control);
                 }
             });
+        }
+
+        protected override void OnResized(ResizedEventArgs e)
+        {
+            this.gameTextLabel.Width = this.ContentRegion.Width;
+            this.gameHintLabel.Width = this.ContentRegion.Width;
+            this.panel.Width = this.ContentRegion.Width;
+            base.OnResized(e);
         }
 
         protected abstract IEnumerable<TEntry> GetEntries(T description);
@@ -133,13 +141,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
         protected override void DisposeControl()
         {
-            foreach (var item in this.itemWindows)
-            {
-                item.Dispose();
-            }
-
-            this.itemWindows.Clear();
-
             foreach (var item in this.itemControls)
             {
                 item.Dispose();

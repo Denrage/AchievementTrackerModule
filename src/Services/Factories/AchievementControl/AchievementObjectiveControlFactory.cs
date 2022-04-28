@@ -9,13 +9,13 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
     public class AchievementObjectiveControlFactory : AchievementControlFactory<AchievementObjectivesControl, ObjectivesDescription>
     {
         private readonly IAchievementService achievementService;
-        private readonly IItemDetailWindowFactory itemDetailWindowFactory;
+        private readonly IItemDetailWindowManager itemDetailWindowFactory;
         private readonly ContentsManager contentsManager;
 
-        public AchievementObjectiveControlFactory(IAchievementService achievementService, IItemDetailWindowFactory itemDetailWindowFactory, ContentsManager contentsManager)
+        public AchievementObjectiveControlFactory(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, ContentsManager contentsManager)
         {
             this.achievementService = achievementService;
-            this.itemDetailWindowFactory = itemDetailWindowFactory;
+            this.itemDetailWindowFactory = itemDetailWindowManager;
             this.contentsManager = contentsManager;
         }
 

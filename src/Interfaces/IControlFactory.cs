@@ -7,6 +7,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
     public interface IControlFactory<T, TDescription>
             where T : IAchievementControl
     {
-        T Create(AchievementTableEntry achievement, TDescription description, Point size);
+        T Create(AchievementTableEntry achievement, TDescription description);
     }
 }

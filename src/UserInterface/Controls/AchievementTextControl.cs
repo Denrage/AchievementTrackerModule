@@ -10,6 +10,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly AchievementTableEntry achievement;
         private readonly StringDescription description;
 
+        private Label gameTextLabel;
+        private Label gameHintLabel;
+
         public AchievementTextControl(AchievementTableEntry achievement, StringDescription description)
         {
             this.achievement = achievement;
@@ -22,7 +25,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                _ = new Label()
+                this.gameTextLabel = new Label()
                 {
                     Parent = this,
                     Text = this.description.GameText,
@@ -34,7 +37,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                _ = new Label()
+                this.gameHintLabel = new Label()
                 {
                     Parent = this,
                     Width = this.ContentRegion.Width,
@@ -44,6 +47,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     WrapText = true,
                 };
             }
+        }
+
+        protected override void OnResized(ResizedEventArgs e)
+        {
+            this.gameTextLabel.Width = this.ContentRegion.Width;
+            this.gameHintLabel.Width = this.ContentRegion.Width;
+            base.OnResized(e);
         }
     }
 }

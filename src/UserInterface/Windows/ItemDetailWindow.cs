@@ -122,14 +122,5 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 }
             }
         }
-
-        public override void Draw(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle drawBounds, Microsoft.Xna.Framework.Rectangle scissor)
-        {
-            // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
-            if (GameService.GameIntegration.Gw2Instance.IsInGame && !GameService.Gw2Mumble.UI.IsMapOpen)
-            {
-                base.Draw(spriteBatch, drawBounds, scissor);
-            }
-        }
     }
 }

@@ -4,6 +4,7 @@ using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,20 +19,21 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly IAchievementTrackerService achievementTrackerService;
         private readonly IAchievementControlProvider achievementControlProvider;
         private readonly IAchievementService achievementService;
-        private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
+        private readonly IAchievementDetailsWindowManager achievementDetailsWindowManager;
+        private readonly IAchievementControlManager achievementControlManager;
         private readonly Texture2D texture;
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
-        private readonly Dictionary<int, AchievementDetailsWindow> detachedWindows = new Dictionary<int, AchievementDetailsWindow>();
 
         private FlowPanel flowPanel;
 
-        public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowFactory achievementDetailsWindowFactory)
+        public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowManager achievementDetailsWindowManager, IAchievementControlManager achievementControlManager)
         {
             this.contentsManager = contentsManager;
             this.achievementTrackerService = achievementTrackerService;
             this.achievementControlProvider = achievementControlProvider;
             this.achievementService = achievementService;
-            this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
+            this.achievementDetailsWindowManager = achievementDetailsWindowManager;
+            this.achievementControlManager = achievementControlManager;
             this.texture = this.contentsManager.GetTexture("background.png");
             this.achievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
@@ -44,6 +46,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 }
             };
 
+            this.achievementDetailsWindowManager.WindowHidden += achievementId
+                => this.CreatePanel(achievementId);
+
             this.BuildWindow();
 
             foreach (var item in this.achievementTrackerService.ActiveAchievements)
@@ -52,14 +57,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             }
         }
 
-        private void AchievementTrackerService_AchievementTracked(int achievementId)
+        private void CreatePanel(int achievementId)
         {
             var achievement = this.achievementService.Achievements.First(x => x.Id == achievementId);
-
-            if (this.trackedAchievements.ContainsKey(achievementId))
-            {
-                return;
-            }
 
             var panel = new Panel()
             {
@@ -92,20 +92,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Texture = this.contentsManager.GetTexture("pop_out.png"),
             };
 
+            if (!this.achievementControlManager.ControlExists(achievementId))
+            {
+                this.achievementControlManager.InitializeControl(achievementId, achievement, achievement.Description);
+            }
+
+            var controlPanel = new Panel()
+            {
+                Parent = panel,
+                HeightSizingMode = SizingMode.AutoSize,
+                Width = panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT,
+                Location = new Point(CONTROL_PADDING_LEFT, CONTROL_PADDING_TOP),
+            };
+
+            this.achievementControlManager.ChangeParent(achievementId, controlPanel);
+
             detachButton.Click += (s, e) =>
             {
-                var trackWindow = this.achievementDetailsWindowFactory.Create(achievement);
-                trackWindow.Parent = GameService.Graphics.SpriteScreen;
-                trackWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
-                trackWindow.Show();
-
-                this.detachedWindows.Add(achievementId, trackWindow);
-
-                trackWindow.Hidden += (_, eventArgs) =>
-                {
-                    _ = this.detachedWindows.Remove(achievementId);
-                    this.AchievementTrackerService_AchievementTracked(achievementId);
-                };
+                this.achievementDetailsWindowManager.CreateWindow(achievement);
 
                 if (this.trackedAchievements.TryGetValue(achievementId, out var trackedPanel))
                 {
@@ -114,19 +118,19 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 }
             };
 
-            var control = this.achievementControlProvider.GetAchievementControl(
-                achievement,
-                achievement.Description,
-                new Point(panel.ContentRegion.Width - trackButton.Width - CONTROL_PADDING_LEFT, panel.ContentRegion.Height));
+            this.trackedAchievements.Add(achievementId, panel);
+        }
 
-            if (control != null)
+        private void AchievementTrackerService_AchievementTracked(int achievementId)
+        {
+            var achievement = this.achievementService.Achievements.First(x => x.Id == achievementId);
+
+            if (this.trackedAchievements.ContainsKey(achievementId))
             {
-                control.Parent = panel;
-                control.Height = panel.ContentRegion.Height;
-                control.Location = new Point(CONTROL_PADDING_LEFT, CONTROL_PADDING_TOP);
+                return;
             }
 
-            this.trackedAchievements.Add(achievementId, panel);
+            this.CreatePanel(achievementId);
         }
 
         private void BuildWindow()
@@ -155,13 +159,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             this.trackedAchievements.Clear();
 
-            foreach (var item in this.detachedWindows)
-            {
-                item.Value.Dispose();
-            }
-
-            this.detachedWindows.Clear();
-
             this.flowPanel.Dispose();
 
             base.DisposeControl();
@@ -169,10 +166,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         public override void Draw(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle drawBounds, Microsoft.Xna.Framework.Rectangle scissor)
         {
-            if (GameService.GameIntegration.Gw2Instance.IsInGame && !GameService.Gw2Mumble.UI.IsMapOpen)
+            if ((!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && this.Visible)
             {
-                base.Draw(spriteBatch, drawBounds, scissor);
+                this.Hide();
             }
+            else if (!this.Visible)
+            {
+                this.Show();
+            }
+
+            base.Draw(spriteBatch, drawBounds, scissor);
         }
     }
 }

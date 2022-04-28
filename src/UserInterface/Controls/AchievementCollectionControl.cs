@@ -12,12 +12,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     public class AchievementCollectionControl : AchievementListControl<CollectionDescription, CollectionDescriptionEntry>
     {
         public AchievementCollectionControl(
-            IItemDetailWindowFactory itemDetailWindowFactory,
+            IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             CollectionDescription description)
-            : base(itemDetailWindowFactory, achievementService, contentsManager, achievement, description)
+            : base(itemDetailWindowManager, achievementService, contentsManager, achievement, description)
         {
         }
 

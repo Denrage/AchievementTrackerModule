@@ -11,13 +11,12 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
     {
         protected abstract T CreateInternal(AchievementTableEntry achievement, TDescription description);
 
-        public override Control Create(AchievementTableEntry achievement, object description, Point size)
-            => this.Create(achievement, (TDescription)description, size);
+        public override Control Create(AchievementTableEntry achievement, object description)
+            => this.Create(achievement, (TDescription)description);
 
-        public T Create(AchievementTableEntry achievement, TDescription description, Point size)
+        public T Create(AchievementTableEntry achievement, TDescription description)
         {
             var control = this.CreateInternal(achievement, description);
-            control.Width = size.X;
             control.HeightSizingMode = SizingMode.AutoSize;
             control.BuildControl();
 

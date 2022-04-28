@@ -14,14 +14,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     {
         private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
-        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowFactory itemDetailWindowFactory, ContentsManager contentsManager)
+        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, ContentsManager contentsManager)
         {
             this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory());
-            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowFactory, contentsManager));
-            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowFactory, contentsManager));
+            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, contentsManager));
+            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager));
         }
 
-        public Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description, Point size)
-            => this.mapping.TryGetValue(description.GetType(), out var factory) ? factory.Create(achievement, description, size) : null;
+        public Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description)
+            => this.mapping.TryGetValue(description.GetType(), out var factory) ? factory.Create(achievement, description) : null;
     }
 }

@@ -104,20 +104,22 @@ namespace Denrage.AchievementTrackerModule.Services
             }
 
             this.trackAchievementProgressCancellationTokenSource = new CancellationTokenSource();
-            this.trackAchievementProgressTask = Task.Run(async () =>
-              {
-                  try
-                  {
-                      while (true)
-                      {
-                          this.trackAchievementProgressCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                          await Task.Delay(TimeSpan.FromMinutes(5), this.trackAchievementProgressCancellationTokenSource.Token);
-                          await this.LoadPlayerAchievements(true, this.trackAchievementProgressCancellationTokenSource.Token);
-                      }
-                  }
-                  catch (OperationCanceledException)
-                  { /* NOOP */ }
-              });
+            this.trackAchievementProgressTask = Task.Run(this.TrackAchievementProgressMethod);
+        }
+
+        private async Task TrackAchievementProgressMethod()
+        {
+            try
+            {
+                while (true)
+                {
+                    this.trackAchievementProgressCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                    await Task.Delay(TimeSpan.FromMinutes(5), this.trackAchievementProgressCancellationTokenSource.Token);
+                    await this.LoadPlayerAchievements(true, this.trackAchievementProgressCancellationTokenSource.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            { /* NOOP */ }
         }
 
         public AsyncTexture2D GetImage(string imageUrl, Action beforeSwap)

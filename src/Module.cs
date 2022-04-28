@@ -86,7 +86,7 @@ namespace Denrage.AchievementTrackerModule
         {
             if (this.window is null)
             {
-                this.window = new AchievementTrackWindow(this.ContentsManager, this.dependencyInjectionContainer.AchievementTrackerService, this.dependencyInjectionContainer.AchievementControlProvider, this.dependencyInjectionContainer.AchievementService, this.dependencyInjectionContainer.AchievementDetailsWindowFactory)
+                this.window = new AchievementTrackWindow(this.ContentsManager, this.dependencyInjectionContainer.AchievementTrackerService, this.dependencyInjectionContainer.AchievementControlProvider, this.dependencyInjectionContainer.AchievementService, this.dependencyInjectionContainer.AchievementDetailsWindowManager, this.dependencyInjectionContainer.AchievementControlManager)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
                     Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),
@@ -109,6 +109,8 @@ namespace Denrage.AchievementTrackerModule
 
         protected override void Update(GameTime gameTime)
         {
+            this.dependencyInjectionContainer.ItemDetailWindowManager.Update();
+            this.dependencyInjectionContainer.AchievementDetailsWindowManager.Update();
         }
 
         /// <inheritdoc />

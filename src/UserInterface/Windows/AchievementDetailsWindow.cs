@@ -13,10 +13,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     public class AchievementDetailsWindow : WindowBase2
     {
         private const int PADDING = 15;
-
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
-        private readonly IAchievementControlProvider achievementControlProvider;
+        private readonly IAchievementControlManager achievementControlManager;
         private readonly AchievementTableEntry achievement;
         private readonly Texture2D texture;
 
@@ -24,11 +23,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             IAchievementService achievementService,
-            IAchievementControlProvider achievementControlProvider)
+            IAchievementControlManager achievementControlManager)
         {
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
-            this.achievementControlProvider = achievementControlProvider;
+            this.achievementControlManager = achievementControlManager;
             this.achievement = achievement;
 
             this.texture = this.contentsManager.GetTexture("achievement_details_background.png");
@@ -70,25 +69,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 HeightSizingMode = SizingMode.AutoSize,
             };
 
-            var control = this.achievementControlProvider.GetAchievementControl(
-                this.achievement,
-                this.achievementService.Achievements.FirstOrDefault(x => x.Id == this.achievement.Id).Description,
-                panel.ContentRegion.Size);
-
-            if (control is null)
-            {
-                return;
-            }
-
-            control.Parent = panel;
+            this.achievementControlManager.ChangeParent(this.achievement.Id, panel);
         }
 
-        public override void Draw(SpriteBatch spriteBatch, Microsoft.Xna.Framework.Rectangle drawBounds, Microsoft.Xna.Framework.Rectangle scissor)
+        public override void Hide()
         {
-            if (GameService.GameIntegration.Gw2Instance.IsInGame && !GameService.Gw2Mumble.UI.IsMapOpen)
-            {
-                base.Draw(spriteBatch, drawBounds, scissor);
-            }
+            this.achievementControlManager.RemoveParent(this.achievement.Id);
+            base.Hide();
         }
     }
 }
