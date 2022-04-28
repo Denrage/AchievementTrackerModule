@@ -3,21 +3,17 @@ using Blish_HUD.Controls;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
-using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.Services;
 using Denrage.AchievementTrackerModule.UserInterface.Views;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
-using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
-    // TODO: revert to stable blishhud version
     // TODO: improve search performance
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests

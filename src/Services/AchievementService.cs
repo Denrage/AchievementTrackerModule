@@ -153,8 +153,12 @@ namespace Denrage.AchievementTrackerModule.Services
                 var imageStream = await getImageStream();
 
                 beforeSwap();
-                texture.SwapTexture(TextureUtil.FromStreamPremultiplied(imageStream));
-                imageStream.Close();
+
+                GameService.Graphics.QueueMainThreadRender(device =>
+                {
+                    texture.SwapTexture(TextureUtil.FromStreamPremultiplied(device, imageStream));
+                    imageStream.Close();
+                });
             });
 
             return texture;
