@@ -1,148 +1,57 @@
-﻿using Blish_HUD;
-using Blish_HUD.Controls;
+﻿using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 {
-    public class AchievementCollectionControl : FlowPanel, IAchievementControl
-    {
-        private readonly IItemDetailWindowFactory itemDetailWindowFactory;
-        private readonly IAchievementService achievementService;
-        private readonly ContentsManager contentsManager;
-        private readonly AchievementTableEntry achievement;
-        private readonly CollectionDescription description;
-        private readonly CollectionAchievementTable achievementDetails;
-        private readonly List<WindowBase2> itemWindows = new List<WindowBase2>();
 
+    public class AchievementCollectionControl : AchievementListControl<CollectionDescription, CollectionDescriptionEntry>
+    {
         public AchievementCollectionControl(
             IItemDetailWindowFactory itemDetailWindowFactory,
             IAchievementService achievementService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             CollectionDescription description)
+            : base(itemDetailWindowFactory, achievementService, contentsManager, achievement, description)
         {
-            this.itemDetailWindowFactory = itemDetailWindowFactory;
-            this.achievementService = achievementService;
-            this.contentsManager = contentsManager;
-            this.achievement = achievement;
-            this.description = description;
-
-            this.achievementDetails = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
-            this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
-            this.ControlPadding = new Vector2(7f);
         }
 
-        public void BuildControl()
+        protected override void ColorControl(Control control, bool achievementBitFinished)
         {
-            if (!string.IsNullOrEmpty(this.description.GameText))
+            if (!achievementBitFinished)
             {
-                _ = new Label()
-                {
-                    Parent = this,
-                    Text = this.description.GameText,
-                    AutoSizeHeight = true,
-                    Width = this.ContentRegion.Width,
-                    WrapText = true,
-                };
+                ((Image)control).Tint = Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
             }
+        }
 
-            if (!string.IsNullOrEmpty(this.description.GameHint))
+        protected override Control CreateEntryControl(int index, CollectionDescriptionEntry entry, Container parent)
+        {
+            var spinner = new LoadingSpinner()
             {
-                _ = new Label()
-                {
-                    Parent = this,
-                    Text = this.description.GameHint,
-                    TextColor = Microsoft.Xna.Framework.Color.LightGray,
-                    Width = this.ContentRegion.Width,
-                    AutoSizeHeight = true,
-                    WrapText = true,
-                };
-            }
-
-            var panel = new FlowPanel()
-            {
-                Parent = this,
-                FlowDirection = ControlFlowDirection.LeftToRight,
-                Width = this.ContentRegion.Width,
-                ControlPadding = new Vector2(7f),
-                HeightSizingMode = SizingMode.AutoSize,
+                Parent = parent,
             };
 
-            _ = Task.Run(() =>
+            spinner.Location = new Point((parent.Width - spinner.Width) / 2, (parent.Height - spinner.Height) / 2);
+
+            spinner.Show();
+
+            return new Image()
             {
-                var counter = 0;
-                var finishedAchievement = this.achievementService.HasFinishedAchievement(this.achievement.Id);
-
-                foreach (var item in this.description.EntryList)
-                {
-                    var tint = !(finishedAchievement || this.achievementService.HasFinishedAchievementBit(this.achievement.Id, counter));
-                    
-                    var imagePanel = new Panel()
-                    {
-                        Parent = panel,
-                        BackgroundTexture = this.contentsManager.GetTexture("collection_item_background.png"),
-                        Width = 71,
-                        Height = 71,
-                    };
-
-                    var spinner = new LoadingSpinner()
-                    {
-                        Parent = imagePanel,
-                    };
-
-                    spinner.Location = new Point((imagePanel.Width - spinner.Width) / 2, (imagePanel.Height - spinner.Height) / 2);
-
-                    spinner.Show();
-
-                    var texture = this.achievementService.GetImage(item.ImageUrl, () => spinner.Dispose());
-
-                    var image = new Image()
-                    {
-                        Parent = imagePanel,
-                        Width = 64,
-                        Height = 64,
-                        Texture = texture,
-                        ZIndex = 1,
-                    };
-
-                    image.Location = new Point((imagePanel.Width - image.Width) / 2, (imagePanel.Height - image.Height) / 2);
-
-                    if (tint)
-                    {
-                        image.Tint = Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
-                    }
-
-                    var index = counter;
-                    image.Click += (s, eventArgs) =>
-                    {
-                        var itemWindow = this.itemDetailWindowFactory.Create(item.DisplayName, this.achievementDetails.ColumnNames, this.achievementDetails.Entries[index], this.achievementDetails.Link);
-                        itemWindow.Parent = GameService.Graphics.SpriteScreen;
-                        itemWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
-                        itemWindow.ToggleWindow();
-                        this.itemWindows.Add(itemWindow);
-                    };
-                    counter++;
-                }
-            });
+                Parent = parent,
+                Width = 64,
+                Height = 64,
+                Texture = this.AchievementService.GetImage(entry.ImageUrl, () => spinner.Dispose()),
+                ZIndex = 1,
+            };
         }
 
-        protected override void DisposeControl()
-        {
-            foreach (var item in this.itemWindows)
-            {
-                item.Dispose();
-            }
+        protected override string GetDisplayName(CollectionDescriptionEntry entry) => entry.DisplayName;
 
-            this.itemWindows.Clear();
-
-            base.DisposeControl();
-        }
+        protected override IEnumerable<CollectionDescriptionEntry> GetEntries(CollectionDescription description) => description.EntryList;
     }
 }

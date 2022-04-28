@@ -18,7 +18,6 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: API refresh and mark completed
     // TODO: Save tracked achievements
-    // TODO: Base class for Objective and Collection Control
     // TODO: revert to stable blishhud version
     // TODO: improve search performance
     // TODO: Logging
