@@ -1,4 +1,5 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
@@ -17,9 +18,9 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: API refresh and mark completed
     // TODO: Save tracked achievements
-    // TODO: CornerIcon to open achievementwindow
     // TODO: revert to stable blishhud version
-    // TODO: Cleanup
+    // TODO: improve search performance
+    // TODO: Dispose objects
     // TODO: Merge AchievementApiService & AchievementService
     // TODO: Logging
     [Export(typeof(Blish_HUD.Modules.Module))]
@@ -28,6 +29,7 @@ namespace Denrage.AchievementTrackerModule
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
         private AchievementTrackWindow window;
+        private CornerIcon cornerIcon;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -51,6 +53,23 @@ namespace Denrage.AchievementTrackerModule
         {
             this.Gw2ApiManager.SubtokenUpdated += async (_, args)
                 => await this.dependencyInjectionContainer.AchievementService.LoadPlayerAchievements();
+
+            this.cornerIcon = new CornerIcon()
+            {
+                // TODO: Localize
+                IconName = "Open Achievement Panel",
+                Icon = this.ContentsManager.GetTexture(@"corner_icon_inactive.png"),
+                HoverIcon = this.ContentsManager.GetTexture(@"corner_icon_active.png"),
+                Width = 64,
+                Height = 64,
+            };
+
+            this.cornerIcon.Click += (s, e) =>
+            {
+                this.InitializeWindow();
+
+                this.window.ToggleWindow();
+            };
         }
 
         protected override async Task LoadAsync()
@@ -70,7 +89,7 @@ namespace Denrage.AchievementTrackerModule
             await base.LoadAsync();
         }
 
-        private void AchievementTrackerService_AchievementTracked(int achievement)
+        private void InitializeWindow()
         {
             if (this.window is null)
             {
@@ -80,6 +99,11 @@ namespace Denrage.AchievementTrackerModule
                     Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),
                 };
             }
+        }
+
+        private void AchievementTrackerService_AchievementTracked(int achievement)
+        {
+            this.InitializeWindow();
 
             if (!this.window.Visible)
             {
