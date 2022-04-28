@@ -14,10 +14,12 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
-    public class AchievementService : IAchievementService
+    public class AchievementService : IAchievementService, IDisposable
     {
         private readonly ContentsManager contentsManager;
         private readonly Gw2ApiManager gw2ApiManager;
+        private Task trackAchievementProgressTask;
+        private CancellationTokenSource trackAchievementProgressCancellationTokenSource;
 
         public IEnumerable<AccountAchievement> PlayerAchievements { get; private set; }
 
@@ -57,7 +59,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync(cancellationToken);
             this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync(cancellationToken);
 
-            await this.LoadPlayerAchievements(cancellationToken);
+            await this.LoadPlayerAchievements(cancellationToken: cancellationToken);
         }
 
         public bool HasFinishedAchievement(int achievementId)
@@ -84,13 +86,38 @@ namespace Denrage.AchievementTrackerModule.Services
             return !(achievement is null) && (achievement.Bits?.Contains(positionIndex) ?? false);
         }
 
-        public async Task LoadPlayerAchievements(CancellationToken cancellationToken = default)
+        public async Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default)
         {
-            if (this.PlayerAchievements == null && this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
+            if ((forceRefresh || this.PlayerAchievements == null) && this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
             {
                 this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync(cancellationToken);
                 _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke(), cancellationToken);
+                this.TrackAchievementProgress();
             }
+        }
+
+        private void TrackAchievementProgress()
+        {
+            if (this.trackAchievementProgressTask != null)
+            {
+                return;
+            }
+
+            this.trackAchievementProgressCancellationTokenSource = new CancellationTokenSource();
+            this.trackAchievementProgressTask = Task.Run(async () =>
+              {
+                  try
+                  {
+                      while (true)
+                      {
+                          this.trackAchievementProgressCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                          await Task.Delay(TimeSpan.FromMinutes(5), this.trackAchievementProgressCancellationTokenSource.Token);
+                          await this.LoadPlayerAchievements(true, this.trackAchievementProgressCancellationTokenSource.Token);
+                      }
+                  }
+                  catch (OperationCanceledException)
+                  { /* NOOP */ }
+              });
         }
 
         public AsyncTexture2D GetImage(string imageUrl, Action beforeSwap)
@@ -114,7 +141,7 @@ namespace Denrage.AchievementTrackerModule.Services
             return imagePath;
         }
 
-        public AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap) 
+        public AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap)
             => _ = this.GetImageInternal(async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync(), beforeSwap);
 
         private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream, Action beforeSwap)
@@ -136,6 +163,6 @@ namespace Denrage.AchievementTrackerModule.Services
         private IFlurlRequest DownloadWikiContent(string url)
             => ("https://wiki.guildwars2.com" + url)
                     .WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36");
-
+        public void Dispose() => this.trackAchievementProgressCancellationTokenSource.Cancel();
     }
 }

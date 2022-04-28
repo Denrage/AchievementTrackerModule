@@ -22,12 +22,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         }
 
         protected override void ColorControl(Control control, bool achievementBitFinished)
-        {
-            if (!achievementBitFinished)
-            {
-                ((Image)control).Tint = Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
-            }
-        }
+            => ((Image)control).Tint = achievementBitFinished
+                ? Microsoft.Xna.Framework.Color.White
+                : Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
+        
 
         protected override Control CreateEntryControl(int index, CollectionDescriptionEntry entry, Container parent)
         {

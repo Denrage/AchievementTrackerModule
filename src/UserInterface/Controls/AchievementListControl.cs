@@ -19,7 +19,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly T description;
         private readonly CollectionAchievementTable achievementDetails;
         private readonly List<WindowBase2> itemWindows = new List<WindowBase2>();
-        
+        private readonly List<Control> itemControls = new List<Control>();
+
         protected IAchievementService AchievementService { get; }
 
         public AchievementListControl(
@@ -38,6 +39,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             this.achievementDetails = this.AchievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Id);
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
             this.ControlPadding = new Vector2(7f);
+
+            this.AchievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
+        }
+
+        private void AchievementService_PlayerAchievementsLoaded()
+        {
+            var finishedAchievement = this.AchievementService.HasFinishedAchievement(this.achievement.Id);
+            for (var i = 0; i < this.itemControls.Count; i++)
+            {
+                this.ColorControl(this.itemControls[i], finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
+            }
         }
 
         public void BuildControl()
@@ -105,6 +117,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         itemWindow.ToggleWindow();
                         this.itemWindows.Add(itemWindow);
                     };
+
+                    this.itemControls.Add(control);
                 }
             });
         }
@@ -125,6 +139,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             }
 
             this.itemWindows.Clear();
+
+            foreach (var item in this.itemControls)
+            {
+                item.Dispose();
+            }
+
+            this.itemControls.Clear();
 
             base.DisposeControl();
         }

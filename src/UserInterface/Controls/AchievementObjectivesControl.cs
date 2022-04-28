@@ -24,12 +24,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         }
 
         protected override void ColorControl(Control control, bool achievementBitFinished)
-        {
-            if (achievementBitFinished)
-            {
-                control.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
-            }
-        }
+        => control.BackgroundColor = achievementBitFinished
+                ? Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50)
+                : Microsoft.Xna.Framework.Color.Transparent;
 
         protected override Control CreateEntryControl(int index, TableDescriptionEntry entry, Container parent) => new Label()
         {
