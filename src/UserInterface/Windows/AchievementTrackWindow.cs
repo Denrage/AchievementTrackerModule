@@ -144,7 +144,27 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Size = this.ContentRegion.Size,
                 ControlPadding = new Vector2(7f),  
             };
+        }
 
+        protected override void DisposeControl()
+        {
+            foreach (var item in this.trackedAchievements)
+            {
+                item.Value.Dispose();
+            }
+
+            this.trackedAchievements.Clear();
+
+            foreach (var item in this.detachedWindows)
+            {
+                item.Value.Dispose();
+            }
+
+            this.detachedWindows.Clear();
+
+            this.flowPanel.Dispose();
+
+            base.DisposeControl();
         }
     }
 }

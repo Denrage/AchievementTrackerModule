@@ -18,9 +18,9 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: API refresh and mark completed
     // TODO: Save tracked achievements
+    // TODO: Base class for Objective and Collection Control
     // TODO: revert to stable blishhud version
     // TODO: improve search performance
-    // TODO: Dispose objects
     // TODO: Logging
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
@@ -119,9 +119,8 @@ namespace Denrage.AchievementTrackerModule
         /// <inheritdoc />
         protected override void Unload()
         {
-            // Unload here
-
-            // All static members must be manually unset
+            this.cornerIcon.Dispose();
+            this.window.Dispose();
         }
     }
 }

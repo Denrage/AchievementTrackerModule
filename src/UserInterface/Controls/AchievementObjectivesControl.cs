@@ -5,6 +5,7 @@ using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,6 +19,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly AchievementTableEntry achievement;
         private readonly ObjectivesDescription description;
         private readonly CollectionAchievementTable achievementDetails;
+        private readonly List<WindowBase2> itemWindows = new List<WindowBase2>();
 
         public AchievementObjectivesControl(
             IItemDetailWindowFactory itemDetailWindowFactory,
@@ -112,9 +114,22 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         itemWindow.Parent = GameService.Graphics.SpriteScreen;
                         itemWindow.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
                         itemWindow.ToggleWindow();
+                        this.itemWindows.Add(itemWindow);
                     };
                 }
             });
+        }
+
+        protected override void DisposeControl()
+        {
+            foreach (var item in this.itemWindows)
+            {
+                item.Dispose();
+            }
+
+            this.itemWindows.Clear();
+
+            base.DisposeControl();
         }
     }
 }
