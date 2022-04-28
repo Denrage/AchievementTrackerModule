@@ -108,6 +108,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     Parent = innerPannel,
                     Width = (int)System.Math.Floor(0.15 * innerPannel.ContentRegion.Width),
                     Text = this.columns[i],
+                    WrapText = true,
+                    AutoSizeHeight = true,
                 };
 
                 var control = this.achievementTableEntryProvider.GetTableEntryControl(this.item[i]);
