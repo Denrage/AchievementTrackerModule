@@ -86,10 +86,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                         Parent = menuItem
                     };
 
-                    innerMenuItem.ItemSelected += (sender, e) => 
+                    innerMenuItem.ItemSelected += (sender, e) =>
                     {
                         var menuItemCategory = this.menuItemCategories[(MenuItem)sender];
                         var achievements = this.achievementService.Achievements.Where(x => menuItemCategory.Achievements.Contains(x.Id));
+                        this.selectedMenuItemView.Clear();
                         this.selectedMenuItemView.Show(
                             this.achievementItemOverviewFactory.Create(
                                 achievements.Select(x => (menuItemCategory, x)),
@@ -143,6 +144,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
                 var searchText = this.searchBar.Text;
 
+                if (string.IsNullOrWhiteSpace(searchText))
+                {
+                    this.selectedMenuItemView.Clear();
+                    return;
+                }
+
                 if (this.achievementCache is null)
                 {
                     var achievements = new Dictionary<AchievementCategory, IEnumerable<AchievementTableEntry>>();
@@ -170,6 +177,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                     }
                 }
 
+                this.selectedMenuItemView.Clear();
                 this.selectedMenuItemView.Show(this.achievementItemOverviewFactory.Create(searchedAchievements, searchText));
             }
             finally

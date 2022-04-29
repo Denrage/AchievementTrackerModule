@@ -14,7 +14,8 @@ using System.Threading.Tasks;
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
-    // TODO: improve search performance
+    // TODO: Add tooltips
+    // TODO: Reduce size of windows
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests
     [Export(typeof(Blish_HUD.Modules.Module))]
