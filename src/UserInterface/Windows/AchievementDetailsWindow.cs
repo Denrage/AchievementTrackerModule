@@ -71,11 +71,5 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             this.achievementControlManager.ChangeParent(this.achievement.Id, panel);
         }
-
-        public override void Hide()
-        {
-            this.achievementControlManager.RemoveParent(this.achievement.Id);
-            base.Hide();
-        }
     }
 }

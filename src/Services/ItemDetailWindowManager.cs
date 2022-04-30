@@ -53,24 +53,26 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Update()
         {
-            // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
-            if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
+            if (GameService.Gw2Mumble.IsAvailable)
             {
-                foreach (var item in this.windows)
+                // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
+                if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    if (item.Value.Visible)
+                    foreach (var item in this.windows)
                     {
                         item.Value.Hide();
                     }
-                }
 
-                this.purposelyHidden = true;
-            }
-            else if (this.purposelyHidden)
-            {
-                foreach (var item in this.windows)
+                    this.purposelyHidden = true;
+                }
+                else if (this.purposelyHidden)
                 {
-                    item.Value.Show();
+                    foreach (var item in this.windows)
+                    {
+                        item.Value.Show();
+                    }
+
+                    this.purposelyHidden = false;
                 }
             }
         }

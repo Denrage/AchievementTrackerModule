@@ -58,7 +58,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.contentsManager);
             this.AchievementControlManager = new AchievementControlManager(this.AchievementControlProvider);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
-            this.AchievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory);
+            this.AchievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager);
 
             await achievementService.LoadAsync(cancellationToken);
         }

@@ -16,13 +16,15 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly Dictionary<int, AchievementDetailsWindow> windows = new Dictionary<int, AchievementDetailsWindow>();
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
+        private readonly IAchievementControlManager achievementControlManager;
         private bool purposelyHidden = false;
 
         public event Action<int> WindowHidden;
 
-        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory)
+        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
+            this.achievementControlManager = achievementControlManager;
         }
 
         public void CreateWindow(AchievementTableEntry achievement)
@@ -37,6 +39,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 if (!this.purposelyHidden)
                 {
                     _ = this.windows.Remove(achievement.Id);
+                    this.achievementControlManager.RemoveParent(achievement.Id);
                     window.Dispose();
                     this.WindowHidden?.Invoke(achievement.Id);
                 }
@@ -49,26 +52,25 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Update()
         {
-            // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
-            if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
+            if (GameService.Gw2Mumble.IsAvailable)
             {
-                this.purposelyHidden = true;
-                foreach (var item in this.windows)
+                if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    if (item.Value.Visible)
+                    this.purposelyHidden = true;
+                    foreach (var item in this.windows)
                     {
                         item.Value.Hide();
                     }
                 }
-            }
-            else if (this.purposelyHidden)
-            {
-                foreach (var item in this.windows)
+                else if (this.purposelyHidden)
                 {
-                    item.Value.Show();
-                }
+                    foreach (var item in this.windows)
+                    {
+                        item.Value.Show();
+                    }
 
-                this.purposelyHidden = false;
+                    this.purposelyHidden = false;
+                }
             }
         }
 

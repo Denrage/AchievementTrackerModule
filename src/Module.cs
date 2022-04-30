@@ -15,7 +15,6 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
     // TODO: Reduce size of windows
-    // TODO: Fix window hide on map open
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests
     // TODO: Wiki Link button like gw2efficiecny on achievement details/trackwindow
@@ -27,6 +26,7 @@ namespace Denrage.AchievementTrackerModule
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
         private AchievementTrackWindow window;
         private CornerIcon cornerIcon;
+        private bool purposelyHidden;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -114,6 +114,20 @@ namespace Denrage.AchievementTrackerModule
         {
             this.dependencyInjectionContainer.ItemDetailWindowManager.Update();
             this.dependencyInjectionContainer.AchievementDetailsWindowManager.Update();
+
+            if (GameService.Gw2Mumble.IsAvailable)
+            {
+                if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
+                {
+                    this.purposelyHidden = true;
+                    this.window.Hide();
+                }
+                else if (this.purposelyHidden)
+                {
+                    this.window.Show();
+                    this.purposelyHidden = false;
+                }
+            }
         }
 
         /// <inheritdoc />
