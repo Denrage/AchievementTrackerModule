@@ -95,6 +95,21 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Texture = this.contentsManager.GetTexture("pop_out.png"),
             };
 
+            if (achievement.HasLink)
+            {
+                var wikiButton = new Image()
+                {
+                    Parent = panel,
+                    Location = new Point(detachButton.Location.X, detachButton.Location.Y + detachButton.Size.Y),
+                    Width = 32,
+                    Height = 32,
+                    Texture = this.contentsManager.GetTexture("wiki.png"),
+                };
+
+                wikiButton.Click += (s, e)
+                    => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + achievement.Link);
+            }
+
             if (!this.achievementControlManager.ControlExists(achievementId))
             {
                 this.achievementControlManager.InitializeControl(achievementId, achievement, achievement.Description);
