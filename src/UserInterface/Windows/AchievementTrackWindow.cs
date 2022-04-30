@@ -53,7 +53,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             foreach (var item in this.achievementTrackerService.ActiveAchievements)
             {
-                this.AchievementTrackerService_AchievementTracked(item);
+                if (!this.achievementDetailsWindowManager.WindowExists(item))
+                {
+                    this.AchievementTrackerService_AchievementTracked(item);
+                }
             }
         }
 

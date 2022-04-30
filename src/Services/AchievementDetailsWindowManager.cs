@@ -17,14 +17,29 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly Dictionary<int, AchievementDetailsWindow> windows = new Dictionary<int, AchievementDetailsWindow>();
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
         private readonly IAchievementControlManager achievementControlManager;
+        private readonly IPersistanceService persistanceService;
+        private readonly IAchievementService achievementService;
         private bool purposelyHidden = false;
 
         public event Action<int> WindowHidden;
 
-        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager)
+        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager, IPersistanceService persistanceService, IAchievementService achievementService)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
             this.achievementControlManager = achievementControlManager;
+            this.persistanceService = persistanceService;
+            this.achievementService = achievementService;
+        }
+
+        public void Load()
+        {
+            foreach (var item in this.persistanceService.Get().AchievementInformation)
+            {
+                var achievement = this.achievementService.Achievements.FirstOrDefault(x => x.Id == item.Key);
+                this.CreateWindow(achievement);
+
+                this.windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
+            }
         }
 
         public void CreateWindow(AchievementTableEntry achievement)
@@ -49,6 +64,9 @@ namespace Denrage.AchievementTrackerModule.Services
 
             window.Show();
         }
+
+        public bool WindowExists(int achievementId)
+            => this.windows.ContainsKey(achievementId);
 
         public void Update()
         {
@@ -78,6 +96,7 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             foreach (var item in this.windows)
             {
+                this.persistanceService.AddAchievementWindowInformation(item.Key, item.Value.Location.X, item.Value.Location.Y);
                 item.Value.Dispose();
             }
 

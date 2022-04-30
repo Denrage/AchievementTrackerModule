@@ -24,5 +24,6 @@
       "optional": false,
       "details": "Needed to review the item in your inventory."
     }
-  }
+  },
+  "directories": [ "achievement_module" ]
 }

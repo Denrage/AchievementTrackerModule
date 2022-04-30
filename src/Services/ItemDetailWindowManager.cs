@@ -13,28 +13,47 @@ namespace Denrage.AchievementTrackerModule.Services
 {
     public class ItemDetailWindowManager : IItemDetailWindowManager, IDisposable
     {
-        private readonly Dictionary<string, ItemDetailWindow> windows = new Dictionary<string, ItemDetailWindow>();
+        private readonly Dictionary<string, ItemDetailWindowInformation> windows = new Dictionary<string, ItemDetailWindowInformation>();
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
+        private readonly IPersistanceService persistanceService;
+        private readonly IAchievementService achievementService;
         private bool purposelyHidden = false;
 
-        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory)
+        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IPersistanceService persistanceService, IAchievementService achievementService)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;
+            this.persistanceService = persistanceService;
+            this.achievementService = achievementService;
         }
 
         public bool ShowWindow(string name)
         {
             if (this.windows.TryGetValue(name, out var window))
             {
-                window.Show();
-                window.BringWindowToFront();
+                window.Window.Show();
+                window.Window.BringWindowToFront();
                 return true;
             }
 
             return false;
         }
 
-        public void CreateAndShowWindow(string name, string[] columns, List<CollectionAchievementTableEntry> item, string achievementLink)
+        public void Load()
+        {
+            foreach (var achievement in this.persistanceService.Get().ItemInformation)
+            {
+                var achievementDetail = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Key);
+
+                foreach (var item in achievement.Value)
+                {
+                    this.CreateAndShowWindow(item.Value.Name, achievementDetail.ColumnNames, achievementDetail.Entries[item.Value.Index], achievementDetail.Link, item.Value.AchievementId, item.Value.Index);
+
+                    this.windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                }
+            }
+        }
+
+        public void CreateAndShowWindow(string name, string[] columns, List<CollectionAchievementTableEntry> item, string achievementLink, int achievementId, int itemIndex)
         {
             if (this.ShowWindow(name))
             {
@@ -46,7 +65,7 @@ namespace Denrage.AchievementTrackerModule.Services
             window.Parent = GameService.Graphics.SpriteScreen;
             window.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
 
-            this.windows[name] = window;
+            this.windows[name] = new ItemDetailWindowInformation() { Window = window, AchievementId = achievementId, ItemIndex = itemIndex, Name = name };
 
             _ = this.ShowWindow(name);
         }
@@ -60,7 +79,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 {
                     foreach (var item in this.windows)
                     {
-                        item.Value.Hide();
+                        item.Value.Window.Hide();
                     }
 
                     this.purposelyHidden = true;
@@ -69,7 +88,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 {
                     foreach (var item in this.windows)
                     {
-                        item.Value.Show();
+                        item.Value.Window.Show();
                     }
 
                     this.purposelyHidden = false;
@@ -81,10 +100,22 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             foreach (var item in this.windows)
             {
-                item.Value.Dispose();
+                this.persistanceService.AddItemInformation(item.Value.AchievementId, item.Value.ItemIndex, item.Value.Name, item.Value.Window.Location.X, item.Value.Window.Location.Y);
+                item.Value.Window.Dispose();
             }
 
             this.windows.Clear();
         }
+    }
+
+    public class ItemDetailWindowInformation
+    {
+        public ItemDetailWindow Window { get; set; }
+
+        public int AchievementId { get; set; }
+
+        public int ItemIndex { get; set; }
+
+        public string Name { get; set; }
     }
 }

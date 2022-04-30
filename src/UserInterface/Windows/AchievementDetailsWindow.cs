@@ -19,6 +19,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly AchievementTableEntry achievement;
         private readonly Texture2D texture;
 
+        public int AchievementId => this.achievement.Id;
+
         public AchievementDetailsWindow(
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
@@ -68,6 +70,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Parent = flowPanel,
                 HeightSizingMode = SizingMode.AutoSize,
             };
+
+            if (!this.achievementControlManager.ControlExists(this.achievement.Id))
+            {
+                this.achievementControlManager.InitializeControl(this.achievement.Id, this.achievement, this.achievement.Description);
+            }
 
             this.achievementControlManager.ChangeParent(this.achievement.Id, panel);
         }

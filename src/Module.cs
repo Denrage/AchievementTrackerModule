@@ -14,10 +14,9 @@ using System.Threading.Tasks;
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
+    // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Logging
-    // TODO: Get TP prices for CoinEntries
     // TODO: Handle Exceptions / Failed API-Requests
-    // TODO: Wiki Link button like gw2efficiecny on achievement details/trackwindow
     // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
@@ -39,7 +38,7 @@ namespace Denrage.AchievementTrackerModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters)
             : base(moduleParameters)
         {
-            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content);
+            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager);
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -115,7 +114,7 @@ namespace Denrage.AchievementTrackerModule
             this.dependencyInjectionContainer.ItemDetailWindowManager.Update();
             this.dependencyInjectionContainer.AchievementDetailsWindowManager.Update();
 
-            if (GameService.Gw2Mumble.IsAvailable)
+            if (GameService.Gw2Mumble.IsAvailable && this.window != null)
             {
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
@@ -135,6 +134,8 @@ namespace Denrage.AchievementTrackerModule
         {
             this.cornerIcon.Dispose();
             this.window?.Dispose();
+            this.dependencyInjectionContainer.Dispose();
+            this.dependencyInjectionContainer.PersistanceService.Save();
         }
     }
 }

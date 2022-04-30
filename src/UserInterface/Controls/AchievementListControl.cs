@@ -130,7 +130,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         this.GetDisplayName(entries[index]),
                         this.achievementDetails.ColumnNames,
                         this.achievementDetails.Entries[index],
-                        this.achievementDetails.Link);
+                        this.achievementDetails.Link,
+                        this.achievementDetails.Id,
+                        index);
 
                     this.itemControls.Add(control);
                 }

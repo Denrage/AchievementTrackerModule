@@ -5,9 +5,10 @@ using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
-    public class AchievementTrackerService : IAchievementTrackerService
+    public class AchievementTrackerService : IAchievementTrackerService, IDisposable
     {
         private readonly List<int> activeAchievements;
+        private readonly IPersistanceService persistanceService;
 
         public event Action<int> AchievementTracked;
 
@@ -15,9 +16,10 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IReadOnlyList<int> ActiveAchievements => this.activeAchievements.AsReadOnly();
 
-        public AchievementTrackerService()
+        public AchievementTrackerService(IPersistanceService persistanceService)
         {
             this.activeAchievements = new List<int>();
+            this.persistanceService = persistanceService;
         }
 
         public void TrackAchievement(int achievement)
@@ -30,6 +32,22 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             _ = this.activeAchievements.Remove(achievement);
             this.AchievementUntracked?.Invoke(achievement);
+        }
+
+        public void Load()
+        {
+            foreach (var item in this.persistanceService.Get().TrackedAchievements)
+            {
+                this.activeAchievements.Add(item);
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (var item in this.activeAchievements)
+            {
+                this.persistanceService.TrackAchievement(item);
+            }
         }
     }
 }

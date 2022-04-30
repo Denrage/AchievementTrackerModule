@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule.Interfaces
 {
-    public interface IAchievementTrackerService
+    public interface IAchievementTrackerService : IDisposable
     {
         IReadOnlyList<int> ActiveAchievements { get; }
 
