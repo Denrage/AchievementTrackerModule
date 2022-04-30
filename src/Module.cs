@@ -14,9 +14,8 @@ using System.Threading.Tasks;
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
-    // TODO: Reduce size of windows
-    // TODO: Sanitize HTML Tags
     // TODO: Logging
+    // TODO: Get TP prices for CoinEntries
     // TODO: Handle Exceptions / Failed API-Requests
     // TODO: Wiki Link button like gw2efficiecny on achievement details/trackwindow
     // TODO: Use Microsoft.Extensions.DependencyInjection
