@@ -15,6 +15,7 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
     // TODO: Reduce size of windows
+    // TODO: Sanitize HTML Tags
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests
     // TODO: Wiki Link button like gw2efficiecny on achievement details/trackwindow

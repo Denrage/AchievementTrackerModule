@@ -100,8 +100,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     {
                         Parent = panel,
                         BackgroundTexture = this.contentsManager.GetTexture("collection_item_background.png"),
-                        Width = 71,
-                        Height = 71,
+                        Width = 39,
+                        Height = 39,
                     };
 
                     var control = this.CreateEntryControl(i, entries[i], imagePanel);

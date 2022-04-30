@@ -41,8 +41,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             return new Image()
             {
                 Parent = parent,
-                Width = 64,
-                Height = 64,
+                Width = 32,
+                Height = 32,
                 Texture = this.AchievementService.GetImage(entry.ImageUrl, () => spinner.Dispose()),
                 ZIndex = 1,
             };

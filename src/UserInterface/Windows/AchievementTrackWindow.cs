@@ -136,9 +136,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private void BuildWindow()
         {
             // TODO: Localize
-            this.Title = "Tracked Achievements";
+            this.Title = "Tracked";
             this.Emblem = this.contentsManager.GetTexture("605019.png");
-            this.ConstructWindow(this.texture, new Rectangle(0, 0, 550, 800), new Rectangle(0, 30, 550, 800 - 30));
+            this.ConstructWindow(this.texture, new Rectangle(0, 0, 350, 600), new Rectangle(0, 30, 350, 600 - 30));
 
             this.flowPanel = new FlowPanel()
             {

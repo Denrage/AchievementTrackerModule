@@ -37,8 +37,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private void BuildWindow()
         {
             // TODO: Localization
-            this.Title = "Achievement Details";
-            this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 600), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 600 - 30));
+            this.Title = "Details";
+            this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 275, 400), new Microsoft.Xna.Framework.Rectangle(0, 30, 275, 400 - 30));
 
             var flowPanel = new FlowPanel()
             {

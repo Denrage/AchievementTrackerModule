@@ -31,8 +31,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         protected override Control CreateEntryControl(int index, TableDescriptionEntry entry, Container parent) => new Label()
         {
             Parent = parent,
-            Width = 64,
-            Height = 64,
+            Width = 32,
+            Height = 32,
             Text = (index + 1).ToString(),
             Font = Content.DefaultFont18,
             VerticalAlignment = VerticalAlignment.Middle,
