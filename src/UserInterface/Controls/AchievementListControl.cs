@@ -108,14 +108,28 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     control.Location = new Point((imagePanel.Width - control.Width) / 2, (imagePanel.Height - control.Height) / 2);
 
+                    control.Tooltip = new Tooltip()
+                    {
+                        HeightSizingMode = SizingMode.AutoSize,
+                        WidthSizingMode = SizingMode.AutoSize,
+                    };
+
+                    _ = new Label()
+                    {
+                        Parent = control.Tooltip,
+                        AutoSizeWidth = true,
+                        AutoSizeHeight = true,
+                        Text = this.GetDisplayName(entries[i]),
+                    };
+
                     this.ColorControl(control, finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
 
                     var index = i;
-                    control.Click += (s, eventArgs) 
+                    control.Click += (s, eventArgs)
                     => this.itemDetailWindowManager.CreateAndShowWindow(
-                        this.GetDisplayName(entries[index]), 
-                        this.achievementDetails.ColumnNames, 
-                        this.achievementDetails.Entries[index], 
+                        this.GetDisplayName(entries[index]),
+                        this.achievementDetails.ColumnNames,
+                        this.achievementDetails.Entries[index],
                         this.achievementDetails.Link);
 
                     this.itemControls.Add(control);
@@ -125,8 +139,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
         protected override void OnResized(ResizedEventArgs e)
         {
-            this.gameTextLabel.Width = this.ContentRegion.Width;
-            this.gameHintLabel.Width = this.ContentRegion.Width;
+            if (this.gameTextLabel != null)
+            {
+                this.gameTextLabel.Width = this.ContentRegion.Width;
+            }
+
+            if (this.gameHintLabel != null)
+            {
+                this.gameHintLabel.Width = this.ContentRegion.Width;
+            }
+
             this.panel.Width = this.ContentRegion.Width;
             base.OnResized(e);
         }

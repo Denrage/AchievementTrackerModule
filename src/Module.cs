@@ -14,10 +14,12 @@ using System.Threading.Tasks;
 namespace Denrage.AchievementTrackerModule
 {
     // TODO: Save tracked achievements
-    // TODO: Add tooltips
     // TODO: Reduce size of windows
+    // TODO: Fix window hide on map open
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests
+    // TODO: Wiki Link button like gw2efficiecny on achievement details/trackwindow
+    // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
     {
