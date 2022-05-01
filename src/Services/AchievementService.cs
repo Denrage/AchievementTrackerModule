@@ -122,20 +122,27 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public async Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default)
         {
-            if ((forceRefresh || this.PlayerAchievements == null) && this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
+            if (forceRefresh || this.PlayerAchievements == null)
             {
-                this.logger.Info("Refreshing Player Achievements");
-                try
+                if (this.gw2ApiManager.HasPermissions(new[] { TokenPermission.Account, TokenPermission.Progression }))
                 {
-                    this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync(cancellationToken);
-                    _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke(), cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    this.logger.Error(ex, "Exception occured during refresh of player achievements. Skipping this time.");
-                }
+                    this.logger.Info("Refreshing Player Achievements");
+                    try
+                    {
+                        this.PlayerAchievements = await this.gw2ApiManager.Gw2ApiClient.V2.Account.Achievements.GetAsync(cancellationToken);
+                        _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke(), cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.Error(ex, "Exception occured during refresh of player achievements. Skipping this time.");
+                    }
 
-                this.TrackAchievementProgress();
+                    this.TrackAchievementProgress();
+                }
+                else
+                {
+                    this.logger.Info("Permissions not granted");
+                }
             }
         }
 

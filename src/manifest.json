@@ -1,11 +1,11 @@
 {
-  "name": "AchievementTrackerModule",
+  "name": "Achievement Tracker",
   "version": "0.1.0",
-  "namespace": "AchievementTrackerModule",
-  "package": "AchievementTrackerModule.dll",
+  "namespace": "Denrage.AchievementTrackerModule",
+  "package": "Denrage.AchievementTrackerModule.dll",
   "manifest_version": 1,
 
-  "description": "Description of your module. Visit https://github.com/blish-hud/manifest.json/blob/master/manifest-v1.md for details about the manifest format.",
+  "description": "Allows to track any achievement with multiple windows and information from the official wiki.",
   "dependencies": {
     "bh.blishhud": ">=0.5.2"
   },
@@ -17,12 +17,12 @@
   ],
   "api_permissions": {
     "account": {
-      "optional": false,
-      "details": "Needed if you want the special feature enabled."
+      "optional": true,
+      "details": "Needed if you want to automatically track achievement progression."
     },
     "progression": {
-      "optional": false,
-      "details": "Needed to review the item in your inventory."
+      "optional": true,
+      "details": "Needed if you want to automatically track achievement progression."
     }
   },
   "directories": [ "achievement_module" ]

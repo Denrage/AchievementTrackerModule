@@ -13,8 +13,6 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
-    // TODO: check api thingies
-    // TODO: Move out api calls in loadasync
     // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
@@ -51,7 +49,7 @@ namespace Denrage.AchievementTrackerModule
             this.Gw2ApiManager.SubtokenUpdated += async (_, args) =>
             {
                 this.logger.Info("Subtoken updated");
-                await this.dependencyInjectionContainer.AchievementService.LoadPlayerAchievements();
+                await this.dependencyInjectionContainer?.AchievementService?.LoadPlayerAchievements();
             };
 
             this.cornerIcon = new CornerIcon()
