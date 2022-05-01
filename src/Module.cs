@@ -126,8 +126,11 @@ namespace Denrage.AchievementTrackerModule
             {
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    this.purposelyHidden = true;
-                    this.window.Hide();
+                    if (this.window.Visible)
+                    {
+                        this.purposelyHidden = true;
+                        this.window.Hide();
+                    }
                 }
                 else if (this.purposelyHidden)
                 {
