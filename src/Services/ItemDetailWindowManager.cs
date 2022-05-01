@@ -15,14 +15,16 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IAchievementService achievementService;
+        private readonly Logger logger;
         private readonly List<ItemDetailWindowInformation> hiddenWindows = new List<ItemDetailWindowInformation>();
         
         internal Dictionary<string, ItemDetailWindowInformation> Windows { get; } = new Dictionary<string, ItemDetailWindowInformation>();
 
-        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IAchievementService achievementService)
+        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IAchievementService achievementService, Logger logger)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;
             this.achievementService = achievementService;
+            this.logger = logger;
         }
 
         public bool ShowWindow(string name)
@@ -39,16 +41,23 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Load(IPersistanceService persistanceService)
         {
-            foreach (var achievement in persistanceService.Get().ItemInformation)
+            try
             {
-                var achievementDetail = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Key);
-
-                foreach (var item in achievement.Value)
+                foreach (var achievement in persistanceService.Get().ItemInformation)
                 {
-                    this.CreateAndShowWindow(item.Value.Name, achievementDetail.ColumnNames, achievementDetail.Entries[item.Value.Index], achievementDetail.Link, item.Value.AchievementId, item.Value.Index);
+                    var achievementDetail = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Key);
 
-                    this.Windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                    foreach (var item in achievement.Value)
+                    {
+                        this.CreateAndShowWindow(item.Value.Name, achievementDetail.ColumnNames, achievementDetail.Entries[item.Value.Index], achievementDetail.Link, item.Value.AchievementId, item.Value.Index);
+
+                        this.Windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Exception occured on restoring window positions");
             }
         }
 

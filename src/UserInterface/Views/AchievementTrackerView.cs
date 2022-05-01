@@ -103,6 +103,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             }
         }
 
+        // TODO: Try timer
         private void SearchBar_TextChanged(object sender, System.EventArgs e)
         {
             try

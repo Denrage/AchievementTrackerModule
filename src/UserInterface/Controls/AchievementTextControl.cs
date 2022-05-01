@@ -60,6 +60,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             {
                 this.gameHintLabel.Width = this.ContentRegion.Width;
             }
+
             base.OnResized(e);
         }
     }

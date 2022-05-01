@@ -5,6 +5,7 @@ using Denrage.AchievementTrackerModule.Models.Achievement;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 {
@@ -22,10 +23,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         }
 
         protected override void ColorControl(Control control, bool achievementBitFinished)
-            => ((Image)control).Tint = achievementBitFinished
-                ? Microsoft.Xna.Framework.Color.White
-                : Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
-        
+        {
+            if (control is Image image)
+            {
+                image.Tint = achievementBitFinished
+                           ? Microsoft.Xna.Framework.Color.White
+                           : Microsoft.Xna.Framework.Color.FromNonPremultiplied(255, 255, 255, 50);
+            }
+        }
 
         protected override Control CreateEntryControl(int index, CollectionDescriptionEntry entry, Container parent)
         {
@@ -48,8 +53,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             };
         }
 
-        protected override string GetDisplayName(CollectionDescriptionEntry entry) => entry.DisplayName;
+        protected override string GetDisplayName(CollectionDescriptionEntry entry) => entry?.DisplayName ?? string.Empty;
 
-        protected override IEnumerable<CollectionDescriptionEntry> GetEntries(CollectionDescription description) => description.EntryList;
+        protected override IEnumerable<CollectionDescriptionEntry> GetEntries(CollectionDescription description) => description?.EntryList ?? System.Array.Empty<CollectionDescriptionEntry>().ToList();
     }
 }

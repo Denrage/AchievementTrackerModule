@@ -16,14 +16,13 @@ namespace Denrage.AchievementTrackerModule
     // TODO: check api thingies
     // TODO: Move out api calls in loadasync
     // TODO: Get TP prices for CoinEntries (after release)
-    // TODO: Logging
-    // TODO: Handle Exceptions / Failed API-Requests
     // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
     {
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
+        private readonly Logger logger;
         private AchievementTrackWindow window;
         private CornerIcon cornerIcon;
         private bool purposelyHidden;
@@ -39,7 +38,8 @@ namespace Denrage.AchievementTrackerModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters)
             : base(moduleParameters)
         {
-            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager);
+            this.logger = Logger;
+            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager, this.logger);
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -48,8 +48,11 @@ namespace Denrage.AchievementTrackerModule
 
         protected override void Initialize()
         {
-            this.Gw2ApiManager.SubtokenUpdated += async (_, args)
-                => await this.dependencyInjectionContainer.AchievementService.LoadPlayerAchievements();
+            this.Gw2ApiManager.SubtokenUpdated += async (_, args) =>
+            {
+                this.logger.Info("Subtoken updated");
+                await this.dependencyInjectionContainer.AchievementService.LoadPlayerAchievements();
+            };
 
             this.cornerIcon = new CornerIcon()
             {
@@ -89,7 +92,13 @@ namespace Denrage.AchievementTrackerModule
         {
             if (this.window is null)
             {
-                this.window = new AchievementTrackWindow(this.ContentsManager, this.dependencyInjectionContainer.AchievementTrackerService, this.dependencyInjectionContainer.AchievementControlProvider, this.dependencyInjectionContainer.AchievementService, this.dependencyInjectionContainer.AchievementDetailsWindowManager, this.dependencyInjectionContainer.AchievementControlManager)
+                this.window = new AchievementTrackWindow(
+                    this.ContentsManager, 
+                    this.dependencyInjectionContainer.AchievementTrackerService, 
+                    this.dependencyInjectionContainer.AchievementControlProvider, 
+                    this.dependencyInjectionContainer.AchievementService, 
+                    this.dependencyInjectionContainer.AchievementDetailsWindowManager, 
+                    this.dependencyInjectionContainer.AchievementControlManager)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
                     Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),

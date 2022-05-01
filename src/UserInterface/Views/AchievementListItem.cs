@@ -15,6 +15,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly ContentService contentService;
         private readonly string icon;
         private readonly AchievementTableEntry achievement;
+        private DetailsButton button;
 
         public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, string icon)
         {
@@ -23,13 +24,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             this.achievementService = achievementService;
             this.contentService = contentService;
             this.icon = icon;
+
+            this.achievementService.PlayerAchievementsLoaded += () 
+                => this.ColorAchievement();
         }
 
         protected override void Build(Container buildPanel)
         {
             buildPanel.Click += (s, e) => this.achievementTrackerService.TrackAchievement(this.achievement.Id);
 
-            var button = new DetailsButton()
+            this.button = new DetailsButton()
             {
                 Text = this.achievement.Name,
                 Parent = buildPanel,
@@ -37,9 +41,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Icon = this.contentService.GetRenderServiceTexture(this.icon),
             };
 
-            if (this.achievementService.HasFinishedAchievement(this.achievement.Id))
+            this.ColorAchievement();
+        }
+
+        public void ColorAchievement()
+        {
+            if (this.button != null)
             {
-                button.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
+                if (this.achievementService.HasFinishedAchievement(this.achievement.Id))
+                {
+                    this.button.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
+                }
             }
         }
     }

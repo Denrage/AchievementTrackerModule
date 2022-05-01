@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Denrage.AchievementTrackerModule.Interfaces;
 using System.Threading.Tasks;
 using static Denrage.AchievementTrackerModule.Models.Achievement.CollectionAchievementTable;
@@ -8,10 +9,12 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
     public class AchievementTableMapEntryFactory : AchievementTableEntryFactory<CollectionAchievementTableMapEntry>
     {
         private readonly IAchievementService achievementService;
+        private readonly Logger logger;
 
-        public AchievementTableMapEntryFactory(IAchievementService achievementService)
+        public AchievementTableMapEntryFactory(IAchievementService achievementService, Logger logger)
         {
             this.achievementService = achievementService;
+            this.logger = logger;
         }
 
         protected override Control CreateInternal(CollectionAchievementTableMapEntry entry)
@@ -37,13 +40,22 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
                 Size = panel.ContentRegion.Size,
             };
 
-            panel.Resized += (s,e) => result.Size = panel.ContentRegion.Size;
+            panel.Resized += (s, e) => result.Size = panel.ContentRegion.Size;
 
-            result.LeftMouseButtonReleased += (o, e) 
-                => _ = Task.Run(async () => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + await this.achievementService.GetDirectImageLink(entry.ImageLink)));
+            result.LeftMouseButtonReleased += (o, e)
+                => _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + await this.achievementService.GetDirectImageLink(entry.ImageLink));
+                    }
+                    catch (System.Exception ex)
+                    {
+                        this.logger.Error(ex, "Exception occured on opening map in browser");
+                    }
+                });
 
             return panel;
         }
     }
 }
- 

@@ -9,7 +9,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
         protected override Control CreateInternal(CollectionAchievementTableCoinEntry entry)
             => new Label()
             {
-                Text = entry.ItemId + ": " + entry.Type.ToString(),
+                Text = (entry?.ItemId.ToString() ?? string.Empty) + ": " + (entry?.Type.ToString() ?? string.Empty),
                 AutoSizeHeight = true,
                 WrapText = true,
             };

@@ -31,13 +31,15 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void ChangeParent(int achievementId, Container parent)
         {
-            var control = this.controls[achievementId];
-            control.Parent = parent;
-
-            if (parent != null)
+            if (this.controls.TryGetValue(achievementId, out var control))
             {
-                control.Width = parent.ContentRegion.Width;
-                control.Height = parent.ContentRegion.Height;
+                control.Parent = parent;
+
+                if (parent != null)
+                {
+                    control.Width = parent.ContentRegion.Width;
+                    control.Height = parent.ContentRegion.Height;
+                }
             }
         }
 

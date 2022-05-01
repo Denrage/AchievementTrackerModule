@@ -8,7 +8,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
         protected override Control CreateInternal(CollectionAchievementTableLinkEntry entry)
             => new Label()
             {
-                Text = entry.Text,
+                Text = entry?.Text ?? string.Empty,
                 AutoSizeHeight = true,
                 WrapText = true,
             };

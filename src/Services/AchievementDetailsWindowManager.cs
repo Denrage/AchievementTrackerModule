@@ -17,27 +17,40 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
         private readonly IAchievementControlManager achievementControlManager;
         private readonly IAchievementService achievementService;
+        private readonly Logger logger;
         private readonly List<AchievementDetailsWindow> hiddenWindows = new List<AchievementDetailsWindow>();
-        
+
         internal Dictionary<int, AchievementDetailsWindow> Windows { get; } = new Dictionary<int, AchievementDetailsWindow>();
 
         public event Action<int> WindowHidden;
 
-        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager, IAchievementService achievementService)
+        public AchievementDetailsWindowManager(
+            IAchievementDetailsWindowFactory achievementDetailsWindowFactory, 
+            IAchievementControlManager achievementControlManager, 
+            IAchievementService achievementService, 
+            Logger logger)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
             this.achievementControlManager = achievementControlManager;
             this.achievementService = achievementService;
+            this.logger = logger;
         }
 
         public void Load(IPersistanceService persistanceService)
         {
-            foreach (var item in persistanceService.Get().AchievementInformation)
+            try
             {
-                var achievement = this.achievementService.Achievements.FirstOrDefault(x => x.Id == item.Key);
-                this.CreateWindow(achievement);
+                foreach (var item in persistanceService.Get().AchievementInformation)
+                {
+                    var achievement = this.achievementService.Achievements.FirstOrDefault(x => x.Id == item.Key);
+                    this.CreateWindow(achievement);
 
-                this.Windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                    this.Windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Exception occured on restoring window positions");
             }
         }
 

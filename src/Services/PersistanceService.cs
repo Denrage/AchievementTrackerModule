@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Modules.Managers;
+﻿using Blish_HUD;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Persistance;
 using System;
@@ -17,13 +18,20 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly AchievementDetailsWindowManager achievementDetailsWindowManager;
         private readonly ItemDetailWindowManager itemDetailWindowManager;
         private readonly AchievementTrackerService achievementTrackerService;
+        private readonly Logger logger;
 
-        public PersistanceService(DirectoriesManager directoriesManager, AchievementDetailsWindowManager achievementDetailsWindowManager, ItemDetailWindowManager itemDetailWindowManager, AchievementTrackerService achievementTrackerService)
+        public PersistanceService(
+            DirectoriesManager directoriesManager,
+            AchievementDetailsWindowManager achievementDetailsWindowManager,
+            ItemDetailWindowManager itemDetailWindowManager,
+            AchievementTrackerService achievementTrackerService,
+            Logger logger)
         {
             this.directoriesManager = directoriesManager;
             this.achievementDetailsWindowManager = achievementDetailsWindowManager;
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.achievementTrackerService = achievementTrackerService;
+            this.logger = logger;
         }
 
         public void Save()
@@ -60,26 +68,40 @@ namespace Denrage.AchievementTrackerModule.Services
 
             storage.TrackedAchievements.AddRange(this.achievementTrackerService.ActiveAchievements);
 
-            var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
+            try
+            {
+                var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
 
-            _ = System.IO.Directory.CreateDirectory(safeFolder);
+                _ = System.IO.Directory.CreateDirectory(safeFolder);
 
-            System.IO.File.WriteAllText(System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME), System.Text.Json.JsonSerializer.Serialize(storage));
+                System.IO.File.WriteAllText(System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME), System.Text.Json.JsonSerializer.Serialize(storage));
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Exception occured on saving persistent information");
+            }
         }
 
         public Storage Get()
         {
-
-            var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
-            var file = System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME);
-            if (this.storage is null)
+            try
             {
-                this.storage = System.IO.File.Exists(file)
-                    ? System.Text.Json.JsonSerializer.Deserialize<Storage>(System.IO.File.ReadAllText(file))
-                    : new Storage();
-            }
+                var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
+                var file = System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME);
+                if (this.storage is null)
+                {
+                    this.storage = System.IO.File.Exists(file)
+                        ? System.Text.Json.JsonSerializer.Deserialize<Storage>(System.IO.File.ReadAllText(file))
+                        : new Storage();
+                }
 
-            return this.storage;
+                return this.storage;
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Exception occured on reading persistent information");
+                return new Storage();
+            }
         }
     }
 }
