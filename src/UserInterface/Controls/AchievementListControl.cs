@@ -124,15 +124,26 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     this.ColorControl(control, finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
 
-                    var index = i;
-                    control.Click += (s, eventArgs)
-                    => this.itemDetailWindowManager.CreateAndShowWindow(
-                        this.GetDisplayName(entries[index]),
-                        this.achievementDetails.ColumnNames,
-                        this.achievementDetails.Entries[index],
-                        this.achievementDetails.Link,
-                        this.achievementDetails.Id,
-                        index);
+                    if (this.achievementDetails != null)
+                    {
+                        var index = i;
+                        control.Click += (s, eventArgs)
+                            => this.itemDetailWindowManager.CreateAndShowWindow(
+                                this.GetDisplayName(entries[index]),
+                                this.achievementDetails.ColumnNames,
+                                this.achievementDetails.Entries[index],
+                                this.achievementDetails.Link,
+                                this.achievementDetails.Id,
+                                index);
+                    }
+                    else
+                    {
+                        if (entries[i] is ILinkEntry linkEntry)
+                        {
+                            control.Click += (s, eventArgs)
+                                => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + linkEntry.Link);
+                        }
+                    }
 
                     this.itemControls.Add(control);
                 }

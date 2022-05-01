@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
+﻿using Denrage.AchievementTrackerModule.Interfaces;
+using System.Diagnostics;
 
 namespace Denrage.AchievementTrackerModule.Models.Achievement
 {
     [DebuggerDisplay("{DisplayName}")]
-    public class TableDescriptionEntry
+    public class TableDescriptionEntry : ILinkEntry
     {
         public string DisplayName { get; set; } = string.Empty;
 
