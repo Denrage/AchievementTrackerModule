@@ -51,8 +51,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
         protected override void OnResized(ResizedEventArgs e)
         {
-            this.gameTextLabel.Width = this.ContentRegion.Width;
-            this.gameHintLabel.Width = this.ContentRegion.Width;
+            if (this.gameTextLabel != null)
+            {
+                this.gameTextLabel.Width = this.ContentRegion.Width;
+            }
+
+            if (this.gameHintLabel != null)
+            {
+                this.gameHintLabel.Width = this.ContentRegion.Width;
+            }
             base.OnResized(e);
         }
     }
