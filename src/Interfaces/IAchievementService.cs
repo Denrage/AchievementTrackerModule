@@ -20,6 +20,8 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 
         event Action PlayerAchievementsLoaded;
 
+        event Action ApiAchievementsLoaded;
+
         Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default);
         
         AsyncTexture2D GetImage(string imageUrl, Action beforeSwap);

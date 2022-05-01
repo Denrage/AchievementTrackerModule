@@ -34,6 +34,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public event Action PlayerAchievementsLoaded;
 
+        public event Action ApiAchievementsLoaded;
+
         public AchievementService(ContentsManager contentsManager, Gw2ApiManager gw2ApiManager, Logger logger)
         {
             this.contentsManager = contentsManager;
@@ -68,11 +70,30 @@ namespace Denrage.AchievementTrackerModule.Services
             }
 
             this.logger.Info("Finished reading saved achievement information");
-            this.logger.Info("Getting achievement data from api");
-            this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync(cancellationToken);
-            this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync(cancellationToken);
-            this.logger.Info("Finished getting achievement data from api");
+
+            _ = Task.Run(async () => await this.InitializeApiAchievements());
+
             await this.LoadPlayerAchievements(cancellationToken: cancellationToken);
+        }
+
+        private async Task InitializeApiAchievements(CancellationToken cancellationToken = default)
+        {
+            this.logger.Info("Getting achievement data from api");
+
+            try
+            {
+                this.AchievementGroups = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Groups.AllAsync(cancellationToken);
+                this.AchievementCategories = await this.gw2ApiManager.Gw2ApiClient.V2.Achievements.Categories.AllAsync(cancellationToken);
+                this.logger.Info("Finished getting achievement data from api");
+
+                this.ApiAchievementsLoaded?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "Failed getting api achievements. Retrying in 5 minutes");
+                await Task.Delay(TimeSpan.FromMinutes(5));
+                _ = Task.Run(async () => await this.InitializeApiAchievements());
+            }
         }
 
         public bool HasFinishedAchievement(int achievementId)
@@ -208,7 +229,7 @@ namespace Denrage.AchievementTrackerModule.Services
             => ("https://wiki.guildwars2.com" + url)
                     .WithHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36");
 
-        public void Dispose() 
+        public void Dispose()
             => this.trackAchievementProgressCancellationTokenSource.Cancel();
     }
 }

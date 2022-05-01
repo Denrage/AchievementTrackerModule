@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
@@ -20,9 +21,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
         private readonly IAchievementItemOverviewFactory achievementItemOverviewFactory;
         private readonly IAchievementService achievementService;
-        private readonly IDictionary<int, AchievementCategory> categories;
         private readonly IDictionary<MenuItem, AchievementCategory> menuItemCategories;
-
+        private Menu menu;
         private ViewContainer selectedMenuItemView;
 
         private Task delayTask;
@@ -33,7 +33,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         {
             this.achievementItemOverviewFactory = achievementItemOverviewFactory;
             this.achievementService = achievementService;
-            this.categories = achievementService.AchievementCategories.ToDictionary(x => x.Id, y => y);
             this.menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();
         }
 
@@ -60,7 +59,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 CanScroll = true,
             };
 
-            var menu = new Menu()
+            this.menu = new Menu()
             {
                 Size = menuPanel.ContentRegion.Size,
                 MenuItemHeight = 40,
@@ -76,9 +75,46 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Location = new Point(menuPanel.Width, 0),
             };
 
+            var apiErrorLabel = new Label()
+            {
+                // TODO: Localization
+                Text = "Weren't able to gather needed information from the API or it is still ongoing. Consult the log for details. Retrying every 5 minutes",
+                Parent = buildPanel,
+                Font = GameService.Content.DefaultFont18,
+                AutoSizeHeight = true,
+                Width = 250,
+                WrapText = true,
+                TextColor = Microsoft.Xna.Framework.Color.Red,
+            };
+
+            apiErrorLabel.Visible = false;
+
+            apiErrorLabel.Location = new Point(((this.selectedMenuItemView.Width - apiErrorLabel.Width) / 2) + this.selectedMenuItemView.Location.X, ((this.selectedMenuItemView.Height - apiErrorLabel.Height) / 2) + this.selectedMenuItemView.Location.Y);
+
+            if (this.achievementService.AchievementGroups is null || this.achievementService.AchievementCategories is null)
+            {
+                this.achievementService.ApiAchievementsLoaded += () =>
+                {
+                    apiErrorLabel.Visible = false;
+                    this.searchBar.Enabled = true;
+                    this.InitializeAchievementElements();
+                };
+
+                this.searchBar.Enabled = false;
+                apiErrorLabel.Visible = true;
+            }
+            else
+            {
+                this.InitializeAchievementElements();
+            }
+        }
+
+        private void InitializeAchievementElements()
+        {
+            this.categories = this.achievementService.AchievementCategories.ToDictionary(x => x.Id, y => y);
             foreach (var group in this.achievementService.AchievementGroups.OrderBy(x => x.Order))
             {
-                var menuItem = menu.AddMenuItem(group.Name);
+                var menuItem = this.menu.AddMenuItem(group.Name);
                 foreach (var category in group.Categories.Select(x => this.categories[x]).OrderBy(x => x.Order))
                 {
                     var innerMenuItem = new MenuItem(category.Name)
@@ -106,6 +142,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         // TODO: Try timer
         private void SearchBar_TextChanged(object sender, System.EventArgs e)
         {
+            if (!this.searchBar.Enabled)
+            {
+                return;
+            }
+
             try
             {
                 if (this.delayTask != null)
@@ -135,6 +176,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         }
 
         private Dictionary<AchievementCategory, IEnumerable<AchievementTableEntry>> achievementCache;
+        private Dictionary<int, AchievementCategory> categories;
 
         private async Task SearchAsync(CancellationToken cancellationToken = default)
         {
