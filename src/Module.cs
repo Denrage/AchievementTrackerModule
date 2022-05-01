@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
-    // TODO: Save tracked achievements
+    // TODO: Cites on WikiParser for CollectionAchievements with links or rather get collection items in row parsing not before
+    
+    // TODO: Save tracked achievements, save only visible windows
     // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests

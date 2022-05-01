@@ -19,7 +19,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly IAchievementControlManager achievementControlManager;
         private readonly IPersistanceService persistanceService;
         private readonly IAchievementService achievementService;
-        private bool purposelyHidden = false;
+        private readonly List<AchievementDetailsWindow> hiddenWindows = new List<AchievementDetailsWindow>();
 
         public event Action<int> WindowHidden;
 
@@ -51,7 +51,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
             window.Hidden += (s, e) =>
             {
-                if (!this.purposelyHidden)
+                if (!this.hiddenWindows.Any())
                 {
                     _ = this.windows.Remove(achievement.Id);
                     this.achievementControlManager.RemoveParent(achievement.Id);
@@ -74,27 +74,27 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    this.purposelyHidden = true;
                     foreach (var item in this.windows)
                     {
+                        this.hiddenWindows.Add(item.Value);
                         item.Value.Hide();
                     }
                 }
-                else if (this.purposelyHidden)
+                else if (this.hiddenWindows.Any())
                 {
-                    foreach (var item in this.windows)
+                    foreach (var item in this.hiddenWindows)
                     {
-                        item.Value.Show();
+                        item.Show();
                     }
 
-                    this.purposelyHidden = false;
+                    this.hiddenWindows.Clear();
                 }
             }
         }
 
         public void Dispose()
         {
-            foreach (var item in this.windows)
+            foreach (var item in this.windows.Where(x => x.Value.Visible))
             {
                 this.persistanceService.AddAchievementWindowInformation(item.Key, item.Value.Location.X, item.Value.Location.Y);
                 item.Value.Dispose();

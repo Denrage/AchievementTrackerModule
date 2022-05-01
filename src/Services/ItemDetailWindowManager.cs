@@ -17,7 +17,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
         private readonly IPersistanceService persistanceService;
         private readonly IAchievementService achievementService;
-        private bool purposelyHidden = false;
+        private readonly List<ItemDetailWindowInformation> hiddenWindows = new List<ItemDetailWindowInformation>();
 
         public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IPersistanceService persistanceService, IAchievementService achievementService)
         {
@@ -77,28 +77,30 @@ namespace Denrage.AchievementTrackerModule.Services
                 // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    foreach (var item in this.windows)
+                    foreach (var item in this.windows.Where(x => x.Value.Window.Visible))
                     {
-                        item.Value.Window.Hide();
+                        if (!this.hiddenWindows.Contains(item.Value))
+                        {
+                            item.Value.Window.Hide();
+                            this.hiddenWindows.Add(item.Value);
+                        }
                     }
-
-                    this.purposelyHidden = true;
                 }
-                else if (this.purposelyHidden)
+                else if (this.hiddenWindows.Any())
                 {
-                    foreach (var item in this.windows)
+                    foreach (var item in this.hiddenWindows)
                     {
-                        item.Value.Window.Show();
+                        item.Window.Show();
                     }
 
-                    this.purposelyHidden = false;
+                    this.hiddenWindows.Clear();
                 }
             }
         }
 
         public void Dispose()
         {
-            foreach (var item in this.windows)
+            foreach (var item in this.windows.Where(x => x.Value.Window.Visible))
             {
                 this.persistanceService.AddItemInformation(item.Value.AchievementId, item.Value.ItemIndex, item.Value.Name, item.Value.Window.Location.X, item.Value.Window.Location.Y);
                 item.Value.Window.Dispose();
