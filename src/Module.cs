@@ -77,7 +77,7 @@ namespace Denrage.AchievementTrackerModule
             this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
             _ = GameService.Overlay.BlishHudWindow.AddTab(
-                "AchievementTracker",
+                "Achievement Tracker",
                 this.ContentsManager.GetTexture("achievement_icon.png"),
                 () => new AchievementTrackerView(
                     this.dependencyInjectionContainer.AchievementItemOverviewFactory,
@@ -91,11 +91,11 @@ namespace Denrage.AchievementTrackerModule
             if (this.window is null)
             {
                 this.window = new AchievementTrackWindow(
-                    this.ContentsManager, 
-                    this.dependencyInjectionContainer.AchievementTrackerService, 
-                    this.dependencyInjectionContainer.AchievementControlProvider, 
-                    this.dependencyInjectionContainer.AchievementService, 
-                    this.dependencyInjectionContainer.AchievementDetailsWindowManager, 
+                    this.ContentsManager,
+                    this.dependencyInjectionContainer.AchievementTrackerService,
+                    this.dependencyInjectionContainer.AchievementControlProvider,
+                    this.dependencyInjectionContainer.AchievementService,
+                    this.dependencyInjectionContainer.AchievementDetailsWindowManager,
                     this.dependencyInjectionContainer.AchievementControlManager)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
