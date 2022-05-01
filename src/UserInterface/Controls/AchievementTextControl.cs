@@ -28,7 +28,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 this.gameTextLabel = new Label()
                 {
                     Parent = this,
-                    Text = this.description.GameText,
+                    Text = StringUtils.SanitizeHtml(this.description.GameText),
                     AutoSizeHeight = true,
                     Width = this.ContentRegion.Width,
                     WrapText = true,
@@ -41,7 +41,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 {
                     Parent = this,
                     Width = this.ContentRegion.Width,
-                    Text = this.description.GameHint,
+                    Text = StringUtils.SanitizeHtml(this.description.GameHint),
                     TextColor = Microsoft.Xna.Framework.Color.LightGray,
                     AutoSizeHeight = true,
                     WrapText = true,
