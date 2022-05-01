@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
-    public class DependencyInjectionContainer : IDisposable
+    public class DependencyInjectionContainer
     {
         private readonly Gw2ApiManager gw2ApiManager;
         private readonly ContentsManager contentsManager;
@@ -52,33 +52,26 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager);
             this.AchievementService = achievementService;
-            this.PersistanceService = new PersistanceService(this.directoriesManager);
 
-            var achievementTrackerService = new AchievementTrackerService(this.PersistanceService);
+            var achievementTrackerService = new AchievementTrackerService();
             this.AchievementTrackerService = achievementTrackerService;
             this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService);
             this.AchievementItemOverviewFactory = new AchievementItemOverviewFactory(this.AchievementListItemFactory, this.AchievementService);
             this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.AchievementService);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider);
-            var itemDetailWindowManager = new ItemDetailWindowManager(this.ItemDetailWindowFactory, this.PersistanceService, this.AchievementService);
+            var itemDetailWindowManager = new ItemDetailWindowManager(this.ItemDetailWindowFactory, this.AchievementService);
             this.ItemDetailWindowManager = itemDetailWindowManager;
             this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.contentsManager);
             this.AchievementControlManager = new AchievementControlManager(this.AchievementControlProvider);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
-            var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.PersistanceService, this.AchievementService);
+            var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService);
             this.AchievementDetailsWindowManager = achievementDetailsWindowManager;
+            this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService);
 
             await achievementService.LoadAsync(cancellationToken);
-            achievementDetailsWindowManager.Load();
-            itemDetailWindowManager.Load();
-            achievementTrackerService.Load();
-        }
-
-        public void Dispose()
-        {
-            this.AchievementTrackerService.Dispose();
-            this.AchievementDetailsWindowManager.Dispose();
-            this.ItemDetailWindowManager.Dispose();
+            achievementDetailsWindowManager.Load(this.PersistanceService);
+            itemDetailWindowManager.Load(this.PersistanceService);
+            achievementTrackerService.Load(this.PersistanceService);
         }
     }
 }

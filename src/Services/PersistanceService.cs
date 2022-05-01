@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.Models.Persistance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,67 +14,57 @@ namespace Denrage.AchievementTrackerModule.Services
         private const string SAVE_FILE_NAME = "persistanceStorage.json";
         private Storage storage;
         private readonly DirectoriesManager directoriesManager;
+        private readonly AchievementDetailsWindowManager achievementDetailsWindowManager;
+        private readonly ItemDetailWindowManager itemDetailWindowManager;
+        private readonly AchievementTrackerService achievementTrackerService;
 
-        public PersistanceService(DirectoriesManager directoriesManager)
+        public PersistanceService(DirectoriesManager directoriesManager, AchievementDetailsWindowManager achievementDetailsWindowManager, ItemDetailWindowManager itemDetailWindowManager, AchievementTrackerService achievementTrackerService)
         {
             this.directoriesManager = directoriesManager;
-        }
-
-        public void AddAchievementWindowInformation(int achievementId, int positionX, int positionY)
-        {
-            if (this.storage is null)
-            {
-                this.storage = new Storage();
-            }
-
-            this.storage.AchievementInformation[achievementId] = new AchievementWindowInformation()
-            {
-                AchievementId = achievementId,
-                PositionX = positionX,
-                PositionY = positionY,
-            };
-        }
-
-        public void AddItemInformation(int achievementId, int itemIndex, string name, int positionX, int positionY)
-        {
-            if (this.storage is null)
-            {
-                this.storage = new Storage();
-            }
-
-            if (!this.storage.ItemInformation.TryGetValue(achievementId, out var itemInformation))
-            {
-                itemInformation = new Dictionary<int, ItemInformation>();
-                this.storage.ItemInformation[achievementId] = itemInformation;
-            }
-
-            itemInformation[itemIndex] = new ItemInformation()
-            {
-                Name = name,
-                AchievementId = achievementId,
-                Index = itemIndex,
-                PositionX = positionX,
-                PositionY = positionY,
-            };
-        }
-
-        public void TrackAchievement(int achievementId)
-        {
-            if (this.storage is null)
-            {
-                this.storage = new Storage();
-            }
-
-            this.storage.TrackedAchievements.Add(achievementId);
+            this.achievementDetailsWindowManager = achievementDetailsWindowManager;
+            this.itemDetailWindowManager = itemDetailWindowManager;
+            this.achievementTrackerService = achievementTrackerService;
         }
 
         public void Save()
         {
+            var storage = new Storage();
+
+            foreach (var item in this.achievementDetailsWindowManager.Windows.Where(x => x.Value.Visible))
+            {
+                storage.AchievementInformation[item.Key] = new AchievementWindowInformation()
+                {
+                    AchievementId = item.Value.AchievementId,
+                    PositionX = item.Value.Location.X,
+                    PositionY = item.Value.Location.Y,
+                };
+            }
+
+            foreach (var item in this.itemDetailWindowManager.Windows.Where(x => x.Value.Window.Visible))
+            {
+                if (!storage.ItemInformation.TryGetValue(item.Value.AchievementId, out var itemWindows))
+                {
+                    itemWindows = new Dictionary<int, ItemInformation>();
+                    storage.ItemInformation[item.Value.AchievementId] = itemWindows;
+                }
+
+                itemWindows[item.Value.ItemIndex] = new ItemInformation()
+                {
+                    AchievementId = item.Value.AchievementId,
+                    Index = item.Value.ItemIndex,
+                    Name = item.Value.Name,
+                    PositionX = item.Value.Window.Location.X,
+                    PositionY = item.Value.Window.Location.Y,
+                };
+            }
+
+            storage.TrackedAchievements.AddRange(this.achievementTrackerService.ActiveAchievements);
+
             var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
 
             _ = System.IO.Directory.CreateDirectory(safeFolder);
 
-            System.IO.File.WriteAllText(System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME), System.Text.Json.JsonSerializer.Serialize(this.storage));
+            System.IO.File.WriteAllText(System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME), System.Text.Json.JsonSerializer.Serialize(storage));
         }
 
         public Storage Get()
@@ -81,44 +72,14 @@ namespace Denrage.AchievementTrackerModule.Services
 
             var safeFolder = this.directoriesManager.GetFullDirectoryPath("achievement_module");
             var file = System.IO.Path.Combine(safeFolder, SAVE_FILE_NAME);
-            if (!System.IO.File.Exists(file))
+            if (this.storage is null)
             {
-                return new Storage();
+                this.storage = System.IO.File.Exists(file)
+                    ? System.Text.Json.JsonSerializer.Deserialize<Storage>(System.IO.File.ReadAllText(file))
+                    : new Storage();
             }
 
-            var result = System.Text.Json.JsonSerializer.Deserialize<Storage>(System.IO.File.ReadAllText(file));
-            return result;
+            return this.storage;
         }
-    }
-
-    public class Storage
-    {
-        public Dictionary<int, AchievementWindowInformation> AchievementInformation { get; set; } = new Dictionary<int, AchievementWindowInformation>();
-
-        public Dictionary<int, Dictionary<int, ItemInformation>> ItemInformation { get; set; } = new Dictionary<int, Dictionary<int, ItemInformation>>();
-
-        public List<int> TrackedAchievements { get; set; } = new List<int>();
-    }
-
-    public class AchievementWindowInformation
-    {
-        public int AchievementId { get; set; }
-
-        public int PositionX { get; set; }
-
-        public int PositionY { get; set; }
-    }
-
-    public class ItemInformation
-    {
-        public int AchievementId { get; set; }
-
-        public int Index { get; set; }
-
-        public string Name { get; set; }
-
-        public int PositionX { get; set; }
-
-        public int PositionY { get; set; }
     }
 }

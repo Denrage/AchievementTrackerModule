@@ -1,6 +1,6 @@
 ﻿using Blish_HUD;
 using Denrage.AchievementTrackerModule.Interfaces;
-using Denrage.AchievementTrackerModule.UserInterface.Windows;
+using Denrage.AchievementTrackerModule.Models;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,22 +13,21 @@ namespace Denrage.AchievementTrackerModule.Services
 {
     public class ItemDetailWindowManager : IItemDetailWindowManager, IDisposable
     {
-        private readonly Dictionary<string, ItemDetailWindowInformation> windows = new Dictionary<string, ItemDetailWindowInformation>();
         private readonly IItemDetailWindowFactory itemDetailWindowFactory;
-        private readonly IPersistanceService persistanceService;
         private readonly IAchievementService achievementService;
         private readonly List<ItemDetailWindowInformation> hiddenWindows = new List<ItemDetailWindowInformation>();
+        
+        internal Dictionary<string, ItemDetailWindowInformation> Windows { get; } = new Dictionary<string, ItemDetailWindowInformation>();
 
-        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IPersistanceService persistanceService, IAchievementService achievementService)
+        public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IAchievementService achievementService)
         {
             this.itemDetailWindowFactory = itemDetailWindowFactory;
-            this.persistanceService = persistanceService;
             this.achievementService = achievementService;
         }
 
         public bool ShowWindow(string name)
         {
-            if (this.windows.TryGetValue(name, out var window))
+            if (this.Windows.TryGetValue(name, out var window))
             {
                 window.Window.Show();
                 window.Window.BringWindowToFront();
@@ -38,9 +37,9 @@ namespace Denrage.AchievementTrackerModule.Services
             return false;
         }
 
-        public void Load()
+        public void Load(IPersistanceService persistanceService)
         {
-            foreach (var achievement in this.persistanceService.Get().ItemInformation)
+            foreach (var achievement in persistanceService.Get().ItemInformation)
             {
                 var achievementDetail = this.achievementService.AchievementDetails.FirstOrDefault(x => x.Id == achievement.Key);
 
@@ -48,7 +47,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 {
                     this.CreateAndShowWindow(item.Value.Name, achievementDetail.ColumnNames, achievementDetail.Entries[item.Value.Index], achievementDetail.Link, item.Value.AchievementId, item.Value.Index);
 
-                    this.windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                    this.Windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
                 }
             }
         }
@@ -65,7 +64,7 @@ namespace Denrage.AchievementTrackerModule.Services
             window.Parent = GameService.Graphics.SpriteScreen;
             window.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
 
-            this.windows[name] = new ItemDetailWindowInformation() { Window = window, AchievementId = achievementId, ItemIndex = itemIndex, Name = name };
+            this.Windows[name] = new ItemDetailWindowInformation() { Window = window, AchievementId = achievementId, ItemIndex = itemIndex, Name = name };
 
             _ = this.ShowWindow(name);
         }
@@ -77,7 +76,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 // TODO: Maybe make this configurable for the case that the user wants to compare a wiki image to the world map?
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    foreach (var item in this.windows.Where(x => x.Value.Window.Visible))
+                    foreach (var item in this.Windows.Where(x => x.Value.Window.Visible))
                     {
                         if (!this.hiddenWindows.Contains(item.Value))
                         {
@@ -100,24 +99,12 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Dispose()
         {
-            foreach (var item in this.windows.Where(x => x.Value.Window.Visible))
+            foreach (var item in this.Windows)
             {
-                this.persistanceService.AddItemInformation(item.Value.AchievementId, item.Value.ItemIndex, item.Value.Name, item.Value.Window.Location.X, item.Value.Window.Location.Y);
                 item.Value.Window.Dispose();
             }
 
-            this.windows.Clear();
+            this.Windows.Clear();
         }
-    }
-
-    public class ItemDetailWindowInformation
-    {
-        public ItemDetailWindow Window { get; set; }
-
-        public int AchievementId { get; set; }
-
-        public int ItemIndex { get; set; }
-
-        public string Name { get; set; }
     }
 }

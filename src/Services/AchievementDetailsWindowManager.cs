@@ -14,31 +14,30 @@ namespace Denrage.AchievementTrackerModule.Services
 {
     public class AchievementDetailsWindowManager : IAchievementDetailsWindowManager
     {
-        private readonly Dictionary<int, AchievementDetailsWindow> windows = new Dictionary<int, AchievementDetailsWindow>();
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
         private readonly IAchievementControlManager achievementControlManager;
-        private readonly IPersistanceService persistanceService;
         private readonly IAchievementService achievementService;
         private readonly List<AchievementDetailsWindow> hiddenWindows = new List<AchievementDetailsWindow>();
+        
+        internal Dictionary<int, AchievementDetailsWindow> Windows { get; } = new Dictionary<int, AchievementDetailsWindow>();
 
         public event Action<int> WindowHidden;
 
-        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager, IPersistanceService persistanceService, IAchievementService achievementService)
+        public AchievementDetailsWindowManager(IAchievementDetailsWindowFactory achievementDetailsWindowFactory, IAchievementControlManager achievementControlManager, IAchievementService achievementService)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
             this.achievementControlManager = achievementControlManager;
-            this.persistanceService = persistanceService;
             this.achievementService = achievementService;
         }
 
-        public void Load()
+        public void Load(IPersistanceService persistanceService)
         {
-            foreach (var item in this.persistanceService.Get().AchievementInformation)
+            foreach (var item in persistanceService.Get().AchievementInformation)
             {
                 var achievement = this.achievementService.Achievements.FirstOrDefault(x => x.Id == item.Key);
                 this.CreateWindow(achievement);
 
-                this.windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                this.Windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
             }
         }
 
@@ -53,20 +52,20 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 if (!this.hiddenWindows.Any())
                 {
-                    _ = this.windows.Remove(achievement.Id);
+                    _ = this.Windows.Remove(achievement.Id);
                     this.achievementControlManager.RemoveParent(achievement.Id);
                     window.Dispose();
                     this.WindowHidden?.Invoke(achievement.Id);
                 }
             };
 
-            this.windows[achievement.Id] = window;
+            this.Windows[achievement.Id] = window;
 
             window.Show();
         }
 
         public bool WindowExists(int achievementId)
-            => this.windows.ContainsKey(achievementId);
+            => this.Windows.ContainsKey(achievementId);
 
         public void Update()
         {
@@ -74,7 +73,7 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 if (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen)
                 {
-                    foreach (var item in this.windows)
+                    foreach (var item in this.Windows)
                     {
                         this.hiddenWindows.Add(item.Value);
                         item.Value.Hide();
@@ -94,13 +93,12 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Dispose()
         {
-            foreach (var item in this.windows.Where(x => x.Value.Visible))
+            foreach (var item in this.Windows)
             {
-                this.persistanceService.AddAchievementWindowInformation(item.Key, item.Value.Location.X, item.Value.Location.Y);
                 item.Value.Dispose();
             }
 
-            this.windows.Clear();
+            this.Windows.Clear();
         }
     }
 }

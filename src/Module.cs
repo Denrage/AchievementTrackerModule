@@ -15,7 +15,6 @@ namespace Denrage.AchievementTrackerModule
 {
     // TODO: Cites on WikiParser for CollectionAchievements with links or rather get collection items in row parsing not before
     
-    // TODO: Save tracked achievements, save only visible windows
     // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests
@@ -136,7 +135,6 @@ namespace Denrage.AchievementTrackerModule
         {
             this.cornerIcon.Dispose();
             this.window?.Dispose();
-            this.dependencyInjectionContainer.Dispose();
             this.dependencyInjectionContainer.PersistanceService.Save();
         }
     }
