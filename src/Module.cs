@@ -13,8 +13,8 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
-    // TODO: Cites on WikiParser for CollectionAchievements with links or rather get collection items in row parsing not before
-    
+    // TODO: check api thingies
+    // TODO: Move out api calls in loadasync
     // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Logging
     // TODO: Handle Exceptions / Failed API-Requests

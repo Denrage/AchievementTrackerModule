@@ -59,6 +59,7 @@ namespace Gw2WikiDownload
                         Name = achievementName.Name,
                         Link = achievementName.Link,
                     };
+
                     ParseDescriptionRow(fullDocument.DocumentNode, achievement[1], entry);
                     result.Add(entry);
                 }
@@ -96,10 +97,39 @@ namespace Gw2WikiDownload
                     }
                 }
 
+                if (entry.HasLink) // Parse Collection achievements on their details page
+                {
+                    var innerHtml = new HtmlWeb();
+                    var innerDocument = innerHtml.Load("https://wiki.guildwars2.com" + entry.Link);
+                    var tableNode = innerDocument.DocumentNode.SelectNodes("//table[contains(@class, 'mech1 achievementbox table')]");
+                    if (tableNode != null && innerDocument.DocumentNode.InnerHtml.Contains("Collection:"))
+                    {
+                        var tableBody = tableNode.FindFirst("tbody");
+                        if (tableBody != null)
+                        {
+                            var tableRows = tableBody.ChildNodes.Where(x => x.Name == "tr").ToArray();
+                            if (tableRows.Length > 1)
+                            {
+                                var descriptionListElement = tableRows[1].ChildNodes.FindFirst("dl");
+                                if (descriptionListElement != null)
+                                {
+                                    var ddElements = descriptionListElement.ChildNodes.Where(x => x.Name == "dd");
+                                    if (ddElements.Any())
+                                    {
+                                        ParseDescriptionList(entry, ddElements);
+                                    }
+                                }
+
+                            }
+
+                        }
+
+                    }
+                }
 
                 foreach (var node in tableData.ChildNodes)
                 {
-                    if (node.Name == "dl") // Multiarea description (Collection, Titles, Rewards, Objectives)
+                    if (node.Name == "dl" && entry.Description is null) // Multiarea description (Collection, Titles, Rewards, Objectives)
                     {
                         ParseDescriptionList(entry, node.ChildNodes.Where(x => x.Name == "dd"));
                     }
@@ -251,9 +281,9 @@ namespace Gw2WikiDownload
 
                             if (entryLink != null)
                             {
-                                displayName = entryLink.InnerText;
                                 link = entryLink.GetAttributeValue("href", string.Empty);
                             }
+
                             description.EntryList.Add(new TableDescriptionEntry() { DisplayName = SanitizesDisplayName(displayName), Link = link });
                         }
 
