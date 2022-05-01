@@ -25,9 +25,9 @@ namespace Denrage.AchievementTrackerModule.Services
         public event Action<int> WindowHidden;
 
         public AchievementDetailsWindowManager(
-            IAchievementDetailsWindowFactory achievementDetailsWindowFactory, 
-            IAchievementControlManager achievementControlManager, 
-            IAchievementService achievementService, 
+            IAchievementDetailsWindowFactory achievementDetailsWindowFactory,
+            IAchievementControlManager achievementControlManager,
+            IAchievementService achievementService,
             Logger logger)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
@@ -74,7 +74,14 @@ namespace Denrage.AchievementTrackerModule.Services
 
             this.Windows[achievement.Id] = window;
 
-            window.Show();
+            if ((!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
+            {
+                this.hiddenWindows.Add(window);
+            }
+            else
+            {
+                window.Show();
+            }
         }
 
         public bool WindowExists(int achievementId)

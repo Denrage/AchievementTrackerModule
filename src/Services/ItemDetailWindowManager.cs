@@ -17,7 +17,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly IAchievementService achievementService;
         private readonly Logger logger;
         private readonly List<ItemDetailWindowInformation> hiddenWindows = new List<ItemDetailWindowInformation>();
-        
+
         internal Dictionary<string, ItemDetailWindowInformation> Windows { get; } = new Dictionary<string, ItemDetailWindowInformation>();
 
         public ItemDetailWindowManager(IItemDetailWindowFactory itemDetailWindowFactory, IAchievementService achievementService, Logger logger)
@@ -31,8 +31,16 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             if (this.Windows.TryGetValue(name, out var window))
             {
-                window.Window.Show();
-                window.Window.BringWindowToFront();
+                if ((!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
+                {
+                    this.hiddenWindows.Add(window);
+                }
+                else
+                {
+                    window.Window.Show();
+                    window.Window.BringWindowToFront();
+                }
+
                 return true;
             }
 
