@@ -49,7 +49,10 @@ namespace Denrage.AchievementTrackerModule
             this.Gw2ApiManager.SubtokenUpdated += async (_, args) =>
             {
                 this.logger.Info("Subtoken updated");
-                await this.dependencyInjectionContainer?.AchievementService?.LoadPlayerAchievements();
+                if (this.dependencyInjectionContainer != null && this.dependencyInjectionContainer.AchievementService != null)
+                {
+                    await this.dependencyInjectionContainer?.AchievementService?.LoadPlayerAchievements();
+                }
             };
 
             this.cornerIcon = new CornerIcon()
