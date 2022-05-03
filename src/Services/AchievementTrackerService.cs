@@ -1,6 +1,5 @@
 ﻿using Blish_HUD;
 using Denrage.AchievementTrackerModule.Interfaces;
-using Gw2Sharp.WebApi.V2.Models;
 using System;
 using System.Collections.Generic;
 

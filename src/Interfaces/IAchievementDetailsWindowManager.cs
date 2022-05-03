@@ -1,5 +1,4 @@
-﻿using Blish_HUD.Controls;
-using Denrage.AchievementTrackerModule.Models.Achievement;
+﻿using Denrage.AchievementTrackerModule.Models.Achievement;
 using System;
 
 namespace Denrage.AchievementTrackerModule.Interfaces

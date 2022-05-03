@@ -1,10 +1,8 @@
 ﻿using Blish_HUD;
-using Blish_HUD.Content;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
-using Gw2Sharp.WebApi.V2.Models;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {

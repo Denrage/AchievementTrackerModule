@@ -1,5 +1,4 @@
-﻿using Denrage.AchievementTrackerModule.Models.Achievement;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using static Denrage.AchievementTrackerModule.Models.Achievement.CollectionAchievementTable;
 

@@ -1,14 +1,7 @@
-﻿using Blish_HUD.Controls;
-using Blish_HUD.Modules.Managers;
+﻿using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
-using Gw2Sharp.WebApi.V2.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services.Factories
 {

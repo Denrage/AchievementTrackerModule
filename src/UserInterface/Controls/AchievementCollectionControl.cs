@@ -2,7 +2,6 @@
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
-using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;

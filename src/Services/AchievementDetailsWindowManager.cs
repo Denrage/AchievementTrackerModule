@@ -1,5 +1,4 @@
 ﻿using Blish_HUD;
-using Blish_HUD.Controls;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
@@ -7,8 +6,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {

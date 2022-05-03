@@ -1,5 +1,4 @@
-﻿using Gw2Sharp.WebApi.V2.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule.Interfaces

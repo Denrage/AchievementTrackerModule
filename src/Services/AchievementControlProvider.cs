@@ -3,8 +3,6 @@ using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.Services.Factories.AchievementControl;
-using Gw2Sharp.WebApi.V2.Models;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 

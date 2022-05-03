@@ -2,7 +2,6 @@
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Models.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Controls;
-using Gw2Sharp.WebApi.V2.Models;
 
 namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
 {

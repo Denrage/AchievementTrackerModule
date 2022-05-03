@@ -4,7 +4,6 @@ using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services.Factories;
 using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
