@@ -79,6 +79,12 @@ namespace Denrage.AchievementTrackerModule
 
             this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
+            if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
+            {
+                this.InitializeWindow();
+                this.window.Show();
+            }
+
             _ = GameService.Overlay.BlishHudWindow.AddTab(
                 "Achievement Tracker",
                 this.ContentsManager.GetTexture("achievement_icon.png"),
@@ -102,8 +108,14 @@ namespace Denrage.AchievementTrackerModule
                     this.dependencyInjectionContainer.AchievementControlManager)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
-                    Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)),
                 };
+
+                var savedWindowLocation = this.dependencyInjectionContainer.PersistanceService.Get();
+
+                this.window.Location =
+                    savedWindowLocation.TrackWindowLocationX == -1 || savedWindowLocation.TrackWindowLocationY == -1 ?
+                    (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)) :
+                    new Point(savedWindowLocation.TrackWindowLocationX, savedWindowLocation.TrackWindowLocationY);
             }
         }
 
@@ -148,7 +160,8 @@ namespace Denrage.AchievementTrackerModule
         {
             this.cornerIcon.Dispose();
             this.window?.Dispose();
-            this.dependencyInjectionContainer.PersistanceService.Save();
+            var location = this.window?.Location ?? new Point(-1, -1);
+            this.dependencyInjectionContainer.PersistanceService.Save(location.X, location.Y, this.window?.Visible ?? false);
         }
     }
 }

@@ -5,8 +5,6 @@ using Denrage.AchievementTrackerModule.Models.Persistance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
@@ -34,7 +32,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.logger = logger;
         }
 
-        public void Save()
+        public void Save(int achievementTrackWindowLocationX, int achievementTrackWindowLocationY, bool showTrackWindow)
         {
             var storage = new Storage();
 
@@ -67,6 +65,10 @@ namespace Denrage.AchievementTrackerModule.Services
             }
 
             storage.TrackedAchievements.AddRange(this.achievementTrackerService.ActiveAchievements);
+
+            storage.TrackWindowLocationX = achievementTrackWindowLocationX;
+            storage.TrackWindowLocationY = achievementTrackWindowLocationY;
+            storage.ShowTrackWindow = showTrackWindow;
 
             try
             {

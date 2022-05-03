@@ -6,6 +6,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
     { 
         Storage Get();
         
-        void Save();
+        void Save(int achievementTrackWindowLocationX, int achievementTrackWindowLocationY, bool showTrackWindow);
     }
 }
