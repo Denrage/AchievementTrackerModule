@@ -29,7 +29,7 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             if (this.Windows.TryGetValue(name, out var window))
             {
-                if ((!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
+                if (GameService.Gw2Mumble.IsAvailable && (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
                 {
                     this.hiddenWindows.Add(window);
                 }

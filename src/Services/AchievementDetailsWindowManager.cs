@@ -71,7 +71,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
             this.Windows[achievement.Id] = window;
 
-            if ((!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
+            if (GameService.Gw2Mumble.IsAvailable && (!GameService.GameIntegration.Gw2Instance.IsInGame || GameService.Gw2Mumble.UI.IsMapOpen) && !this.hiddenWindows.Contains(window))
             {
                 this.hiddenWindows.Add(window);
             }
