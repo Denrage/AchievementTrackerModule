@@ -54,43 +54,46 @@ namespace Denrage.AchievementTrackerModule
                     await this.dependencyInjectionContainer?.AchievementService?.LoadPlayerAchievements();
                 }
             };
-
-            this.cornerIcon = new CornerIcon()
-            {
-                // TODO: Localize
-                IconName = "Open Achievement Panel",
-                Icon = this.ContentsManager.GetTexture(@"corner_icon_inactive.png"),
-                HoverIcon = this.ContentsManager.GetTexture(@"corner_icon_active.png"),
-                Width = 64,
-                Height = 64,
-            };
-
-            this.cornerIcon.Click += (s, e) =>
-            {
-                this.InitializeWindow();
-
-                this.window.ToggleWindow();
-            };
         }
 
         protected override async Task LoadAsync()
         {
-            await this.dependencyInjectionContainer.InitializeAsync();
-
-            this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
-
-            if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
+            _ = Task.Run(async () =>
             {
-                this.InitializeWindow();
-                this.window.Show();
-            }
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                await this.dependencyInjectionContainer.InitializeAsync();
+                this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
-            _ = GameService.Overlay.BlishHudWindow.AddTab(
-                "Achievement Tracker",
-                this.ContentsManager.GetTexture("achievement_icon.png"),
-                () => new AchievementTrackerView(
-                    this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                    this.dependencyInjectionContainer.AchievementService));
+                if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
+                {
+                    this.InitializeWindow();
+                    this.window.Show();
+                }
+
+                _ = GameService.Overlay.BlishHudWindow.AddTab(
+                    "Achievement Tracker",
+                    this.ContentsManager.GetTexture("achievement_icon.png"),
+                    () => new AchievementTrackerView(
+                        this.dependencyInjectionContainer.AchievementItemOverviewFactory,
+                        this.dependencyInjectionContainer.AchievementService));
+
+                this.cornerIcon = new CornerIcon()
+                {
+                    // TODO: Localize
+                    IconName = "Open Achievement Panel",
+                    Icon = this.ContentsManager.GetTexture(@"corner_icon_inactive.png"),
+                    HoverIcon = this.ContentsManager.GetTexture(@"corner_icon_active.png"),
+                    Width = 64,
+                    Height = 64,
+                };
+
+                this.cornerIcon.Click += (s, e) =>
+                {
+                    this.InitializeWindow();
+
+                    this.window.ToggleWindow();
+                };
+            });
 
             await base.LoadAsync();
         }
@@ -112,10 +115,14 @@ namespace Denrage.AchievementTrackerModule
 
                 var savedWindowLocation = this.dependencyInjectionContainer.PersistanceService.Get();
 
+                this.logger.Info($"SavedWindowLocation -  X:{savedWindowLocation.TrackWindowLocationX} Y:{savedWindowLocation.TrackWindowLocationY}");
+
                 this.window.Location =
                     savedWindowLocation.TrackWindowLocationX == -1 || savedWindowLocation.TrackWindowLocationY == -1 ?
                     (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)) :
                     new Point(savedWindowLocation.TrackWindowLocationX, savedWindowLocation.TrackWindowLocationY);
+
+                this.logger.Info($"AchievementTrackWindowLocation -  X:{this.window.Location.X} Y:{this.window.Location.Y}");
             }
         }
 
@@ -134,8 +141,8 @@ namespace Denrage.AchievementTrackerModule
 
         protected override void Update(GameTime gameTime)
         {
-            this.dependencyInjectionContainer.ItemDetailWindowManager.Update();
-            this.dependencyInjectionContainer.AchievementDetailsWindowManager.Update();
+            this.dependencyInjectionContainer?.ItemDetailWindowManager?.Update();
+            this.dependencyInjectionContainer?.AchievementDetailsWindowManager?.Update();
 
             if (GameService.Gw2Mumble.IsAvailable && this.window != null)
             {
@@ -158,10 +165,10 @@ namespace Denrage.AchievementTrackerModule
         /// <inheritdoc />
         protected override void Unload()
         {
-            this.cornerIcon.Dispose();
-            this.window?.Dispose();
             var location = this.window?.Location ?? new Point(-1, -1);
             this.dependencyInjectionContainer.PersistanceService.Save(location.X, location.Y, this.window?.Visible ?? false);
+            this.cornerIcon?.Dispose();
+            this.window?.Dispose();
         }
     }
 }
