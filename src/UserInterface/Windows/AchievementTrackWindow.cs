@@ -40,6 +40,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 if (this.trackedAchievements.TryGetValue(achievement, out var panel))
                 {
                     _ = this.trackedAchievements.Remove(achievement);
+                    this.achievementControlManager.RemoveParent(achievement);
                     panel.Dispose();
                 }
             };
