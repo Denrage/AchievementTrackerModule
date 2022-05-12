@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
@@ -21,6 +22,7 @@ namespace Denrage.AchievementTrackerModule
         private static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DependencyInjectionContainer dependencyInjectionContainer;
         private readonly Logger logger;
+        private Func<IView> achievementOverviewView;
         private AchievementTrackWindow window;
         private CornerIcon cornerIcon;
         private bool purposelyHidden;
@@ -60,6 +62,11 @@ namespace Denrage.AchievementTrackerModule
         {
             _ = Task.Run(async () =>
             {
+
+                this.achievementOverviewView = () => new AchievementTrackerView(
+                        this.dependencyInjectionContainer.AchievementItemOverviewFactory,
+                        this.dependencyInjectionContainer.AchievementService);
+
                 await Task.Delay(TimeSpan.FromSeconds(3));
                 await this.dependencyInjectionContainer.InitializeAsync();
                 this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
@@ -73,9 +80,7 @@ namespace Denrage.AchievementTrackerModule
                 _ = GameService.Overlay.BlishHudWindow.AddTab(
                     "Achievement Tracker",
                     this.ContentsManager.GetTexture("achievement_icon.png"),
-                    () => new AchievementTrackerView(
-                        this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                        this.dependencyInjectionContainer.AchievementService));
+                    this.achievementOverviewView);
 
                 this.cornerIcon = new CornerIcon()
                 {
@@ -108,7 +113,9 @@ namespace Denrage.AchievementTrackerModule
                     this.dependencyInjectionContainer.AchievementControlProvider,
                     this.dependencyInjectionContainer.AchievementService,
                     this.dependencyInjectionContainer.AchievementDetailsWindowManager,
-                    this.dependencyInjectionContainer.AchievementControlManager)
+                    this.dependencyInjectionContainer.AchievementControlManager,
+                    GameService.Overlay,
+                    this.achievementOverviewView)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
                 };
@@ -166,7 +173,7 @@ namespace Denrage.AchievementTrackerModule
         protected override void Unload()
         {
             var location = this.window?.Location ?? new Point(-1, -1);
-            this.dependencyInjectionContainer.PersistanceService.Save(location.X, location.Y, this.window?.Visible ?? false);
+            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
         }

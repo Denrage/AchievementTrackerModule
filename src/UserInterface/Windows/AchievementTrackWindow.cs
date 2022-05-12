@@ -1,8 +1,11 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
+using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,13 +22,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly IAchievementService achievementService;
         private readonly IAchievementDetailsWindowManager achievementDetailsWindowManager;
         private readonly IAchievementControlManager achievementControlManager;
+        private readonly OverlayService overlayService;
+        private readonly Func<IView> achievementOverviewView;
         private readonly Texture2D texture;
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
 
         private FlowPanel flowPanel;
         private Label noAchievementsLabel;
 
-        public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowManager achievementDetailsWindowManager, IAchievementControlManager achievementControlManager)
+        public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowManager achievementDetailsWindowManager, IAchievementControlManager achievementControlManager, OverlayService overlayService, Func<IView> achievementOverviewView)
         {
             this.contentsManager = contentsManager;
             this.achievementTrackerService = achievementTrackerService;
@@ -33,6 +38,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.achievementService = achievementService;
             this.achievementDetailsWindowManager = achievementDetailsWindowManager;
             this.achievementControlManager = achievementControlManager;
+            this.overlayService = overlayService;
+            this.achievementOverviewView = achievementOverviewView;
             this.texture = this.contentsManager.GetTexture("background.png");
             this.achievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
@@ -168,14 +175,37 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.Emblem = this.contentsManager.GetTexture("605019.png");
             this.ConstructWindow(this.texture, new Rectangle(0, 0, 350, 600), new Rectangle(0, 30, 350, 600 - 30));
 
+            var openAchievementPanelButton = new StandardButton()
+            {
+                // TODO: Localize
+                Text = "Open Achievement Panel",
+                Height = 30,
+                Width = this.ContentRegion.Width,
+                Parent = this,
+            };
+
             this.flowPanel = new FlowPanel()
             {
                 Parent = this,
                 CanScroll = true,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
-                Size = this.ContentRegion.Size,
+                Width = this.ContentRegion.Width,
+                Height = this.ContentRegion.Height - openAchievementPanelButton.Height,
                 ControlPadding = new Vector2(7f),
             };
+
+            openAchievementPanelButton.Location = new Point(0, this.flowPanel.Height);
+
+            openAchievementPanelButton.Click += (s, e) =>
+            {
+                if (!this.overlayService.BlishHudWindow.Visible)
+                {
+                    this.overlayService.BlishHudWindow.Show();
+                }
+
+                this.overlayService.BlishHudWindow.Navigate(this.achievementOverviewView());
+            };
+
             this.noAchievementsLabel = new Label()
             {
                 Parent = this.flowPanel,
