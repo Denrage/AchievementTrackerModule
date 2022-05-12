@@ -23,6 +23,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
 
         private FlowPanel flowPanel;
+        private Label noAchievementsLabel;
 
         public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowManager achievementDetailsWindowManager, IAchievementControlManager achievementControlManager)
         {
@@ -42,6 +43,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     _ = this.trackedAchievements.Remove(achievement);
                     this.achievementControlManager.RemoveParent(achievement);
                     panel.Dispose();
+                }
+
+                if (this.trackedAchievements.Count == 0)
+                {
+                    this.noAchievementsLabel.Visible = true;
                 }
             };
 
@@ -140,6 +146,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         private void AchievementTrackerService_AchievementTracked(int achievementId)
         {
+            if (this.noAchievementsLabel.Visible)
+            {
+                this.noAchievementsLabel.Visible = false;
+            }
+
             var achievement = this.achievementService.Achievements.First(x => x.Id == achievementId);
 
             if (this.trackedAchievements.ContainsKey(achievementId))
@@ -164,6 +175,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Size = this.ContentRegion.Size,
                 ControlPadding = new Vector2(7f),
+            };
+            this.noAchievementsLabel = new Label()
+            {
+                Parent = this.flowPanel,
+                Height = this.flowPanel.ContentRegion.Height,
+                Width = this.flowPanel.ContentRegion.Width,
+                // TODO: Localize
+                Text = "You currently don't track any achievements.\n To open the achievement overview, either press\n the button below or open the\n blishhud window and navigate to the achievement tab.",
+                Visible = true,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Middle,
             };
         }
 
