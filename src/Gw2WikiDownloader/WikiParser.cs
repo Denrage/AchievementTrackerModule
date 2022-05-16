@@ -30,7 +30,7 @@ public class WikiParser
         }
     }
 
-    public IEnumerable<AchievementTableEntry> Parse(HtmlDocument fullDocument, HtmlNode table)
+    public IEnumerable<AchievementTableEntry> Parse(HtmlDocument fullDocument, HtmlNode table) // Parse Overviewpage f.e. https://wiki.guildwars2.com/wiki/A_Bug_in_the_System_(achievements)
     {
         try
         {
@@ -314,7 +314,7 @@ public class WikiParser
         => string.Join(" ", WebUtility.HtmlDecode(displayName).Replace(Environment.NewLine, "").Trim().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
 
     //href="https://api.guildwars2.com/v2/items?ids=86993&lang=en"
-    public int ParseItemWikiPage(HtmlNode itemBoxNode)
+    public int ParseItemWikiPage(HtmlNode itemBoxNode) // Parse ItemPage f.e. https://wiki.guildwars2.com/wiki/Reinforced_Olmakhan_Bandolier
     {
         var dlNode = itemBoxNode.ChildNodes.Where(x => x.ChildNodes.FirstOrDefault(x => x.Name == "dl") != null).FirstOrDefault();
         if (dlNode != null)
@@ -344,7 +344,7 @@ public class WikiParser
         return -1;
     }
 
-    public CollectionAchievementTable? ParseCollectionAchievementPage(HtmlNode collectionAchievementPageNode)
+    public CollectionAchievementTable? ParseCollectionAchievementPage(HtmlNode collectionAchievementPageNode) // Parse Collection Achievement page f.e. https://wiki.guildwars2.com/wiki/Lasting_Bonds:_What_Comes_Next
     {
         var result = new CollectionAchievementTable();
 
