@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 
-
 namespace Denrage.AchievementTrackerModule.Libs.Achievement
 {
     [DebuggerDisplay("{Tiers[0].DisplayName}")]

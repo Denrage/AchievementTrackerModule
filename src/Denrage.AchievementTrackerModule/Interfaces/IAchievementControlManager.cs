@@ -10,9 +10,9 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         bool ControlExists(int achievementId);
 
         Control GetControl(int achievementId);
-        
+
         void InitializeControl(int achievementId, AchievementTableEntry achievement, AchievementTableEntryDescription description);
-        
+
         void RemoveParent(int achievementId);
     }
 }

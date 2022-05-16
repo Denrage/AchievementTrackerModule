@@ -30,6 +30,7 @@ foreach (var item in listElements)
         System.Diagnostics.Debug.WriteLine(item.title + " skipped");
         continue;
     }
+
     System.Diagnostics.Debug.WriteLine(item.title);
     var web = new HtmlWeb();
     var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link);
@@ -50,7 +51,7 @@ async Task ParseItem(string name, string link, Action<int> setId, Func<bool> sho
             setId(parser.ParseItemWikiPage(itemBoxNode));
         }
     }
-    catch (Exception ex)
+    catch (Exception)
     {
         throw;
     }
@@ -88,8 +89,6 @@ File.WriteAllText("AchievementData_final2.json", jsonResult);
 //    WriteIndented = true,
 //    Converters = { new Gw2WikiDownload.RewardConverter(), new Gw2WikiDownload.AchievementTableEntryDescriptionConverter() },
 //});
-
-
 
 //var collectionAchievementSource = File.ReadAllText("CollectionAchievementSource.html");
 //var document = new HtmlDocument();

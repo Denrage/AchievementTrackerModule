@@ -17,9 +17,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly string title;
 
         public AchievementItemOverview(
-            IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements, 
-            string title, 
-            IAchievementService achievementService, 
+            IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements,
+            string title,
+            IAchievementService achievementService,
             IAchievementListItemFactory achievementListItemFactory)
         {
             this.achievements = achievements;

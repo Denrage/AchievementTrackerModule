@@ -23,7 +23,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             this.contentService = contentService;
             this.icon = icon;
 
-            this.achievementService.PlayerAchievementsLoaded += () 
+            this.achievementService.PlayerAchievementsLoaded += ()
                 => this.ColorAchievement();
         }
 

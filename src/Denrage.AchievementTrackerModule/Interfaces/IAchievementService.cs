@@ -13,7 +13,7 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         IReadOnlyList<AchievementTableEntry> Achievements { get; }
 
         IReadOnlyList<CollectionAchievementTable> AchievementDetails { get; }
-        
+
         IEnumerable<AchievementGroup> AchievementGroups { get; }
 
         IEnumerable<AchievementCategory> AchievementCategories { get; }
@@ -23,13 +23,13 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         event Action ApiAchievementsLoaded;
 
         Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default);
-        
+
         AsyncTexture2D GetImage(string imageUrl, Action beforeSwap);
-        
+
         AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap);
-        
+
         bool HasFinishedAchievement(int achievementId);
-        
+
         bool HasFinishedAchievementBit(int achievementId, int positionIndex);
 
         Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default);

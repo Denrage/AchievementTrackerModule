@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-
 namespace Denrage.AchievementTrackerModule.Libs.Achievement
 {
     public class RewardConverter : JsonConverter<Reward>
@@ -35,6 +34,7 @@ namespace Denrage.AchievementTrackerModule.Libs.Achievement
                 {
                     throw new JsonException();
                 }
+
                 if (!jsonReader.Read() || jsonReader.TokenType != JsonTokenType.StartObject)
                 {
                     throw new JsonException();
@@ -42,12 +42,7 @@ namespace Denrage.AchievementTrackerModule.Libs.Achievement
 
                 var result = (T)JsonSerializer.Deserialize(ref jsonReader, typeof(T));
 
-                if (result is null)
-                {
-                    throw new JsonException();
-                }
-
-                return result;
+                return result is null ? throw new JsonException() : (Reward)result;
             }
 
             Reward reward;
@@ -67,12 +62,7 @@ namespace Denrage.AchievementTrackerModule.Libs.Achievement
                     throw new NotSupportedException();
             }
 
-            if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
-            {
-                throw new JsonException();
-            }
-
-            return reward;
+            return !reader.Read() || reader.TokenType != JsonTokenType.EndObject ? throw new JsonException() : reward;
         }
 
         public override void Write(Utf8JsonWriter writer, Reward value, JsonSerializerOptions options)

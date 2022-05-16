@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 
-
 namespace Denrage.AchievementTrackerModule.Libs.Achievement
 {
     [DebuggerDisplay("{DisplayName}")]

@@ -26,18 +26,18 @@ namespace Denrage.AchievementTrackerModule.Services
         public IAchievementItemOverviewFactory AchievementItemOverviewFactory { get; set; }
 
         public IAchievementService AchievementService { get; set; }
-        
+
         public IPersistanceService PersistanceService { get; private set; }
         public IAchievementControlProvider AchievementControlProvider { get; set; }
 
         public IAchievementControlManager AchievementControlManager { get; private set; }
-        
+
         public IAchievementTableEntryProvider AchievementTableEntryProvider { get; set; }
 
         public IItemDetailWindowFactory ItemDetailWindowFactory { get; set; }
 
         public IAchievementDetailsWindowFactory AchievementDetailsWindowFactory { get; set; }
-        
+
         public IAchievementDetailsWindowManager AchievementDetailsWindowManager { get; set; }
 
         public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager, ContentService contentService, DirectoriesManager directoriesManager, Logger logger)

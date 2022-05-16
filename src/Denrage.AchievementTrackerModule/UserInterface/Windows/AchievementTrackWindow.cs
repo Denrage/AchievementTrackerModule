@@ -90,7 +90,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 HeightSizingMode = SizingMode.AutoSize,
             };
 
-
             var trackButton = new Image()
             {
                 Parent = panel,
