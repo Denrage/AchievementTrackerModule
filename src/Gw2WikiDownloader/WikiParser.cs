@@ -432,7 +432,7 @@ public class WikiParser
                     }
                     : new CollectionAchievementTable.CollectionAchievementTableStringEntry()
                 {
-                    Text = SanitizesDisplayName(entry.InnerHtml),
+                    Text = entry.InnerHtml,
                 };
             }
             else if (item.Name == "span")
