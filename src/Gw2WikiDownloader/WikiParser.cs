@@ -332,7 +332,7 @@ public class WikiParser
                 var idStartIndex = apiLink.IndexOf("ids=") + "ids=".Length;
                 var idEndIndex = apiLink.IndexOf("&");
                 var idList = apiLink[idStartIndex..idEndIndex];
-                
+
                 return idList.Contains(",") ? int.Parse(idList.Split(",", StringSplitOptions.RemoveEmptyEntries)[0]) : int.Parse(idList);
             }
             catch (Exception)
@@ -431,9 +431,9 @@ public class WikiParser
                         Number = number,
                     }
                     : new CollectionAchievementTable.CollectionAchievementTableStringEntry()
-                {
-                    Text = entry.InnerHtml,
-                };
+                    {
+                        Text = entry.InnerHtml,
+                    };
             }
             else if (item.Name == "span")
             {
@@ -499,4 +499,397 @@ public class WikiParser
 
         return currentEntry;
     }
+
+    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 3)
+    {
+        try
+        {
+            if (link.Count(x => x == '.') > 2) // Skip anything that is not from the gw2 wiki
+            {
+                return;
+            }
+
+            if (link.IndexOf("#") > 0)
+            {
+                link = link[..link.IndexOf("#")];
+            }
+
+            Console.WriteLine($"{link} - {depth}");
+
+            if (depth > maxDepth)
+            {
+                return;
+            }
+
+            var web = new HtmlWeb();
+            var document = await web.LoadFromWebAsync(link);
+            SubPageInformation subPageInformation = null;
+
+            if (document.DocumentNode.OuterHtml.Contains("infobox npc")) // NPC subpage https://wiki.guildwars2.com/wiki/Efi
+            {
+                subPageInformation = this.ParseNpcSubPage(document);
+            }
+            else if (document.DocumentNode.OuterHtml.Contains("infobox area")) // Some map type (POI, etc.) https://wiki.guildwars2.com/wiki/Magnetics_Lab
+            {
+                subPageInformation = this.ParseLocationSubPage(document);
+            }
+            else if (document.DocumentNode.OuterHtml.Contains("infobox quest")) // Event https://wiki.guildwars2.com/wiki/Defeat_Abiri,_the_Beetle_Queen
+            {
+                subPageInformation = this.ParseQuestSubPage(document);
+
+            }
+            else if (document.DocumentNode.OuterHtml.Contains("infobox item")) // Item https://wiki.guildwars2.com/wiki/Bundle_of_Children's_Toys
+            {
+                subPageInformation = this.ParseItemSubPage(document);
+            }
+            else // If nothing fits, just show a summary https://wiki.guildwars2.com/wiki/Bounty
+            {
+                subPageInformation = new TextSubPageInformation();
+            }
+
+            subPageInformation.Title = SanitizesDisplayName(document.DocumentNode.SelectSingleNode("//h1[@id='firstHeading']").InnerText);
+            subPageInformation.Link = link;
+
+            var pageNode = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'mw-parser-output')]");
+            var firstText = new List<HtmlNode>();
+
+            foreach (var item in pageNode.ChildNodes)
+            {
+                if (item.Name == "p")
+                {
+                    firstText.Add(item);
+                }
+
+                if (firstText.Any() && item.Name != "p")
+                {
+                    break;
+                }
+            }
+            var descriptionNode = HtmlNode.CreateNode("<div>" + string.Join("", firstText.Select(x => x.InnerHtml)) + "</div>");
+            subPageInformation.Description = descriptionNode.InnerHtml;
+            results.Add(subPageInformation);
+            foreach (var linkNode in descriptionNode.ChildNodes.Where(x => x.Name == "a"))
+            {
+                if (linkNode.GetAttributeValue("class", "").Contains("selflink"))
+                {
+                    continue;
+                }
+
+                var subPageLink = linkNode.GetAttributeValue("href", "");
+
+                if (!subPageLink.Contains('.')) // Skip anything that is not on the wiki.guildwars2.com domain
+                {
+                    subPageLink = "https://wiki.guildwars2.com" + subPageLink;
+
+                    if (subPageLink.IndexOf("#") > 0)
+                    {
+                        subPageLink = subPageLink[..subPageLink.IndexOf("#")];
+                    }
+
+                    if (results.Select(x => x.Link).Contains(subPageLink))
+                    {
+                        continue;
+                    }
+
+                    await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
+                }
+            }
+
+            if (subPageInformation is IHasDescriptionList descriptionListPage)
+            {
+                foreach (var item in descriptionListPage.DescriptionList)
+                {
+                    var keyNode = HtmlNode.CreateNode("<div>" + item.Key + "</div>");
+                    var valueNode = HtmlNode.CreateNode("<div>" + item.Value + "</div>");
+                    foreach (var node in keyNode.ChildNodes.Where(x => x.Name == "a").Concat(valueNode.ChildNodes.Where(x => x.Name == "a")))
+                    {
+                        if (node.GetAttributeValue("class", "").Contains("selflink"))
+                        {
+                            continue;
+                        }
+
+                        var subPageLink = node.GetAttributeValue("href", "");
+
+                        if (!subPageLink.Contains('.')) // Skip anything that is not on the wiki.guildwars2.com domain
+                        {
+                            subPageLink = "https://wiki.guildwars2.com" + subPageLink;
+
+                            if (subPageLink.IndexOf("#") > 0)
+                            {
+                                subPageLink = subPageLink[..subPageLink.IndexOf("#")];
+                            }
+
+                            if (results.Select(x => x.Link).Contains(subPageLink))
+                            {
+                                continue;
+                            }
+
+                            await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private NpcSubPageInformation ParseNpcSubPage(HtmlDocument document)
+    {
+        var npcSubPage = new NpcSubPageInformation();
+        var npcInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox npc')]");
+        HtmlNode element = null;
+        var wrapper = npcInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+
+        if (wrapper != null)
+        {
+            element = wrapper;
+        }
+        else
+        {
+            if (npcInfoBox.ChildNodes.Any(x => x.Name == "dl"))
+            {
+                element = npcInfoBox.ChildNodes.First(x => x.Name == "dl");
+            }
+        }
+
+        if (element != null)
+        {
+            npcSubPage.DescriptionList = this.ParseDescriptionList(element);
+        }
+
+        npcSubPage.ImageUrl = this.ParseInfoBoxImageWrapper(npcInfoBox);
+
+        var table = npcInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
+
+        npcSubPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+
+        return npcSubPage;
+    }
+
+    private LocationSubPageInformation ParseLocationSubPage(HtmlDocument document)
+    {
+        var subPage = new LocationSubPageInformation();
+        var locationInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox area')]");
+        HtmlNode element = null;
+        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+
+        if (wrapper != null)
+        {
+            element = wrapper;
+        }
+        else
+        {
+            if (locationInfoBox.ChildNodes.Any(x => x.Name == "dl"))
+            {
+                element = locationInfoBox.ChildNodes.First(x => x.Name == "dl");
+            }
+        }
+
+        if (element != null)
+        {
+            subPage.DescriptionList = this.ParseDescriptionList(element);
+        }
+
+        subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
+        var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
+
+        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+
+        return subPage;
+    }
+
+    private QuestSubPageInformation ParseQuestSubPage(HtmlDocument document)
+    {
+        var subPage = new QuestSubPageInformation();
+        var locationInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox quest')]");
+        HtmlNode element = null;
+        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+
+        if (wrapper != null)
+        {
+            element = wrapper;
+        }
+        else
+        {
+            if (locationInfoBox.ChildNodes.Any(x => x.Name == "dl"))
+            {
+                element = locationInfoBox.ChildNodes.First(x => x.Name == "dl");
+            }
+        }
+
+        if (element != null)
+        {
+            subPage.DescriptionList = this.ParseDescriptionList(element);
+        }
+
+        subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
+
+        var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
+
+        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+
+        return subPage;
+    }
+
+    private ItemSubPageInformation ParseItemSubPage(HtmlDocument document)
+    {
+        var subPage = new ItemSubPageInformation();
+        var locationInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox item')]");
+        HtmlNode element = null;
+        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+
+        if (wrapper != null)
+        {
+            element = wrapper;
+        }
+        else
+        {
+            if (locationInfoBox.ChildNodes.Any(x => x.Name == "dl"))
+            {
+                element = locationInfoBox.ChildNodes.First(x => x.Name == "dl");
+            }
+        }
+
+        if (element != null)
+        {
+            subPage.DescriptionList = this.ParseDescriptionList(element);
+        }
+
+        subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
+        var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
+
+        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+
+        return subPage;
+    }
+
+    private string ParseInfoBoxImageWrapper(HtmlNode infoBox)
+    {
+        var wrapper = infoBox.SelectSingleNode("//p[contains(@class, 'image_wrapper')]");
+
+        if (wrapper != null)
+        {
+            if (wrapper.ChildNodes.Any())
+            {
+                var linkElement = wrapper.ChildNodes.FirstOrDefault(x => x.Name == "a");
+                if (linkElement != null)
+                {
+                    return linkElement.GetAttributeValue("href", "");
+                }
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private List<KeyValuePair<string, string>> ParseDescriptionList(HtmlNode wrapper)
+    {
+        var descriptionListResult = new List<KeyValuePair<string, string>>();
+
+        var descriptionLists = wrapper.ChildNodes.Where(x => x.Name == "dl");
+
+        if (descriptionLists.Any())
+        {
+            var descriptionListEntries = descriptionLists.SelectMany(x => x.ChildNodes).Where(x => x.Name == "dt" || x.Name == "dd").ToArray();
+            for (int i = 0; i < descriptionListEntries.Length; i += 2)
+            {
+                // The dd Element "always" (till it randomly is not doing it) follows the dt Element
+                if (i + 1 != descriptionListEntries.Length)
+                {
+                    descriptionListResult.Add(new KeyValuePair<string, string>(descriptionListEntries[i].InnerHtml, descriptionListEntries[i + 1].InnerHtml));
+                }
+                else // https://wiki.guildwars2.com/wiki/Help_Elof_recover_buried_artifacts
+                {
+                    var weirdOutsideDescriptionElement = wrapper.ChildNodes.First(x => x.Name == "dd");
+                    var relevantElements = weirdOutsideDescriptionElement.ChildNodes.Where(x => x.Name == "a").ToArray();
+                    var insideDiv = weirdOutsideDescriptionElement.ChildNodes.First(x => x.Name == "div");
+                    relevantElements = relevantElements.Concat(insideDiv.ChildNodes.Where(x => x.Name == "a")).ToArray();
+                    descriptionListResult.Add(new KeyValuePair<string, string>(descriptionListEntries[i].InnerHtml, string.Join(", ", relevantElements.Select(x => x.OuterHtml))));
+                }
+            }
+        }
+
+        return descriptionListResult;
+    }
+
+    private IEnumerable<string> ParseAdditionalImagesPartInfoBox(HtmlNode table)
+    {
+        if (table != null)
+        {
+            var tableBody = table.ChildNodes.FindFirst("tbody");
+            var relevantRows = tableBody.ChildNodes.Where(x => x.Name == "tr").Skip(1);
+
+            foreach (var item in relevantRows)
+            {
+                var data = item.ChildNodes.FindFirst("td");
+
+                // TODO: Parse interactive map through string manipulation and reverse engineering of the script tag
+                var pElement = data.ChildNodes.FindFirst("p");
+                if (pElement != null)
+                {
+                    var linkElement = pElement.ChildNodes.FindFirst("a");
+
+                    if (linkElement != null)
+                    {
+                        yield return linkElement.GetAttributeValue("href", "");
+                    }
+                }
+            }
+        }
+    }
+
+    public interface IHasDescriptionList
+    {
+        List<KeyValuePair<string, string>> DescriptionList { get; set; }
+    }
+
+    public abstract class SubPageInformation
+    {
+        public string Title { get; set; }
+
+        public string Link { get; set; }
+
+        public string Description { get; set; }
+    }
+
+    public class NpcSubPageInformation : SubPageInformation, IHasDescriptionList
+    {
+        public string ImageUrl { get; set; }
+
+        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
+
+        public List<string> AdditionalImages { get; set; } = new List<string>();
+    }
+
+    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList
+    {
+        public string ImageUrl { get; set; }
+
+        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
+
+        public List<string> AdditionalImages { get; set; } = new List<string>();
+    }
+
+    public class QuestSubPageInformation : SubPageInformation, IHasDescriptionList
+    {
+        public string ImageUrl { get; set; }
+
+        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
+
+        public List<string> AdditionalImages { get; set; } = new List<string>();
+    }
+
+    public class ItemSubPageInformation : SubPageInformation, IHasDescriptionList
+    {
+        public string ImageUrl { get; set; }
+
+        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
+
+        public List<string> AdditionalImages { get; set; } = new List<string>();
+    }
+
+    public class TextSubPageInformation : SubPageInformation { }
 }
