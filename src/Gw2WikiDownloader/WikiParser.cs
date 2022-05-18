@@ -664,7 +664,9 @@ public class WikiParser
 
         var table = npcInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
 
-        npcSubPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+        var imagePart = this.ParseAdditionalImagesPartInfoBox(table);
+        npcSubPage.AdditionalImages.AddRange(imagePart.Images);
+        npcSubPage.InteractiveMap = imagePart.MapInformation;
 
         return npcSubPage;
     }
@@ -696,7 +698,9 @@ public class WikiParser
         subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
         var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
 
-        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+        var imagePart = this.ParseAdditionalImagesPartInfoBox(table);
+        subPage.AdditionalImages.AddRange(imagePart.Images);
+        subPage.InteractiveMap = imagePart.MapInformation;
 
         return subPage;
     }
@@ -729,7 +733,9 @@ public class WikiParser
 
         var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
 
-        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+        var imagePart = this.ParseAdditionalImagesPartInfoBox(table);
+        subPage.AdditionalImages.AddRange(imagePart.Images);
+        subPage.InteractiveMap = imagePart.MapInformation;
 
         return subPage;
     }
@@ -739,7 +745,7 @@ public class WikiParser
         var subPage = new ItemSubPageInformation();
         var locationInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox item')]");
         HtmlNode element = null;
-        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div" && x.GetClasses().Contains("wrapper"));
 
         if (wrapper != null)
         {
@@ -758,10 +764,18 @@ public class WikiParser
             subPage.DescriptionList = this.ParseDescriptionList(element);
         }
 
-        subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
+        var iconElement = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div" && x.GetClasses().Contains("infobox-icon"));
+
+        if (iconElement != null)
+        {
+            subPage.ImageUrl = iconElement.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href", "");
+        }
+
         var table = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "table");
 
-        subPage.AdditionalImages.AddRange(this.ParseAdditionalImagesPartInfoBox(table));
+        var imagePart = this.ParseAdditionalImagesPartInfoBox(table);
+        subPage.AdditionalImages.AddRange(imagePart.Images);
+        subPage.InteractiveMap = imagePart.MapInformation;
 
         return subPage;
     }
@@ -815,8 +829,10 @@ public class WikiParser
         return descriptionListResult;
     }
 
-    private IEnumerable<string> ParseAdditionalImagesPartInfoBox(HtmlNode table)
+    private (IEnumerable<string> Images, InteractiveMapInformation MapInformation) ParseAdditionalImagesPartInfoBox(HtmlNode table)
     {
+        var result = new List<string>();
+        InteractiveMapInformation map = null;
         if (table != null)
         {
             var tableBody = table.ChildNodes.FindFirst("tbody");
@@ -827,6 +843,15 @@ public class WikiParser
                 var data = item.ChildNodes.FindFirst("td");
 
                 // TODO: Parse interactive map through string manipulation and reverse engineering of the script tag
+                var linkNodes = data.ChildNodes.Where(x => x.Name == "a");
+                if (linkNodes.Any())
+                {
+                    foreach (var linkNode in linkNodes)
+                    {
+                        result.Add(linkNode.GetAttributeValue("href", ""));
+                    }
+                }
+
                 var pElement = data.ChildNodes.FindFirst("p");
                 if (pElement != null)
                 {
@@ -834,16 +859,73 @@ public class WikiParser
 
                     if (linkElement != null)
                     {
-                        yield return linkElement.GetAttributeValue("href", "");
+                        result.Add(linkElement.GetAttributeValue("href", ""));
+                    }
+                }
+
+
+                var scriptNodes = data.ChildNodes.Where(x => x.Name == "script");
+                if (scriptNodes.Any())
+                {
+                    foreach (var script in scriptNodes)
+                    {
+                        if (!string.IsNullOrEmpty(script.InnerText))
+                        {
+                            map = this.ParseInteractiveMap(script.InnerText);
+                        }
                     }
                 }
             }
         }
+
+        return (result, map);
+    }
+
+    private InteractiveMapInformation ParseInteractiveMap(string scriptTag)
+    {
+        var inputInformationStartIndex = scriptTag.IndexOf("// Inputs");
+        var inputInformationEndIndex = scriptTag.IndexOf("// If all inputs", inputInformationStartIndex);
+        var relevantString = scriptTag[inputInformationStartIndex..inputInformationEndIndex];
+
+        var iconUrlStartIndex = relevantString.IndexOf("\"") + 1;
+        var iconUrlEndIndex = relevantString.IndexOf("\"", iconUrlStartIndex);
+        var parsedIconUrl = relevantString[iconUrlStartIndex..iconUrlEndIndex];
+        var iconUrl = string.IsNullOrEmpty(parsedIconUrl) ? string.Empty : "https:" + parsedIconUrl;
+
+        var localTilesStartIndex = relevantString.IndexOf("\"", iconUrlEndIndex + 1) + 1;
+        var localTilesEndIndex = relevantString.IndexOf("\"", localTilesStartIndex);
+        var localTiles = relevantString[localTilesStartIndex..localTilesEndIndex];
+
+        var coordsStartIndex = relevantString.IndexOf("\"", localTilesEndIndex + 1) + 1;
+        var coordsEndIndex = relevantString.IndexOf("\"", coordsStartIndex);
+        var coords = relevantString[coordsStartIndex..coordsEndIndex];
+
+        var pathStartIndex = relevantString.IndexOf("\"", coordsEndIndex + 1) + 1;
+        var pathEndIndex = relevantString.IndexOf("\"", pathStartIndex);
+        var path = relevantString[pathStartIndex..pathEndIndex];
+
+        var boundsStartIndex = relevantString.IndexOf("\"", pathEndIndex + 1) + 1;
+        var boundsEndIndex = relevantString.IndexOf("\"", boundsStartIndex);
+        var bounds = relevantString[boundsStartIndex..boundsEndIndex];
+
+        return new InteractiveMapInformation()
+        {
+            Bounds = bounds,
+            IconUrl = iconUrl,
+            LocalTiles = localTiles,
+            Path = path,
+            Coordinates = coords,
+        };
     }
 
     public interface IHasDescriptionList
     {
         List<KeyValuePair<string, string>> DescriptionList { get; set; }
+    }
+
+    public interface IHasInteractiveMap
+    {
+        InteractiveMapInformation InteractiveMap { get; set; }
     }
 
     public abstract class SubPageInformation
@@ -855,41 +937,62 @@ public class WikiParser
         public string Description { get; set; }
     }
 
-    public class NpcSubPageInformation : SubPageInformation, IHasDescriptionList
+    public class NpcSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
     {
         public string ImageUrl { get; set; }
 
         public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
 
         public List<string> AdditionalImages { get; set; } = new List<string>();
+
+        public InteractiveMapInformation InteractiveMap { get; set; }
     }
 
-    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList
+    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
     {
         public string ImageUrl { get; set; }
 
         public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
 
         public List<string> AdditionalImages { get; set; } = new List<string>();
+
+        public InteractiveMapInformation InteractiveMap { get; set; }
     }
 
-    public class QuestSubPageInformation : SubPageInformation, IHasDescriptionList
+    public class QuestSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
     {
         public string ImageUrl { get; set; }
 
         public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
 
         public List<string> AdditionalImages { get; set; } = new List<string>();
+
+        public InteractiveMapInformation InteractiveMap { get; set; }
     }
 
-    public class ItemSubPageInformation : SubPageInformation, IHasDescriptionList
+    public class ItemSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
     {
         public string ImageUrl { get; set; }
 
         public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
 
         public List<string> AdditionalImages { get; set; } = new List<string>();
+
+        public InteractiveMapInformation InteractiveMap { get; set; }
     }
 
     public class TextSubPageInformation : SubPageInformation { }
+
+    public class InteractiveMapInformation
+    {
+        public string IconUrl { get; set; }
+
+        public string LocalTiles { get; set; }
+
+        public string Path { get; set; }
+
+        public string Bounds { get; set; }
+
+        public string Coordinates { get; set; }
+    }
 }

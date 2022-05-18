@@ -145,6 +145,8 @@ Console.WriteLine("Hello, World!");
 
 // Parse Subpages
 
+
+
 var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("AchievementData_final2.json"), new JsonSerializerOptions()
 {
     WriteIndented = true,
@@ -152,6 +154,7 @@ var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEn
 });
 var parser = new Gw2WikiDownload.WikiParser();
 var subpageInformation = new List<Gw2WikiDownload.WikiParser.SubPageInformation>();
+//await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Tome_of_the_Five_True_Gods", 0, subpageInformation);
 
 foreach (var item in result.Select(x => x.Description.GameText))
 {
@@ -160,7 +163,26 @@ foreach (var item in result.Select(x => x.Description.GameText))
     {
         await parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation);
     }
+
+    foreach (var information in subpageInformation)
+    {
+        if (information is Gw2WikiDownload.WikiParser.IHasInteractiveMap interactiveMap)
+        {
+            if (interactiveMap.InteractiveMap != null && !string.IsNullOrEmpty(interactiveMap.InteractiveMap.Path))
+            {
+                Console.WriteLine();
+            }
+        }
+    }
 }
 Console.WriteLine("");
+
+var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
+{
+    WriteIndented = true,
+});
+
+File.WriteAllText("subPages.json", json);
+
 
 Console.WriteLine("Done");
