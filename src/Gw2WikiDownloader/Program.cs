@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using HtmlAgilityPack;
 using System.Diagnostics;
 using System.Text.Json;
@@ -153,7 +154,7 @@ var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEn
     Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
 });
 var parser = new Gw2WikiDownload.WikiParser();
-var subpageInformation = new List<Gw2WikiDownload.WikiParser.SubPageInformation>();
+var subpageInformation = new List<SubPageInformation>();
 //await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Tome_of_the_Five_True_Gods", 0, subpageInformation);
 
 foreach (var item in result.Select(x => x.Description.GameText))
@@ -166,7 +167,7 @@ foreach (var item in result.Select(x => x.Description.GameText))
 
     foreach (var information in subpageInformation)
     {
-        if (information is Gw2WikiDownload.WikiParser.IHasInteractiveMap interactiveMap)
+        if (information is IHasInteractiveMap interactiveMap)
         {
             if (interactiveMap.InteractiveMap != null && !string.IsNullOrEmpty(interactiveMap.InteractiveMap.Path))
             {
@@ -183,6 +184,5 @@ var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new Jso
 });
 
 File.WriteAllText("subPages.json", json);
-
 
 Console.WriteLine("Done");

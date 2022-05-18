@@ -1,12 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using HtmlAgilityPack;
 using System.Diagnostics;
 using System.Net;
 
 namespace Gw2WikiDownload;
 
-public class WikiParser
+public partial class WikiParser
 {
     // Parses a overview category page. Used for the initial list of achievement categories. https://wiki.guildwars2.com/index.php?title=Category:Achievement_categories
     public IEnumerable<(string link, string title)> ParseListElementsFromWiki(string categoryOverviewSource)
@@ -916,83 +917,5 @@ public class WikiParser
             Path = path,
             Coordinates = coords,
         };
-    }
-
-    public interface IHasDescriptionList
-    {
-        List<KeyValuePair<string, string>> DescriptionList { get; set; }
-    }
-
-    public interface IHasInteractiveMap
-    {
-        InteractiveMapInformation InteractiveMap { get; set; }
-    }
-
-    public abstract class SubPageInformation
-    {
-        public string Title { get; set; }
-
-        public string Link { get; set; }
-
-        public string Description { get; set; }
-    }
-
-    public class NpcSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
-    {
-        public string ImageUrl { get; set; }
-
-        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
-
-        public List<string> AdditionalImages { get; set; } = new List<string>();
-
-        public InteractiveMapInformation InteractiveMap { get; set; }
-    }
-
-    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
-    {
-        public string ImageUrl { get; set; }
-
-        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
-
-        public List<string> AdditionalImages { get; set; } = new List<string>();
-
-        public InteractiveMapInformation InteractiveMap { get; set; }
-    }
-
-    public class QuestSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
-    {
-        public string ImageUrl { get; set; }
-
-        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
-
-        public List<string> AdditionalImages { get; set; } = new List<string>();
-
-        public InteractiveMapInformation InteractiveMap { get; set; }
-    }
-
-    public class ItemSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
-    {
-        public string ImageUrl { get; set; }
-
-        public List<KeyValuePair<string, string>> DescriptionList { get; set; } = new List<KeyValuePair<string, string>>();
-
-        public List<string> AdditionalImages { get; set; } = new List<string>();
-
-        public InteractiveMapInformation InteractiveMap { get; set; }
-    }
-
-    public class TextSubPageInformation : SubPageInformation { }
-
-    public class InteractiveMapInformation
-    {
-        public string IconUrl { get; set; }
-
-        public string LocalTiles { get; set; }
-
-        public string Path { get; set; }
-
-        public string Bounds { get; set; }
-
-        public string Coordinates { get; set; }
     }
 }
