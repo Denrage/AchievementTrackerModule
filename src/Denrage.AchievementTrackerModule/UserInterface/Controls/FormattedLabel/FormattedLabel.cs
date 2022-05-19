@@ -109,6 +109,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
                 if (_wrapText && rectangle.X + rectangle.Width > Width)
                 {
                     splittedText = DrawUtil.WrapText(item.Font, firstText, Width - rectangle.X).Split(new[] { "\n" }, StringSplitOptions.None).Concat(splittedText.Skip(1)).ToList();
+                    firstText = splittedText[0];
                     rectangle = HandleFirstTextPart(item, firstText);
                 }
 
@@ -284,7 +285,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var random = new Random();
             foreach (var rectangle in _rectangles)
             {
                 var destinationRectangle = rectangle.Rectangle.Rectangle.ToBounds(AbsoluteBounds);
@@ -294,9 +294,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
                 {
                     textColor = rectangle.Text.HoverColor;
                 }
-
-
-                spriteBatch.DrawRectangle(destinationRectangle, Color.FromNonPremultiplied(random.Next(0, 256), random.Next(0, 256), random.Next(0, 256), 255));
 
                 if (rectangle.ToDraw is string stringText)
                 {
