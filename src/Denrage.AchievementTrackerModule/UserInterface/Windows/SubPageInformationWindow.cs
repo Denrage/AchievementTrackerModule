@@ -28,7 +28,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.subPageInformation = subPageInformation;
-            this.texture = this.contentsManager.GetTexture("achievement_details_background.png");
+            this.texture = this.contentsManager.GetTexture("subpage_background.png");
             this.BuildWindow();
         }
         private void BuildWindow()
@@ -134,7 +134,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 var acquisitionLabelBuilder = FormattedLabelHelper.CreateLabel(itemSubPage.Acquisition)
                     .AutoSizeHeight()
                     .Wrap()
-                    .SetWidth(flowPanel.ContentRegion.Width);
+                    .SetWidth(flowPanel.ContentRegion.Width - (PADDING * 3));
 
                 var acquisitionLabel = acquisitionLabelBuilder.Build();
                 acquisitionLabel.Parent = flowPanel;
@@ -145,7 +145,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 var statisticsLabelBuilds = FormattedLabelHelper.CreateLabel(locationSubPage.Statistics)
                     .AutoSizeHeight()
                     .Wrap()
-                    .SetWidth(flowPanel.ContentRegion.Width);
+                    .SetWidth(flowPanel.ContentRegion.Width - (PADDING * 3));
 
                 var statisticsLabel = statisticsLabelBuilds.Build();
                 statisticsLabel.Parent = flowPanel;
