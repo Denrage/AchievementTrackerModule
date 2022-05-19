@@ -1,5 +1,6 @@
 ﻿using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
+using Denrage.AchievementTrackerModule.Helper;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Microsoft.Xna.Framework;
@@ -18,8 +19,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly T description;
         private readonly CollectionAchievementTable achievementDetails;
         private readonly List<Control> itemControls = new List<Control>();
-        private Label gameTextLabel;
-        private Label gameHintLabel;
+        private FormattedLabel.FormattedLabel gameTextLabel;
+        private FormattedLabel.FormattedLabel gameHintLabel;
         private FlowPanel panel;
 
         protected IAchievementService AchievementService { get; }
@@ -57,27 +58,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                this.gameTextLabel = new Label()
-                {
-                    Parent = this,
-                    Text = StringUtils.SanitizeHtml(this.description.GameText),
-                    AutoSizeHeight = true,
-                    Width = this.ContentRegion.Width,
-                    WrapText = true,
-                };
+                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameText)
+                    .AutoSizeHeight()
+                    .SetWidth(this.ContentRegion.Width)
+                    .Wrap();
+
+                this.gameTextLabel = labelBuilder.Build();
+                this.gameTextLabel.Parent = this;
             }
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                this.gameHintLabel = new Label()
-                {
-                    Parent = this,
-                    Text = StringUtils.SanitizeHtml(this.description.GameHint),
-                    TextColor = Microsoft.Xna.Framework.Color.LightGray,
-                    Width = this.ContentRegion.Width,
-                    AutoSizeHeight = true,
-                    WrapText = true,
-                };
+                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameHint)
+                    .AutoSizeHeight()
+                    .SetWidth(this.ContentRegion.Width)
+                    .Wrap();
+
+                this.gameHintLabel = labelBuilder.Build();
+                this.gameHintLabel.Parent = this;
             }
 
             this.panel = new FlowPanel()

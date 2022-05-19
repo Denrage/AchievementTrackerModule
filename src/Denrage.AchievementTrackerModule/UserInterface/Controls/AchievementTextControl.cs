@@ -1,4 +1,5 @@
 ﻿using Blish_HUD.Controls;
+using Denrage.AchievementTrackerModule.Helper;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 
@@ -9,8 +10,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly AchievementTableEntry achievement;
         private readonly StringDescription description;
 
-        private Label gameTextLabel;
-        private Label gameHintLabel;
+        private FormattedLabel.FormattedLabel gameTextLabel;
+        private FormattedLabel.FormattedLabel gameHintLabel;
 
         public AchievementTextControl(AchievementTableEntry achievement, StringDescription description)
         {
@@ -24,27 +25,24 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                this.gameTextLabel = new Label()
-                {
-                    Parent = this,
-                    Text = StringUtils.SanitizeHtml(this.description.GameText),
-                    AutoSizeHeight = true,
-                    Width = this.ContentRegion.Width,
-                    WrapText = true,
-                };
+                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameText)
+                    .AutoSizeHeight()
+                    .SetWidth(this.ContentRegion.Width)
+                    .Wrap();
+
+                this.gameTextLabel = labelBuilder.Build();
+                this.gameTextLabel.Parent = this;
             }
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                this.gameHintLabel = new Label()
-                {
-                    Parent = this,
-                    Width = this.ContentRegion.Width,
-                    Text = StringUtils.SanitizeHtml(this.description.GameHint),
-                    TextColor = Microsoft.Xna.Framework.Color.LightGray,
-                    AutoSizeHeight = true,
-                    WrapText = true,
-                };
+                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameHint)
+                    .AutoSizeHeight()
+                    .SetWidth(this.ContentRegion.Width)
+                    .Wrap();
+
+                this.gameHintLabel = labelBuilder.Build();
+                this.gameHintLabel.Parent = this;
             }
         }
 
