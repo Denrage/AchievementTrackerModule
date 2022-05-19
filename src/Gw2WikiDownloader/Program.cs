@@ -153,35 +153,59 @@ var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEn
     WriteIndented = true,
     Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
 });
+
 var parser = new Gw2WikiDownload.WikiParser();
 var subpageInformation = new List<SubPageInformation>();
-//await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Tome_of_the_Five_True_Gods", 0, subpageInformation);
+//await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Chasing_Tales:_Azra_the_Sunslayer", 0, subpageInformation);
 
-foreach (var item in result.Select(x => x.Description.GameText))
+foreach (var item in result)
 {
-    var node = HtmlNode.CreateNode("<div>" + item + "</div>");
+    var node = HtmlNode.CreateNode("<div>" + item.Description.GameText + "</div>");
     foreach (var linkNode in node.ChildNodes.Where(x => x.Name == "a"))
     {
         await parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation);
     }
 
-    foreach (var information in subpageInformation)
+    if (!string.IsNullOrEmpty(item.Link))
     {
-        if (information is IHasInteractiveMap interactiveMap)
+        await parser.ParseSubPage("https://wiki.guildwars2.com" + item.Link, 0, subpageInformation);
+    }
+
+    if (item.Description is ObjectivesDescription objectivesDescription)
+    {
+        foreach (var objective in objectivesDescription.EntryList)
         {
-            if (interactiveMap.InteractiveMap != null && !string.IsNullOrEmpty(interactiveMap.InteractiveMap.Path))
+            if (objective is ILinkEntry linkEntry)
             {
-                Console.WriteLine();
+                if (!string.IsNullOrEmpty(linkEntry.Link))
+                {
+                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
+                }
             }
         }
     }
+
+    if (item.Description is CollectionDescription collectionDescription)
+    {
+        foreach (var collectionItem in collectionDescription.EntryList)
+        {
+            if (collectionItem is ILinkEntry linkEntry)
+            {
+                if (!string.IsNullOrEmpty(linkEntry.Link))
+                {
+                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
+                }
+            }
+        }
+    }
+
+    Console.Write($"\t\t\t{subpageInformation.Count}");
 }
-Console.WriteLine("");
 
 var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
 {
     WriteIndented = true,
-    Converters = { new SubPageInformationConverter()},
+    Converters = { new SubPageInformationConverter() },
 });
 
 File.WriteAllText("subPages.json", json);

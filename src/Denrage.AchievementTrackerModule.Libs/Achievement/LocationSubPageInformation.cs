@@ -12,5 +12,7 @@ namespace Denrage.AchievementTrackerModule.Libs.Achievement
         public List<string> AdditionalImages { get; set; } = new List<string>();
 
         public InteractiveMapInformation InteractiveMap { get; set; }
+
+        public string Statistics { get; set; }
     }
 }

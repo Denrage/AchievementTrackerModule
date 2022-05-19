@@ -677,7 +677,7 @@ public partial class WikiParser
         var subPage = new LocationSubPageInformation();
         var locationInfoBox = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'infobox area')]");
         HtmlNode element = null;
-        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div");
+        var wrapper = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div" && x.GetClasses().Contains("wrapper"));
 
         if (wrapper != null)
         {
@@ -694,6 +694,13 @@ public partial class WikiParser
         if (element != null)
         {
             subPage.DescriptionList = this.ParseDescriptionList(element);
+        }
+
+        var statisticsElement = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div" && x.GetClasses().Contains("statistics"));
+
+        if (statisticsElement != null)
+        {
+            subPage.Statistics = statisticsElement.InnerHtml;
         }
 
         subPage.ImageUrl = this.ParseInfoBoxImageWrapper(locationInfoBox);
@@ -777,6 +784,20 @@ public partial class WikiParser
         var imagePart = this.ParseAdditionalImagesPartInfoBox(table);
         subPage.AdditionalImages.AddRange(imagePart.Images);
         subPage.InteractiveMap = imagePart.MapInformation;
+
+        var pageNode = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'mw-parser-output')]");
+        var relevantNodes = pageNode.ChildNodes.Where(x => x.NodeType != HtmlNodeType.Text).ToArray();
+
+        for (var i = 0; i < relevantNodes.Length; i++)
+        {
+            if (relevantNodes[i].Name == "h2" && relevantNodes[i].InnerText.Contains("Acquisition"))
+            {
+                if (relevantNodes[i + 1].Name != "table")
+                {
+                    subPage.Acquisition = relevantNodes[i + 1].OuterHtml;
+                }
+            }
+        }
 
         return subPage;
     }
