@@ -51,6 +51,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             this.ClipsBounds = true;
             this.iconUrl = iconUrl;
+            this.localTiles = localTiles;
             var coords = this.ConvertStringToNestedArray(inputCoords);
             this.path = this.ConvertStringToNestedArray(path);
             this.bounds = this.ConvertStringToNestedArray(bounds);
@@ -335,8 +336,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 }
             }
 
-            var iconX = (float)((this.intMapCoords.X - this.startCoordinate.X) * TILE_SIZE + TILE_SIZE * (this.mapCoords.X % 1));
-            var iconY = (float)((this.intMapCoords.Y - this.startCoordinate.Y) * TILE_SIZE + TILE_SIZE * (this.mapCoords.Y % 1));
+            var iconX = (float)(((this.intMapCoords.X - this.startCoordinate.X) * TILE_SIZE) + (TILE_SIZE * (this.mapCoords.X % 1)));
+            var iconY = (float)(((this.intMapCoords.Y - this.startCoordinate.Y) * TILE_SIZE) + (TILE_SIZE * (this.mapCoords.Y % 1)));
 
             iconX = this.Scale(iconX, scaleX);
             iconY = this.Scale(iconY, scaleY);
@@ -344,20 +345,20 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             if (this.path.Count > 0)
             {
                 var startImageCoordinates = this.ConvertCoordinates((this.path[0][0], this.path[0][1]), this.maxzoom);
-                var startImageX = (int)(((int)Math.Floor(startImageCoordinates.X) - this.startCoordinate.X) * TILE_SIZE + TILE_SIZE * (startImageCoordinates.X % 1));
-                var startImageY = (int)(((int)Math.Floor(startImageCoordinates.Y) - this.startCoordinate.Y) * TILE_SIZE + TILE_SIZE * (startImageCoordinates.Y % 1));
+                var startImageX = (int)((((int)Math.Floor(startImageCoordinates.X) - this.startCoordinate.X) * TILE_SIZE) + (TILE_SIZE * (startImageCoordinates.X % 1)));
+                var startImageY = (int)((((int)Math.Floor(startImageCoordinates.Y) - this.startCoordinate.Y) * TILE_SIZE) + (TILE_SIZE * (startImageCoordinates.Y % 1)));
 
                 var endImageCoordinates = this.ConvertCoordinates((this.path[this.path.Count - 1][0], this.path[this.path.Count - 1][1]), this.maxzoom);
-                var endImageX = (int)(((int)Math.Floor(endImageCoordinates.X) - this.startCoordinate.X) * TILE_SIZE + TILE_SIZE * (endImageCoordinates.X % 1));
-                var endImageY = (int)(((int)Math.Floor(endImageCoordinates.Y) - this.startCoordinate.Y) * TILE_SIZE + TILE_SIZE * (endImageCoordinates.Y % 1));
+                var endImageX = (int)((((int)Math.Floor(endImageCoordinates.X) - this.startCoordinate.X) * TILE_SIZE) + (TILE_SIZE * (endImageCoordinates.X % 1)));
+                var endImageY = (int)((((int)Math.Floor(endImageCoordinates.Y) - this.startCoordinate.Y) * TILE_SIZE) + (TILE_SIZE * (endImageCoordinates.Y % 1)));
 
                 var points = this.path.Select(x =>
                 {
                     var translatedCoord = this.ConvertCoordinates((x[0], x[1]), this.maxzoom);
                     var intTranslatedCoordX = (int)Math.Floor(translatedCoord.X);
                     var intTranslatedCoordY = (int)Math.Floor(translatedCoord.Y);
-                    translatedCoord.X = (int)((intTranslatedCoordX - this.startCoordinate.X) * TILE_SIZE + TILE_SIZE * (translatedCoord.X % 1));
-                    translatedCoord.Y = (int)((intTranslatedCoordY - this.startCoordinate.Y) * TILE_SIZE + TILE_SIZE * (translatedCoord.Y % 1));
+                    translatedCoord.X = (int)(((intTranslatedCoordX - this.startCoordinate.X) * TILE_SIZE) + (TILE_SIZE * (translatedCoord.X % 1)));
+                    translatedCoord.Y = (int)(((intTranslatedCoordY - this.startCoordinate.Y) * TILE_SIZE) + (TILE_SIZE * (translatedCoord.Y % 1)));
                     return new Vector2(translatedCoord.X, translatedCoord.Y);
                 }).ToArray();
 
@@ -368,11 +369,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     spriteBatch.DrawLine(this.ToBounds(startPosition), this.ToBounds(nextPosition), Color.Yellow, 10);
                 }
 
-                var flagStartX = this.Scale(startImageX, scaleX) - this.Scale(flagStart.Texture.Width, scaleX) / 2;
-                var flagStartY = this.Scale(startImageY, scaleY) - this.Scale(flagStart.Texture.Height, scaleY) / 2;
+                var flagStartX = this.Scale(startImageX, scaleX) - (this.Scale(flagStart.Texture.Width, scaleX) / 2);
+                var flagStartY = this.Scale(startImageY, scaleY) - (this.Scale(flagStart.Texture.Height, scaleY) / 2);
 
-                var flagEndX = this.Scale(endImageX, scaleX) - this.Scale(flagEnd.Texture.Width, scaleX) / 2;
-                var flagEndY = this.Scale(endImageY, scaleY) - this.Scale(flagEnd.Texture.Height, scaleY) / 2;
+                var flagEndX = this.Scale(endImageX, scaleX) - (this.Scale(flagEnd.Texture.Width, scaleX) / 2);
+                var flagEndY = this.Scale(endImageY, scaleY) - (this.Scale(flagEnd.Texture.Height, scaleY) / 2);
 
                 spriteBatch.Draw(flagStart, this.ToBounds(new Vector2(flagStartX, flagStartY)), null, Color.White, 0f, default, new Vector2(scaleX, scaleY), SpriteEffects.None, 0f);
                 spriteBatch.Draw(flagEnd, this.ToBounds(new Vector2(flagEndX, flagEndY)), null, Color.White, 0f, default, new Vector2(scaleX, scaleY), SpriteEffects.None, 0f);
@@ -380,15 +381,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (!string.IsNullOrEmpty(this.iconUrl))
             {
-                var pointX = iconX - this.Scale(this.icon.Texture.Width, scaleX) / 2;
-                var pointY = iconY - this.Scale(this.icon.Texture.Height, scaleY) / 2;
+                var pointX = iconX - (this.Scale(this.icon.Texture.Width, scaleX) / 2);
+                var pointY = iconY - (this.Scale(this.icon.Texture.Height, scaleY) / 2);
 
                 spriteBatch.Draw(this.icon, this.ToBounds(new Vector2(pointX, pointY)), null, Color.White, 0f, default, new Vector2(scaleX, scaleY), SpriteEffects.None, 0f);
             }
             else
             {
-                var dotX = iconX - this.Scale(dot.Texture.Width, scaleX) / 2;
-                var dotY = iconY - this.Scale(dot.Texture.Height, scaleY) / 2;
+                var dotX = iconX - (this.Scale(dot.Texture.Width, scaleX) / 2);
+                var dotY = iconY - (this.Scale(dot.Texture.Height, scaleY) / 2);
                 spriteBatch.Draw(dot, this.ToBounds(new Vector2(dotX, dotY)), null, Color.White, 0f, default, new Vector2(scaleX, scaleY), SpriteEffects.None, 0f);
             }
 
@@ -399,8 +400,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     var translatedCoord = this.ConvertCoordinates((x[0], x[1]), this.maxzoom);
                     var intTranslatedCoordX = (int)Math.Floor(translatedCoord.X);
                     var intTranslatedCoordY = (int)Math.Floor(translatedCoord.Y);
-                    translatedCoord.X = (intTranslatedCoordX - this.startCoordinate.X) * TILE_SIZE + TILE_SIZE * (translatedCoord.X % 1);
-                    translatedCoord.Y = (intTranslatedCoordY - this.startCoordinate.Y) * TILE_SIZE + TILE_SIZE * (translatedCoord.Y % 1);
+                    translatedCoord.X = ((intTranslatedCoordX - this.startCoordinate.X) * TILE_SIZE) + (TILE_SIZE * (translatedCoord.X % 1));
+                    translatedCoord.Y = ((intTranslatedCoordY - this.startCoordinate.Y) * TILE_SIZE) + (TILE_SIZE * (translatedCoord.Y % 1));
 
                     return new Vector2(translatedCoord.X, translatedCoord.Y);
                 }).ToArray();
@@ -426,8 +427,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             }
             else
             {
-                var swirlX = iconX - this.Scale(swirl.Texture.Width, scaleX) / 2;
-                var swirlY = iconY - this.Scale(swirl.Texture.Height, scaleY) / 2;
+                var swirlX = iconX - (this.Scale(swirl.Texture.Width, scaleX) / 2);
+                var swirlY = iconY - (this.Scale(swirl.Texture.Height, scaleY) / 2);
                 spriteBatch.Draw(swirl, this.ToBounds(new Vector2(swirlX, swirlY)), null, Color.White, 0f, default, new Vector2(scaleX, scaleY), SpriteEffects.None, 0f);
 
             }
@@ -495,7 +496,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         }
 
         static (double X, double Y) GetCentroid(List<(double X, double Y)> poly)
-            => poly.Aggregate((x, y) => (x.X + y.X / poly.Count, x.Y + y.Y / poly.Count));
+            => poly.Aggregate((x, y) => (x.X + (y.X / poly.Count), x.Y + (y.Y / poly.Count)));
 
         static (double X, double Y) GetSize(List<(double X, double Y)> polygon)
         {
