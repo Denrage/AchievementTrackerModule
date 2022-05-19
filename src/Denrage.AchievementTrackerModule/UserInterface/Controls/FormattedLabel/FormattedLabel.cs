@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Blish_HUD;
+using Blish_HUD.Content;
 using Blish_HUD.Controls;
 using Blish_HUD.Input;
 using Microsoft.Xna.Framework;
@@ -301,7 +302,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
                 {
                     spriteBatch.DrawString(rectangle.Text.Font, stringText, destinationRectangle.Location.ToVector2(), textColor);
                 }
-                else if (rectangle.ToDraw is Texture2D texture)
+                else if (rectangle.ToDraw is AsyncTexture2D texture)
                 {
                     spriteBatch.Draw(texture, destinationRectangle, Color.White);
                 }
