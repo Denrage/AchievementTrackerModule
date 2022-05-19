@@ -146,68 +146,133 @@ Console.WriteLine("Hello, World!");
 
 // Parse Subpages
 
+//var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("AchievementData_final2.json"), new JsonSerializerOptions()
+//{
+//    WriteIndented = true,
+//    Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
+//});
 
-
-var result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("AchievementData_final2.json"), new JsonSerializerOptions()
-{
-    WriteIndented = true,
-    Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
-});
-
-var parser = new Gw2WikiDownload.WikiParser();
-var subpageInformation = new List<SubPageInformation>();
+//var parser = new Gw2WikiDownload.WikiParser();
+//var subpageInformation = new List<SubPageInformation>();
 //await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Chasing_Tales:_Azra_the_Sunslayer", 0, subpageInformation);
 
-foreach (var item in result)
-{
-    var node = HtmlNode.CreateNode("<div>" + item.Description.GameText + "</div>");
-    foreach (var linkNode in node.ChildNodes.Where(x => x.Name == "a"))
-    {
-        await parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation);
-    }
+//foreach (var item in result)
+//{
+//    var node = HtmlNode.CreateNode("<div>" + item.Description.GameText + "</div>");
+//    foreach (var linkNode in node.ChildNodes.Where(x => x.Name == "a"))
+//    {
+//        await parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation);
+//    }
 
-    if (!string.IsNullOrEmpty(item.Link))
-    {
-        await parser.ParseSubPage("https://wiki.guildwars2.com" + item.Link, 0, subpageInformation);
-    }
+//    if (!string.IsNullOrEmpty(item.Link))
+//    {
+//        await parser.ParseSubPage("https://wiki.guildwars2.com" + item.Link, 0, subpageInformation);
+//    }
 
-    if (item.Description is ObjectivesDescription objectivesDescription)
-    {
-        foreach (var objective in objectivesDescription.EntryList)
-        {
-            if (objective is ILinkEntry linkEntry)
-            {
-                if (!string.IsNullOrEmpty(linkEntry.Link))
-                {
-                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
-                }
-            }
-        }
-    }
+//    if (item.Description is ObjectivesDescription objectivesDescription)
+//    {
+//        foreach (var objective in objectivesDescription.EntryList)
+//        {
+//            if (objective is ILinkEntry linkEntry)
+//            {
+//                if (!string.IsNullOrEmpty(linkEntry.Link))
+//                {
+//                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
+//                }
+//            }
+//        }
+//    }
 
-    if (item.Description is CollectionDescription collectionDescription)
-    {
-        foreach (var collectionItem in collectionDescription.EntryList)
-        {
-            if (collectionItem is ILinkEntry linkEntry)
-            {
-                if (!string.IsNullOrEmpty(linkEntry.Link))
-                {
-                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
-                }
-            }
-        }
-    }
+//    if (item.Description is CollectionDescription collectionDescription)
+//    {
+//        foreach (var collectionItem in collectionDescription.EntryList)
+//        {
+//            if (collectionItem is ILinkEntry linkEntry)
+//            {
+//                if (!string.IsNullOrEmpty(linkEntry.Link))
+//                {
+//                    await parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation);
+//                }
+//            }
+//        }
+//    }
 
-    Console.Write($"\t\t\t{subpageInformation.Count}");
-}
+//    Console.Write($"\t\t\t{subpageInformation.Count}");
+//}
 
-var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
+//var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
+//{
+//    WriteIndented = true,
+//    Converters = { new SubPageInformationConverter() },
+//});
+
+//File.WriteAllText("subPages.json", json);
+
+
+var result = System.Text.Json.JsonSerializer.Deserialize<List<SubPageInformation>>(File.ReadAllText("subPages.json"), new JsonSerializerOptions()
 {
     WriteIndented = true,
     Converters = { new SubPageInformationConverter() },
 });
 
-File.WriteAllText("subPages.json", json);
+var differentNodes = new List<HtmlNode>();
+
+void Add(HtmlNode node)
+{
+    if (!differentNodes.Select(x => x.Name).Contains(node.Name))
+    {
+        differentNodes.Add(node);
+    }
+}
+
+foreach (var page in result)
+{
+    var node = HtmlNode.CreateNode("<div>" + page.Description + "</div");
+
+    foreach (var childNode in node.ChildNodes)
+    {
+        Add(childNode);
+    }
+
+    if (page is ItemSubPageInformation itemSubPage)
+    {
+        node = HtmlNode.CreateNode("<div>" + itemSubPage.Acquisition + "</div");
+
+        foreach (var childNode in node.ChildNodes)
+        {
+            Add(childNode);
+        }
+    }
+
+    if (page is LocationSubPageInformation location)
+    {
+        node = HtmlNode.CreateNode("<div>" + location.Statistics + "</div");
+
+        foreach (var childNode in node.ChildNodes)
+        {
+            Add(childNode);
+        }
+    }
+
+    if (page is IHasDescriptionList descriptionList)
+    {
+        foreach (var item in descriptionList.DescriptionList)
+        {
+            node = HtmlNode.CreateNode("<div>" + item.Key + "</div");
+
+            foreach (var childNode in node.ChildNodes)
+            {
+                Add(childNode);
+            }
+
+            node = HtmlNode.CreateNode("<div>" + item.Value + "</div");
+
+            foreach (var childNode in node.ChildNodes)
+            {
+                Add(childNode);
+            }
+        }
+    }
+}
 
 Console.WriteLine("Done");
