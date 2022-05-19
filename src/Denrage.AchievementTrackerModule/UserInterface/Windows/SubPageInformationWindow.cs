@@ -44,6 +44,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Height = this.ContentRegion.Height,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 CanScroll = true,
+                ControlPadding = new Microsoft.Xna.Framework.Vector2(0, 20),
                 OuterControlPadding = new Microsoft.Xna.Framework.Vector2(PADDING, PADDING),
             };
 
@@ -63,7 +64,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             var labelBuild = FormattedLabelHelper.CreateLabel(this.subPageInformation.Description)
                 .AutoSizeHeight()
-                .SetWidth(labelWidth)
+                .SetWidth(labelWidth - 5)
                 .Wrap();
 
             var label = labelBuild.Build();
@@ -75,11 +76,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 var statisticsLabelBuilds = FormattedLabelHelper.CreateLabel(locationSubPage.Statistics)
                     .AutoSizeHeight()
                     .Wrap()
-                    .SetWidth(panel.ContentRegion.Width / 2)
+                    .SetWidth((panel.ContentRegion.Width / 2) - 5)
                     .SetHorizontalAlignment(HorizontalAlignment.Center);
 
                 var statisticsLabel = statisticsLabelBuilds.Build();
-                statisticsLabel.Location = new Microsoft.Xna.Framework.Point(labelWidth, 0);
+                statisticsLabel.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, 0);
                 statisticsLabel.Parent = panel;
                 statisticsControl = statisticsLabel;
             }
@@ -90,19 +91,30 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             {
                 if (!string.IsNullOrEmpty(hasImage.ImageUrl))
                 {
-                    imageControl = new Image()
+                    var image = new Image()
                     {
-                        Texture = this.achievementService.GetImageFromIndirectLink(hasImage.ImageUrl, null),
-                        Width = panel.ContentRegion.Width / 2,
+                        Width = (panel.ContentRegion.Width / 2) - 5,
                         Height = 200,
-                        Location = new Microsoft.Xna.Framework.Point(labelWidth, 0),
+                        Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, 0),
                         Parent = panel,
                     };
 
                     if (statisticsControl != null)
                     {
-                        imageControl.Location = new Microsoft.Xna.Framework.Point(labelWidth, statisticsControl.Height + 5);
+                        image.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, statisticsControl.Height + 5);
                     }
+
+                    var spinner = new LoadingSpinner()
+                    {
+                        Parent = panel,
+                    };
+
+                    spinner.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5 + ((panel.Width - labelWidth - 5) / 2) - (spinner.Width / 2), image.Location.Y + (image.Height / 2) - (spinner.Height / 2));
+
+                    spinner.Show();
+
+                    image.Texture = this.achievementService.GetImageFromIndirectLink(hasImage.ImageUrl, () => spinner.Dispose());
+                    imageControl = image;
                 }
             }
 
@@ -113,7 +125,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     HeightSizingMode = SizingMode.AutoSize,
                     FlowDirection = ControlFlowDirection.SingleTopToBottom,
                     Width = panel.ContentRegion.Width / 2,
-                    Location = new Microsoft.Xna.Framework.Point(labelWidth, 0),
+                    Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, 0),
+                    ControlPadding = new Microsoft.Xna.Framework.Vector2(0, 30),
                     Parent = panel,
                 };
 
@@ -145,7 +158,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 if (imageControl != null)
                 {
-                    descriptionListPanel.Location = new Microsoft.Xna.Framework.Point(labelWidth, imageControl.Location.Y + imageControl.Height + 5);
+                    descriptionListPanel.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, imageControl.Location.Y + imageControl.Height + 5);
                 }
             }
 
@@ -172,9 +185,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 foreach (var item in additionalImages.AdditionalImages)
                 {
+                    var spinner = new LoadingSpinner()
+                    {
+                        Location = new Microsoft.Xna.Framework.Point(additionalImagesFlowPanel.Width / 2, additionalImagesFlowPanel.Height / 2),
+                        Parent = additionalImagesFlowPanel,
+                    };
+
+                    spinner.Show();
+
                     _ = new Image()
                     {
-                        Texture = this.achievementService.GetImageFromIndirectLink(item, null),
+                        Texture = this.achievementService.GetImageFromIndirectLink(item, () => spinner.Dispose()),
                         Width = additionalImagesFlowPanel.Width / 3,
                         Height = 100,
                         Parent = additionalImagesFlowPanel,
