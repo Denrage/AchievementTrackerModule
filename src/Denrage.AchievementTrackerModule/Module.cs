@@ -4,12 +4,14 @@ using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using Denrage.AchievementTrackerModule.Services;
 using Denrage.AchievementTrackerModule.UserInterface.Views;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
 using System;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule

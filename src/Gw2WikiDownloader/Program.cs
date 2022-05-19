@@ -181,6 +181,7 @@ Console.WriteLine("");
 var json = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
 {
     WriteIndented = true,
+    Converters = { new SubPageInformationConverter()},
 });
 
 File.WriteAllText("subPages.json", json);

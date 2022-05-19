@@ -32,6 +32,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IEnumerable<AchievementCategory> AchievementCategories { get; private set; }
 
+        public IReadOnlyList<Libs.Achievement.SubPageInformation> Subpages { get; private set; }
+
         public event Action PlayerAchievementsLoaded;
 
         public event Action ApiAchievementsLoaded;
@@ -48,7 +50,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.logger.Info("Reading saved achievement information");
             var serializerOptions = new JsonSerializerOptions()
             {
-                Converters = { new Libs.Achievement.RewardConverter(), new Libs.Achievement.AchievementTableEntryDescriptionConverter(), new Libs.Achievement.CollectionAchievementTableEntryConverter() },
+                Converters = { new Libs.Achievement.RewardConverter(), new Libs.Achievement.AchievementTableEntryDescriptionConverter(), new Libs.Achievement.CollectionAchievementTableEntryConverter(), new Libs.Achievement.SubPageInformationConverter() },
             };
 
             try
@@ -61,6 +63,11 @@ namespace Denrage.AchievementTrackerModule.Services
                 using (var achievementDetails = this.contentsManager.GetFileStream("achievement_tables.json"))
                 {
                     this.AchievementDetails = (await JsonSerializer.DeserializeAsync<List<Libs.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
+                }
+
+                using (var subpageInformation = this.contentsManager.GetFileStream("subpages.json"))
+                {
+                    this.Subpages = (await JsonSerializer.DeserializeAsync<List<Libs.Achievement.SubPageInformation>>(subpageInformation, serializerOptions)).AsReadOnly();
                 }
             }
             catch (Exception ex)

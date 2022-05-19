@@ -17,6 +17,7 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         IEnumerable<AchievementGroup> AchievementGroups { get; }
 
         IEnumerable<AchievementCategory> AchievementCategories { get; }
+        IReadOnlyList<SubPageInformation> Subpages { get; }
 
         event Action PlayerAchievementsLoaded;
 
