@@ -69,6 +69,21 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             var label = labelBuild.Build();
             label.Parent = panel;
 
+            Control statisticsControl = null;
+            if (this.subPageInformation is LocationSubPageInformation locationSubPage)
+            {
+                var statisticsLabelBuilds = FormattedLabelHelper.CreateLabel(locationSubPage.Statistics)
+                    .AutoSizeHeight()
+                    .Wrap()
+                    .SetWidth(panel.ContentRegion.Width / 2)
+                    .SetHorizontalAlignment(HorizontalAlignment.Center);
+
+                var statisticsLabel = statisticsLabelBuilds.Build();
+                statisticsLabel.Location = new Microsoft.Xna.Framework.Point(labelWidth, 0);
+                statisticsLabel.Parent = panel;
+                statisticsControl = statisticsLabel;
+            }
+
             Control imageControl = null;
 
             if (subPageInformation is IHasImage hasImage)
@@ -83,6 +98,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                         Location = new Microsoft.Xna.Framework.Point(labelWidth, 0),
                         Parent = panel,
                     };
+
+                    if (statisticsControl != null)
+                    {
+                        imageControl.Location = new Microsoft.Xna.Framework.Point(labelWidth, statisticsControl.Height + 5);
+                    }
                 }
             }
 
@@ -125,7 +145,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 if (imageControl != null)
                 {
-                    descriptionListPanel.Location = new Microsoft.Xna.Framework.Point(labelWidth, imageControl.Height);
+                    descriptionListPanel.Location = new Microsoft.Xna.Framework.Point(labelWidth, imageControl.Location.Y + imageControl.Height + 5);
                 }
             }
 
@@ -138,17 +158,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 var acquisitionLabel = acquisitionLabelBuilder.Build();
                 acquisitionLabel.Parent = flowPanel;
-            }
-
-            if (this.subPageInformation is LocationSubPageInformation locationSubPage)
-            {
-                var statisticsLabelBuilds = FormattedLabelHelper.CreateLabel(locationSubPage.Statistics)
-                    .AutoSizeHeight()
-                    .Wrap()
-                    .SetWidth(flowPanel.ContentRegion.Width - (PADDING * 3));
-
-                var statisticsLabel = statisticsLabelBuilds.Build();
-                statisticsLabel.Parent = flowPanel;
             }
 
             if (this.subPageInformation is IHasAdditionalImages additionalImages)
