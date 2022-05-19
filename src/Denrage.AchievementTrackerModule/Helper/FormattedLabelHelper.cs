@@ -1,8 +1,10 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Controls;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
+using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Flurl.Http;
 using HtmlAgilityPack;
 using System;
@@ -17,6 +19,7 @@ namespace Denrage.AchievementTrackerModule.Helper
     {
         private const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
         public static IAchievementService AchievementService { get; set; }
+        public static ContentsManager ContentsManager { get; set; }
 
         public static FormattedLabelBuilder CreateLabel(string textWithHtml)
         {
@@ -52,24 +55,19 @@ namespace Denrage.AchievementTrackerModule.Helper
                         {
                             var link = childNode.GetAttributeValue("href", "");
                             var inSubpages = false;
-                            foreach (var subpage in AchievementService.Subpages)
+                            foreach (var subPage in AchievementService.Subpages)
                             {
-                                if (subpage.Link.Contains(link) && !inSubpages )
+                                if (subPage.Link.Contains(link) && !inSubpages )
                                 {
                                     inSubpages = true;
                                     yield return part.SetLink(() =>
                                     {
-                                        var window = new StandardWindow(ContentService.Textures.TransparentPixel, new Microsoft.Xna.Framework.Rectangle(0, 0, 800, 800), new Microsoft.Xna.Framework.Rectangle(0, 0, 800, 800));
+                                        var window = new SubPageInformationWindow(ContentsManager, AchievementService, subPage)
+                                        {
+                                            Parent = GameService.Graphics.SpriteScreen,
+                                        };
 
-                                        window.Parent = GameService.Graphics.SpriteScreen;
-
-                                        var labelBuild = FormattedLabelHelper.CreateLabel(subpage.Description)
-                                            .AutoSizeHeight()
-                                            .SetWidth(window.ContentRegion.Width)
-                                            .Wrap();
-
-                                        var label = labelBuild.Build();
-                                        label.Parent = window;
+                                        window.Hidden += (s, e) => window.Dispose();
                                         window.Show();
                                     }).MakeUnderlined();
                                 }
@@ -108,7 +106,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                     if (imageNode != null)
                     {
                         var builder = labelBuilder.CreatePart("");
-                        builder.SetPrefixImage(GetTexture(imageNode.GetAttributeValue("src", "")));
+                        builder.SetPrefixImage(GetTexture(imageNode.GetAttributeValue("src", ""))).SetPrefixImageSize(new Microsoft.Xna.Framework.Point(24, 24));
                         yield return builder;
                     }
                 }

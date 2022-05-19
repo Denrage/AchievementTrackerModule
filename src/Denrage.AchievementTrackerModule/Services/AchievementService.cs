@@ -220,7 +220,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 {
                     var imageStream = await getImageStream();
 
-                    beforeSwap();
+                    beforeSwap?.Invoke();
 
                     GameService.Graphics.QueueMainThreadRender(device =>
                     {

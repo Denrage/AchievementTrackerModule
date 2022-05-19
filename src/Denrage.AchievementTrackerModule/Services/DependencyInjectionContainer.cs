@@ -54,6 +54,7 @@ namespace Denrage.AchievementTrackerModule.Services
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger);
             this.AchievementService = achievementService;
             Helper.FormattedLabelHelper.AchievementService = this.AchievementService;
+            Helper.FormattedLabelHelper.ContentsManager = this.contentsManager;
 
             var achievementTrackerService = new AchievementTrackerService(this.logger);
             this.AchievementTrackerService = achievementTrackerService;

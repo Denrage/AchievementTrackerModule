@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule.Libs.Achievement
 {
-    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap
+    public class LocationSubPageInformation : SubPageInformation, IHasDescriptionList, IHasInteractiveMap, IHasImage, IHasAdditionalImages
     {
         public string ImageUrl { get; set; }
 
