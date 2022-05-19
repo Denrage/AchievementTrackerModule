@@ -1,5 +1,6 @@
 ﻿using System;
 using Blish_HUD;
+using Blish_HUD.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
@@ -20,9 +21,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
 
         public Action Link { get; }
 
-        public Texture2D PrefixImage { get; }
+        public AsyncTexture2D PrefixImage { get; }
 
-        public Texture2D SuffixImage { get; }
+        public AsyncTexture2D SuffixImage { get; }
 
         public Point PrefixImageSize { get; }
 
@@ -42,8 +43,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
             bool isUnderlined,
             string text,
             Action link,
-            Texture2D prefixImage,
-            Texture2D suffixImage,
+            AsyncTexture2D prefixImage,
+            AsyncTexture2D suffixImage,
             Point prefixImageSize,
             Point suffixImageSize,
             Color textColor,

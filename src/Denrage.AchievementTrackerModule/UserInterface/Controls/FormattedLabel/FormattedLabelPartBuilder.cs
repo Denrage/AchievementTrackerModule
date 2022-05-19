@@ -1,5 +1,6 @@
 ﻿using System;
 using Blish_HUD;
+using Blish_HUD.Content;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -12,8 +13,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
         private bool _isStrikeThrough;
         private bool _isUnderlined;
         private Action _link;
-        private Texture2D _prefixImage;
-        private Texture2D _suffixImage;
+        private AsyncTexture2D _prefixImage;
+        private AsyncTexture2D _suffixImage;
         private Point _prefixImageSize = new Point(32, 32);
         private Point _suffixImageSize = new Point(32, 32);
         private Color _textColor;
@@ -55,13 +56,13 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
             return this;
         }
 
-        public FormattedLabelPartBuilder SetPrefixImage(Texture2D prefixImage)
+        public FormattedLabelPartBuilder SetPrefixImage(AsyncTexture2D prefixImage)
         {
             _prefixImage = prefixImage;
             return this;
         }
 
-        public FormattedLabelPartBuilder SetSuffixImage(Texture2D suffixImage)
+        public FormattedLabelPartBuilder SetSuffixImage(AsyncTexture2D suffixImage)
         {
             _suffixImage = suffixImage;
             return this;
