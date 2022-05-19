@@ -187,13 +187,23 @@ namespace Denrage.AchievementTrackerModule.Helper
                     }
                 }
             }
-            // TODO: Move out
             else if (childNode.Name == "ul")
             {
                 // TODO: Does this work?
                 foreach (var item in childNode.ChildNodes.Where(x => x.Name == "li"))
                 {
                     foreach (var part in CreateParts(item, labelBuilder))
+                    {
+                        yield return part;
+                    }
+                }
+            }
+            else if (childNode.Name == "li")
+            {
+                // TODO: Does this work?
+                foreach (var innerChildNode in childNode.ChildNodes)
+                {
+                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
