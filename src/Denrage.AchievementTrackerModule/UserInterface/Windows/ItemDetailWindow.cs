@@ -1,6 +1,8 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
+using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -62,16 +64,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 CanScroll = true,
             };
 
-            var itemTitle = new Label()
-            {
-                Parent = panel,
-                Width = panel.ContentRegion.Width,
-                Text = this.name,
-                AutoSizeHeight = true,
-                WrapText = true,
-                Font = Content.DefaultFont18,
-            };
-
             var item = this.item.OfType<CollectionAchievementTableItemEntry>().FirstOrDefault();
             var link = this.achievementLink;
 
@@ -80,17 +72,49 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 link = item.Link;
             }
 
+            var itemTitleBuilder = new FormattedLabelBuilder()
+                .SetWidth(panel.ContentRegion.Width)
+                .AutoSizeHeight()
+                .Wrap();
+
+            var itemTitlePart = itemTitleBuilder.CreatePart(this.name);
+
+            _ = itemTitlePart.SetFontSize(Blish_HUD.ContentService.FontSize.Size18);
+
             if (!string.IsNullOrEmpty(link))
             {
-                itemTitle.MouseEntered += (o, e) => itemTitle.TextColor = Color.LightBlue;
-                itemTitle.MouseLeft += (o, e) => itemTitle.TextColor = Color.White;
-                itemTitle.LeftMouseButtonPressed += (o, e) => itemTitle.TextColor = new Color(206, 174, 250);
-                itemTitle.LeftMouseButtonReleased += (o, e) =>
+                var inSubpages = false;
+                foreach (var subPage in this.achievementService.Subpages)
                 {
-                    itemTitle.TextColor = Color.LightBlue;
-                    _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + link);
-                };
+                    if (subPage.Link.Contains(link))
+                    {
+                        inSubpages = true;
+                        _ = itemTitlePart.SetLink(() =>
+                        {
+                            var window = new SubPageInformationWindow(this.contentsManager, this.achievementService, subPage)
+                            {
+                                Parent = GameService.Graphics.SpriteScreen,
+                            };
+
+                            window.Hidden += (s, e) => window.Dispose();
+                            window.Show();
+                        }).MakeUnderlined();
+                    }
+                }
+
+                if (!inSubpages)
+                {
+                    if (link.StartsWith("/"))
+                    {
+                        link = "https://wiki.guildwars2.com/" + link;
+                    }
+
+                    _ = itemTitlePart.SetHyperLink(link).MakeUnderlined();
+                }
             }
+
+            var itemTitle = itemTitleBuilder.CreatePart(itemTitlePart).Build();
+            itemTitle.Parent = panel;
 
             for (var i = 0; i < this.item.Count; i++)
             {

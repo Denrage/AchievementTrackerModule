@@ -16,7 +16,7 @@ namespace Denrage.AchievementTrackerModule.Services
         {
             this.mapping.Add(typeof(CollectionAchievementTableNumberEntry), new AchievementTableNumberEntryFactory());
             this.mapping.Add(typeof(CollectionAchievementTableCoinEntry), new AchievementTableCoinEntryFactory());
-            this.mapping.Add(typeof(CollectionAchievementTableItemEntry), new AchievementTableItemEntryFactory());
+            this.mapping.Add(typeof(CollectionAchievementTableItemEntry), new AchievementTableItemEntryFactory(achievementService));
             this.mapping.Add(typeof(CollectionAchievementTableLinkEntry), new AchievementTableLinkEntryFactory());
             this.mapping.Add(typeof(CollectionAchievementTableMapEntry), new AchievementTableMapEntryFactory(achievementService, logger));
             this.mapping.Add(typeof(CollectionAchievementTableStringEntry), new AchievementTableStringEntryFactory());
