@@ -105,17 +105,19 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
                 var splittedText = item.Text.Split(new[] { "\n" }, StringSplitOptions.None).ToList();
                 var firstText = splittedText[0];
                 var rectangle = HandleFirstTextPart(item, firstText);
-
+                var wrapped = false;
                 if (_wrapText && rectangle.X + rectangle.Width > Width)
                 {
-                    splittedText = DrawUtil.WrapText(item.Font, firstText, Width - rectangle.X).Split(new[] { "\n" }, StringSplitOptions.None).Concat(splittedText.Skip(1)).ToList();
-                    firstText = splittedText[0];
+                    var tempSplittedText = DrawUtil.WrapText(item.Font, firstText, Width - rectangle.X).Split(new[] { "\n" }, StringSplitOptions.None).ToList();
+                    splittedText = new[] { string.Join("", tempSplittedText.Skip(1)) }.Concat(splittedText.Skip(1)).ToList();
+                    firstText = tempSplittedText[0];
                     rectangle = HandleFirstTextPart(item, firstText);
+                    wrapped = true;
                 }
 
                 _rectangles.Add((new RectangleWrapper(rectangle), item, firstText));
 
-                for (var i = 1; i < splittedText.Count; i++)
+                for (var i = wrapped ? 0 : 1; i < splittedText.Count; i++)
                 {
                     rectangle = HandleMultiLineText(item, splittedText[i]);
                     if (_wrapText && rectangle.X + rectangle.Width > Width)
@@ -316,6 +318,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
                 }
             }
         }
+
+        protected override void OnResized(ResizedEventArgs e) => base.OnResized(e);
 
         private class RectangleWrapper
         {
