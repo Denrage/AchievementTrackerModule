@@ -34,15 +34,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private Label noAchievementsLabel;
 
         public AchievementTrackWindow(
-            ContentsManager contentsManager, 
-            IAchievementTrackerService achievementTrackerService, 
-            IAchievementControlProvider achievementControlProvider, 
-            IAchievementService achievementService, 
-            IAchievementDetailsWindowManager achievementDetailsWindowManager, 
-            IAchievementControlManager achievementControlManager, 
+            ContentsManager contentsManager,
+            IAchievementTrackerService achievementTrackerService,
+            IAchievementControlProvider achievementControlProvider,
+            IAchievementService achievementService,
+            IAchievementDetailsWindowManager achievementDetailsWindowManager,
+            IAchievementControlManager achievementControlManager,
             ISubPageInformationWindowManager subPageInformationWindowManager,
-            OverlayService overlayService, 
-            IFormattedLabelHtmlService formattedLabelHtmlService, 
+            OverlayService overlayService,
+            IFormattedLabelHtmlService formattedLabelHtmlService,
             Func<IView> achievementOverviewView)
         {
             this.contentsManager = contentsManager;
@@ -118,6 +118,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             trackButton.Click += (s, e)
                 => this.achievementTrackerService.RemoveAchievement(achievementId);
 
+            // TODO: Localize
+            trackButton.BasicTooltipText = "Untrack this achievement";
+
             var detachButton = new Image()
             {
                 Parent = panel,
@@ -127,9 +130,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Texture = this.contentsManager.GetTexture("pop_out.png"),
             };
 
+            // TODO: Localize
+            detachButton.BasicTooltipText = "Detach into own window";
+
             if (achievement.HasLink)
             {
-                var wikiButton = new Image()
+                var linkButton = new Image()
                 {
                     Parent = panel,
                     Location = new Point(detachButton.Location.X, detachButton.Location.Y + detachButton.Size.Y),
@@ -138,7 +144,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     Texture = this.contentsManager.GetTexture("link.png"),
                 };
 
-                wikiButton.Click += (s, e)
+                linkButton.Click += (s, e)
                     =>
                 {
                     var inSubpages = false;
@@ -156,6 +162,22 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                         _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + achievement.Link);
                     }
                 };
+
+                linkButton.BasicTooltipText = "Open achievement in subpages or wiki";
+
+                var wikiButton = new Image()
+                {
+                    Parent = panel,
+                    Location = new Point(linkButton.Location.X, linkButton.Location.Y + linkButton.Size.Y),
+                    Width = 32,
+                    Height = 32,
+                    Texture = this.contentsManager.GetTexture("wiki.png"),
+                };
+
+                wikiButton.Click += (s, e)
+                    => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + achievement.Link);
+
+                wikiButton.BasicTooltipText = "Open achievement in wiki";
             }
 
             if (!this.achievementControlManager.ControlExists(achievementId))
@@ -244,12 +266,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 CanScroll = true,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Width = this.ContentRegion.Width,
-                Height = this.ContentRegion.Height - openAchievementPanelButton.Height - closeSubPagesButton.Height,
+                Height = this.ContentRegion.Height - openAchievementPanelButton.Height - closeSubPagesButton.Height - collapseAll.Height,
                 Location = new Point(0, collapseAll.Height),
                 ControlPadding = new Vector2(7f),
             };
 
-            openAchievementPanelButton.Location = new Point(0, this.flowPanel.Height);
+            openAchievementPanelButton.Location = new Point(0, this.flowPanel.Height + this.flowPanel.Location.Y);
             closeSubPagesButton.Location = new Point(0, openAchievementPanelButton.Height + openAchievementPanelButton.Location.Y);
 
             openAchievementPanelButton.Click += (s, e) =>
