@@ -125,7 +125,29 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 };
 
                 wikiButton.Click += (s, e)
-                    => _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + achievement.Link);
+                    =>
+                {
+                    var inSubpages = false;
+                    foreach (var subPage in this.achievementService.Subpages)
+                    {
+                        if (subPage.Link.Contains(achievement.Link))
+                        {
+                            inSubpages = true;
+                            var window = new SubPageInformationWindow(this.contentsManager, this.achievementService, subPage)
+                            {
+                                Parent = GameService.Graphics.SpriteScreen,
+                            };
+
+                            window.Hidden += (sender, _) => window.Dispose();
+                            window.Show();
+                        }
+                    }
+
+                    if (!inSubpages)
+                    {
+                        _ = System.Diagnostics.Process.Start("https://wiki.guildwars2.com" + achievement.Link);
+                    }
+                };
             }
 
             if (!this.achievementControlManager.ControlExists(achievementId))
