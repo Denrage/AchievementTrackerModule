@@ -36,8 +36,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         private void BuildWindow()
         {
-            // TODO: Localization
-            this.Title = subPageInformation.Title;
+            var title = subPageInformation.Title.Substring(0, System.Math.Min(subPageInformation.Title.Length, 25));
+            if (title != subPageInformation.Title)
+            {
+                title += " ...";
+            }
+            this.Title = title;
             this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 400), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 400 - 30));
 
             var flowPanel = new FlowPanel()
