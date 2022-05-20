@@ -1,10 +1,8 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
-using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
-using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Flurl.Http;
 using HtmlAgilityPack;
 using System;
@@ -13,15 +11,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Denrage.AchievementTrackerModule.Helper
+namespace Denrage.AchievementTrackerModule.Services
 {
-    internal class FormattedLabelHelper
+    public class FormattedLabelHtmlService : IFormattedLabelHtmlService
     {
         private const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
-        public static IAchievementService AchievementService { get; set; }
-        public static ContentsManager ContentsManager { get; set; }
+        private readonly IAchievementService achievementService;
+        private readonly ISubPageInformationWindowManager subPageInformationWindowManager;
+        public readonly ContentsManager contentsManager;
 
-        public static FormattedLabelBuilder CreateLabel(string textWithHtml)
+        public FormattedLabelHtmlService(ContentsManager contentsManager, IAchievementService achievementService, ISubPageInformationWindowManager subPageInformationWindowManager)
+        {
+            this.contentsManager = contentsManager;
+            this.achievementService = achievementService;
+            this.subPageInformationWindowManager = subPageInformationWindowManager;
+        }
+
+        public FormattedLabelBuilder CreateLabel(string textWithHtml)
         {
             var labelBuilder = new FormattedLabelBuilder();
 
@@ -29,7 +35,7 @@ namespace Denrage.AchievementTrackerModule.Helper
 
             foreach (var childNode in node.ChildNodes)
             {
-                foreach (var item in CreateParts(childNode, labelBuilder))
+                foreach (var item in this.CreateParts(childNode, labelBuilder))
                 {
                     _ = labelBuilder.CreatePart(item);
                 }
@@ -38,7 +44,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             return labelBuilder;
         }
 
-        private static IEnumerable<FormattedLabelPartBuilder> CreateParts(HtmlNode childNode, FormattedLabelBuilder labelBuilder)
+        private IEnumerable<FormattedLabelPartBuilder> CreateParts(HtmlNode childNode, FormattedLabelBuilder labelBuilder)
         {
             if (childNode.Name == "#text")
             {
@@ -51,25 +57,16 @@ namespace Denrage.AchievementTrackerModule.Helper
                 {
                     foreach (var innerChildNode in childNode.ChildNodes)
                     {
-                        foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                        foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                         {
                             var link = childNode.GetAttributeValue("href", "");
                             var inSubpages = false;
-                            foreach (var subPage in AchievementService.Subpages)
+                            foreach (var subPage in this.achievementService.Subpages)
                             {
-                                if (subPage.Link.Contains(link) && !inSubpages )
+                                if (subPage.Link.Contains(link) && !inSubpages)
                                 {
                                     inSubpages = true;
-                                    yield return part.SetLink(() =>
-                                    {
-                                        var window = new SubPageInformationWindow(ContentsManager, AchievementService, subPage)
-                                        {
-                                            Parent = GameService.Graphics.SpriteScreen,
-                                        };
-
-                                        window.Hidden += (s, e) => window.Dispose();
-                                        window.Show();
-                                    }).MakeUnderlined();
+                                    yield return part.SetLink(() => this.subPageInformationWindowManager.Create(subPage)).MakeUnderlined();
                                 }
                             }
 
@@ -89,7 +86,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 {
                     foreach (var innerChildNode in childNode.ChildNodes)
                     {
-                        foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                        foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                         {
                             yield return part;
                         }
@@ -106,7 +103,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                     if (imageNode != null)
                     {
                         var builder = labelBuilder.CreatePart("");
-                        builder.SetPrefixImage(GetTexture(imageNode.GetAttributeValue("src", ""))).SetPrefixImageSize(new Microsoft.Xna.Framework.Point(24, 24));
+                        _ = builder.SetPrefixImage(this.GetTexture(imageNode.GetAttributeValue("src", ""))).SetPrefixImageSize(new Microsoft.Xna.Framework.Point(24, 24));
                         yield return builder;
                     }
                 }
@@ -114,7 +111,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 {
                     foreach (var innerChildNode in childNode.ChildNodes)
                     {
-                        foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                        foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                         {
                             yield return part;
                         }
@@ -126,7 +123,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Make it bold when merged with core
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -136,7 +133,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part.MakeItalic();
                     }
@@ -151,7 +148,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -166,7 +163,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -181,7 +178,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Make it small when merged with core
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -192,7 +189,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Does this work?
                 foreach (var item in childNode.ChildNodes.Where(x => x.Name == "li"))
                 {
-                    foreach (var part in CreateParts(item, labelBuilder))
+                    foreach (var part in this.CreateParts(item, labelBuilder))
                     {
                         yield return part;
                     }
@@ -203,7 +200,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Does this work?
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -213,7 +210,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -226,13 +223,13 @@ namespace Denrage.AchievementTrackerModule.Helper
             else if (childNode.Name == "img")
             {
                 var builder = labelBuilder.CreatePart(string.Empty);
-                yield return builder.SetPrefixImage(GetTexture(childNode.GetAttributeValue("src", string.Empty)));
+                yield return builder.SetPrefixImage(this.GetTexture(childNode.GetAttributeValue("src", string.Empty)));
             }
             else if (childNode.Name == "s")
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part.MakeStrikeThrough();
                     }
@@ -242,7 +239,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -252,7 +249,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             {
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -263,7 +260,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Make it big when merged with core
                 foreach (var innerChildNode in childNode.ChildNodes)
                 {
-                    foreach (var part in CreateParts(innerChildNode, labelBuilder))
+                    foreach (var part in this.CreateParts(innerChildNode, labelBuilder))
                     {
                         yield return part;
                     }
@@ -274,7 +271,7 @@ namespace Denrage.AchievementTrackerModule.Helper
                 // TODO: Does this work?
                 foreach (var item in childNode.ChildNodes.Where(x => x.Name == "li"))
                 {
-                    foreach (var part in CreateParts(item, labelBuilder))
+                    foreach (var part in this.CreateParts(item, labelBuilder))
                     {
                         yield return part;
                     }
@@ -282,7 +279,7 @@ namespace Denrage.AchievementTrackerModule.Helper
             }
         }
 
-        private static AsyncTexture2D GetTexture(string url)
+        private AsyncTexture2D GetTexture(string url)
         {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
             _ = Task.Run(() =>

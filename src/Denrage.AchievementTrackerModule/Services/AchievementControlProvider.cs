@@ -12,11 +12,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     {
         private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
-        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, ContentsManager contentsManager)
+        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, IFormattedLabelHtmlService formattedLabelHtmlService, ContentsManager contentsManager)
         {
-            this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory());
-            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, contentsManager));
-            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager));
+            this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory(formattedLabelHtmlService));
+            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, formattedLabelHtmlService, contentsManager));
+            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager, formattedLabelHtmlService));
         }
 
         public Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description)

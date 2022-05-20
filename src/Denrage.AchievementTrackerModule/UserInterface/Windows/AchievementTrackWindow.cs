@@ -23,7 +23,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly IAchievementService achievementService;
         private readonly IAchievementDetailsWindowManager achievementDetailsWindowManager;
         private readonly IAchievementControlManager achievementControlManager;
+        private readonly ISubPageInformationWindowManager subPageInformationWindowManager;
         private readonly OverlayService overlayService;
+        private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly Func<IView> achievementOverviewView;
         private readonly Texture2D texture;
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
@@ -31,7 +33,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private FlowPanel flowPanel;
         private Label noAchievementsLabel;
 
-        public AchievementTrackWindow(ContentsManager contentsManager, IAchievementTrackerService achievementTrackerService, IAchievementControlProvider achievementControlProvider, IAchievementService achievementService, IAchievementDetailsWindowManager achievementDetailsWindowManager, IAchievementControlManager achievementControlManager, OverlayService overlayService, Func<IView> achievementOverviewView)
+        public AchievementTrackWindow(
+            ContentsManager contentsManager, 
+            IAchievementTrackerService achievementTrackerService, 
+            IAchievementControlProvider achievementControlProvider, 
+            IAchievementService achievementService, 
+            IAchievementDetailsWindowManager achievementDetailsWindowManager, 
+            IAchievementControlManager achievementControlManager, 
+            ISubPageInformationWindowManager subPageInformationWindowManager,
+            OverlayService overlayService, 
+            IFormattedLabelHtmlService formattedLabelHtmlService, 
+            Func<IView> achievementOverviewView)
         {
             this.contentsManager = contentsManager;
             this.achievementTrackerService = achievementTrackerService;
@@ -39,7 +51,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.achievementService = achievementService;
             this.achievementDetailsWindowManager = achievementDetailsWindowManager;
             this.achievementControlManager = achievementControlManager;
+            this.subPageInformationWindowManager = subPageInformationWindowManager;
             this.overlayService = overlayService;
+            this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.achievementOverviewView = achievementOverviewView;
             this.texture = this.contentsManager.GetTexture("background.png");
             this.achievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
@@ -133,13 +147,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                         if (subPage.Link.Contains(achievement.Link))
                         {
                             inSubpages = true;
-                            var window = new SubPageInformationWindow(this.contentsManager, this.achievementService, subPage)
-                            {
-                                Parent = GameService.Graphics.SpriteScreen,
-                            };
-
-                            window.Hidden += (sender, _) => window.Dispose();
-                            window.Show();
+                            this.subPageInformationWindowManager.Create(subPage);
                         }
                     }
 

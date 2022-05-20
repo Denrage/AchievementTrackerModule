@@ -1,6 +1,5 @@
 ﻿using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
-using Denrage.AchievementTrackerModule.Helper;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Denrage.AchievementTrackerModule.Libs.Interfaces;
@@ -21,17 +20,20 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
+        private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly SubPageInformation subPageInformation;
         private readonly Texture2D texture;
 
-        public SubPageInformationWindow(ContentsManager contentsManager, IAchievementService achievementService, SubPageInformation subPageInformation)
+        public SubPageInformationWindow(ContentsManager contentsManager, IAchievementService achievementService, IFormattedLabelHtmlService formattedLabelHtmlService, SubPageInformation subPageInformation)
         {
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
+            this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.subPageInformation = subPageInformation;
             this.texture = this.contentsManager.GetTexture("subpage_background.png");
             this.BuildWindow();
         }
+
         private void BuildWindow()
         {
             // TODO: Localization
@@ -73,7 +75,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 labelWidth = panel.ContentRegion.Width / 2;
             }
 
-            var labelBuild = FormattedLabelHelper.CreateLabel(this.subPageInformation.Description)
+            var labelBuild = this.formattedLabelHtmlService.CreateLabel(this.subPageInformation.Description)
                 .AutoSizeHeight()
                 .SetWidth(labelWidth - 5)
                 .Wrap();
@@ -84,7 +86,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             Control statisticsControl = null;
             if (this.subPageInformation is LocationSubPageInformation locationSubPage)
             {
-                var statisticsLabelBuilds = FormattedLabelHelper.CreateLabel(locationSubPage.Statistics)
+                var statisticsLabelBuilds = this.formattedLabelHtmlService.CreateLabel(locationSubPage.Statistics)
                     .AutoSizeHeight()
                     .Wrap()
                     .SetWidth((panel.ContentRegion.Width / 2) - 5)
@@ -149,7 +151,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                         HeightSizingMode= SizingMode.AutoSize,
                         Parent = descriptionListPanel,
                     };
-                    var labelBuilder = FormattedLabelHelper.CreateLabel(item.Key)
+                    var labelBuilder = this.formattedLabelHtmlService.CreateLabel(item.Key)
                         .AutoSizeHeight()
                         .Wrap()
                         .SetWidth(descriptionEntryPanel.ContentRegion.Width / 2);
@@ -157,7 +159,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     var keyLabel = labelBuilder.Build();
                     keyLabel.Parent = descriptionEntryPanel;
 
-                    labelBuilder = FormattedLabelHelper.CreateLabel(item.Value)
+                    labelBuilder = this.formattedLabelHtmlService.CreateLabel(item.Value)
                         .AutoSizeHeight()
                         .Wrap()
                         .SetWidth(descriptionEntryPanel.ContentRegion.Width / 2);
@@ -175,7 +177,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             if (this.subPageInformation is ItemSubPageInformation itemSubPage)
             {
-                var acquisitionLabelBuilder = FormattedLabelHelper.CreateLabel(itemSubPage.Acquisition)
+                var acquisitionLabelBuilder = this.formattedLabelHtmlService.CreateLabel(itemSubPage.Acquisition)
                     .AutoSizeHeight()
                     .Wrap()
                     .SetWidth(flowPanel.ContentRegion.Width - (PADDING * 3));

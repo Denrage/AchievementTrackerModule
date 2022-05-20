@@ -12,14 +12,14 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly Dictionary<Type, AchievementTableEntryFactory> mapping = new Dictionary<Type, AchievementTableEntryFactory>();
 
-        public AchievementTableEntryProvider(IAchievementService achievementService, Logger logger)
+        public AchievementTableEntryProvider(IAchievementService achievementService, IFormattedLabelHtmlService formattedLabelHtmlService, Logger logger)
         {
             this.mapping.Add(typeof(CollectionAchievementTableNumberEntry), new AchievementTableNumberEntryFactory());
             this.mapping.Add(typeof(CollectionAchievementTableCoinEntry), new AchievementTableCoinEntryFactory());
             this.mapping.Add(typeof(CollectionAchievementTableItemEntry), new AchievementTableItemEntryFactory(achievementService));
-            this.mapping.Add(typeof(CollectionAchievementTableLinkEntry), new AchievementTableLinkEntryFactory());
+            this.mapping.Add(typeof(CollectionAchievementTableLinkEntry), new AchievementTableLinkEntryFactory(formattedLabelHtmlService));
             this.mapping.Add(typeof(CollectionAchievementTableMapEntry), new AchievementTableMapEntryFactory(achievementService, logger));
-            this.mapping.Add(typeof(CollectionAchievementTableStringEntry), new AchievementTableStringEntryFactory());
+            this.mapping.Add(typeof(CollectionAchievementTableStringEntry), new AchievementTableStringEntryFactory(formattedLabelHtmlService));
             this.mapping.Add(typeof(CollectionAchievementTableEmptyEntry), new AchievementTableEmptyEntryFactory());
         }
 

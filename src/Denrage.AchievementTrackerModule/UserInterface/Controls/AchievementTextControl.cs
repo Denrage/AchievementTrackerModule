@@ -1,5 +1,4 @@
 ﻿using Blish_HUD.Controls;
-using Denrage.AchievementTrackerModule.Helper;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 
@@ -7,14 +6,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 {
     public class AchievementTextControl : FlowPanel, IAchievementControl
     {
+        private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly AchievementTableEntry achievement;
         private readonly StringDescription description;
 
         private FormattedLabel.FormattedLabel gameTextLabel;
         private FormattedLabel.FormattedLabel gameHintLabel;
 
-        public AchievementTextControl(AchievementTableEntry achievement, StringDescription description)
+        public AchievementTextControl(IFormattedLabelHtmlService formattedLabelHtmlService, AchievementTableEntry achievement, StringDescription description)
         {
+            this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.achievement = achievement;
             this.description = description;
 
@@ -25,7 +26,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameText)
+                var labelBuilder = this.formattedLabelHtmlService.CreateLabel(this.description.GameText)
                     .AutoSizeHeight()
                     .SetWidth(this.ContentRegion.Width)
                     .Wrap();
@@ -36,7 +37,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameHint)
+                var labelBuilder = this.formattedLabelHtmlService.CreateLabel(this.description.GameHint)
                     .AutoSizeHeight()
                     .SetWidth(this.ContentRegion.Width)
                     .Wrap();

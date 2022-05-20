@@ -18,6 +18,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly IAchievementTableEntryProvider achievementTableEntryProvider;
+        private readonly ISubPageInformationWindowManager subPageInformationWindowManager;
         private readonly string achievementLink;
         private readonly string name;
         private readonly string[] columns;
@@ -28,6 +29,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             ContentsManager contentsManager,
             IAchievementService achievementService,
             IAchievementTableEntryProvider achievementTableEntryProvider,
+            ISubPageInformationWindowManager subPageInformationWindowManager,
             string achievementLink,
             string name,
             string[] columns,
@@ -36,6 +38,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.achievementTableEntryProvider = achievementTableEntryProvider;
+            this.subPageInformationWindowManager = subPageInformationWindowManager;
             this.achievementLink = achievementLink;
             this.texture = this.contentsManager.GetTexture("item_detail_background.png");
 
@@ -89,16 +92,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     if (subPage.Link.Contains(link))
                     {
                         inSubpages = true;
-                        _ = itemTitlePart.SetLink(() =>
-                        {
-                            var window = new SubPageInformationWindow(this.contentsManager, this.achievementService, subPage)
-                            {
-                                Parent = GameService.Graphics.SpriteScreen,
-                            };
-
-                            window.Hidden += (s, e) => window.Dispose();
-                            window.Show();
-                        }).MakeUnderlined();
+                        _ = itemTitlePart.SetLink(() => this.subPageInformationWindowManager.Create(subPage)).MakeUnderlined();
                     }
                 }
 

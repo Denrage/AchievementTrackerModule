@@ -1,6 +1,5 @@
 ﻿using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
-using Denrage.AchievementTrackerModule.Helper;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Microsoft.Xna.Framework;
@@ -14,6 +13,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         where T : AchievementTableEntryDescription
     {
         private readonly IItemDetailWindowManager itemDetailWindowManager;
+        private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly ContentsManager contentsManager;
         private readonly AchievementTableEntry achievement;
         private readonly T description;
@@ -28,12 +28,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         public AchievementListControl(
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
+            IFormattedLabelHtmlService formattedLabelHtmlService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             T description)
         {
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.AchievementService = achievementService;
+            this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.contentsManager = contentsManager;
             this.achievement = achievement;
             this.description = description;
@@ -58,7 +60,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             if (!string.IsNullOrEmpty(this.description.GameText))
             {
-                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameText)
+                var labelBuilder = this.formattedLabelHtmlService.CreateLabel(this.description.GameText)
                     .AutoSizeHeight()
                     .SetWidth(this.ContentRegion.Width)
                     .Wrap();
@@ -69,7 +71,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (!string.IsNullOrEmpty(this.description.GameHint))
             {
-                var labelBuilder = FormattedLabelHelper.CreateLabel(this.description.GameHint)
+                var labelBuilder = this.formattedLabelHtmlService.CreateLabel(this.description.GameHint)
                     .AutoSizeHeight()
                     .SetWidth(this.ContentRegion.Width)
                     .Wrap();

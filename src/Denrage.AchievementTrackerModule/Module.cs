@@ -116,7 +116,9 @@ namespace Denrage.AchievementTrackerModule
                     this.dependencyInjectionContainer.AchievementService,
                     this.dependencyInjectionContainer.AchievementDetailsWindowManager,
                     this.dependencyInjectionContainer.AchievementControlManager,
+                    this.dependencyInjectionContainer.SubPageInformationWindowManager,
                     GameService.Overlay,
+                    this.dependencyInjectionContainer.FormattedLabelHtmlService,
                     this.achievementOverviewView)
                 {
                     Parent = GameService.Graphics.SpriteScreen,
