@@ -180,7 +180,7 @@ namespace Denrage.AchievementTrackerModule.Services
         }
 
         public AsyncTexture2D GetImage(string imageUrl, Action beforeSwap)
-            => this.GetImageInternal(async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync(), beforeSwap);
+            => this.GetImageInternal((async () => await this.DownloadWikiContent(imageUrl).GetStreamAsync(), imageUrl), beforeSwap);
 
         public async Task<string> GetDirectImageLink(string imagePath, CancellationToken cancellationToken = default)
         {
@@ -208,9 +208,9 @@ namespace Denrage.AchievementTrackerModule.Services
         }
 
         public AsyncTexture2D GetImageFromIndirectLink(string imagePath, Action beforeSwap)
-            => _ = this.GetImageInternal(async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync(), beforeSwap);
+            => _ = this.GetImageInternal((async () => await this.DownloadWikiContent(await this.GetDirectImageLink(imagePath)).GetStreamAsync(), imagePath), beforeSwap);
 
-        private AsyncTexture2D GetImageInternal(Func<Task<Stream>> getImageStream, Action beforeSwap)
+        private AsyncTexture2D GetImageInternal((Func<Task<Stream>> GetStream, string Url) getImageStream, Action beforeSwap)
         {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
 
@@ -218,19 +218,28 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 try
                 {
-                    var imageStream = await getImageStream();
+                    var imageStream = await getImageStream.GetStream();
 
                     beforeSwap?.Invoke();
 
                     GameService.Graphics.QueueMainThreadRender(device =>
                     {
-                        texture.SwapTexture(TextureUtil.FromStreamPremultiplied(device, imageStream));
-                        imageStream.Close();
+                        try
+                        {
+                            texture.SwapTexture(TextureUtil.FromStreamPremultiplied(device, imageStream));
+                            imageStream.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.Error(ex, $"Exception occured on downloading/swapping image. URL: {getImageStream.Url}");
+
+                            GameService.Graphics.QueueMainThreadRender(_ => texture.SwapTexture(ContentService.Textures.Error));
+                        }
                     });
                 }
                 catch (Exception ex)
                 {
-                    this.logger.Error(ex, "Exception occured on downloading/swapping image");
+                    this.logger.Error(ex, $"Exception occured on downloading/swapping image. URL: {getImageStream.Url}");
 
                     GameService.Graphics.QueueMainThreadRender(_ => texture.SwapTexture(ContentService.Textures.Error));
                 }
