@@ -211,6 +211,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.Emblem = this.contentsManager.GetTexture("605019.png");
             this.ConstructWindow(this.texture, new Rectangle(0, 0, 350, 600), new Rectangle(0, 30, 350, 600 - 30));
 
+            var collapseAll = new StandardButton()
+            {
+                // TODO: Localize
+                Text = "Collapse All",
+                Height = 30,
+                Width = this.ContentRegion.Width,
+                Parent = this,
+            };
+
             var openAchievementPanelButton = new StandardButton()
             {
                 // TODO: Localize
@@ -236,6 +245,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Width = this.ContentRegion.Width,
                 Height = this.ContentRegion.Height - openAchievementPanelButton.Height - closeSubPagesButton.Height,
+                Location = new Point(0, collapseAll.Height),
                 ControlPadding = new Vector2(7f),
             };
 
@@ -254,6 +264,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             closeSubPagesButton.Click += (s, e) =>
                 this.subPageInformationWindowManager.CloseWindows();
+
+            collapseAll.Click += (s, e) =>
+            {
+                foreach (var item in this.trackedAchievements.Values)
+                {
+                    item.Collapse();
+                }
+            };
 
             this.noAchievementsLabel = new Label()
             {
