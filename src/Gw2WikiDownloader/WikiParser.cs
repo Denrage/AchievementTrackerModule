@@ -813,7 +813,10 @@ public partial class WikiParser
                 var linkElement = wrapper.ChildNodes.FirstOrDefault(x => x.Name == "a");
                 if (linkElement != null)
                 {
-                    return linkElement.GetAttributeValue("href", "");
+                    if (!linkElement.GetClasses().Contains("new"))
+                    {
+                        return linkElement.GetAttributeValue("href", "");
+                    }
                 }
             }
         }
@@ -864,13 +867,15 @@ public partial class WikiParser
             {
                 var data = item.ChildNodes.FindFirst("td");
 
-                // TODO: Parse interactive map through string manipulation and reverse engineering of the script tag
                 var linkNodes = data.ChildNodes.Where(x => x.Name == "a");
                 if (linkNodes.Any())
                 {
                     foreach (var linkNode in linkNodes)
                     {
-                        result.Add(linkNode.GetAttributeValue("href", ""));
+                        if (!linkNode.GetClasses().Contains("new"))
+                        {
+                            result.Add(linkNode.GetAttributeValue("href", ""));
+                        }
                     }
                 }
 
