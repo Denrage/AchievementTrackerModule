@@ -7,7 +7,7 @@ using MonoGame.Extended.BitmapFonts;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
 {
-    internal class FormattedLabelPart
+    internal class FormattedLabelPart : IDisposable
     {
         public BitmapFont Font { get; }
 
@@ -74,6 +74,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
             }
 
             Font = GameService.Content.GetFont(FontFace, FontSize, style);
+        }
+
+        public void Dispose()
+        {
+            PrefixImage?.Dispose();
+            SuffixImage?.Dispose();
         }
     }
 }

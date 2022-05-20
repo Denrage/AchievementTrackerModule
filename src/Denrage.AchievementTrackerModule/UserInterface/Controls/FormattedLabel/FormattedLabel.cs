@@ -332,7 +332,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel
             }
         }
 
-        protected override void OnResized(ResizedEventArgs e) => base.OnResized(e);
+        protected override void DisposeControl()
+        {
+            foreach (var item in _parts)
+            {
+                item.Dispose();
+            }
+
+            base.DisposeControl();
+        }
 
         private class RectangleWrapper
         {
