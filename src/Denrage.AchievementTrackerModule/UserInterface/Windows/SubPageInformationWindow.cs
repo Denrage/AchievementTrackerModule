@@ -5,6 +5,7 @@ using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using Denrage.AchievementTrackerModule.UserInterface.Controls;
+using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private void BuildWindow()
         {
             // TODO: Localization
-            this.Title = "Subpage";
+            this.Title = subPageInformation.Title;
             this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 400), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 400 - 30));
 
             var flowPanel = new FlowPanel()
@@ -47,6 +48,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 ControlPadding = new Microsoft.Xna.Framework.Vector2(0, 20),
                 OuterControlPadding = new Microsoft.Xna.Framework.Vector2(PADDING, PADDING),
             };
+
+            var titleLabel = new FormattedLabelBuilder()
+                .CreatePart(this.subPageInformation.Title, x => x.SetHyperLink(this.subPageInformation.Link).SetFontSize(Blish_HUD.ContentService.FontSize.Size24).MakeUnderlined())
+                .CreatePart("  ", x => x.SetSuffixImage(this.contentsManager.GetTexture("wiki.png")).SetSuffixImageSize(new Microsoft.Xna.Framework.Point(24, 24)))
+                .AutoSizeHeight()
+                .SetWidth(flowPanel.ContentRegion.Width)
+                .Wrap()
+                .Build();
+            
+            titleLabel.Parent = flowPanel;
 
             var panel = new Panel()
             {

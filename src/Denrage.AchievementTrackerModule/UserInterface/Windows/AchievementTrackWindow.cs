@@ -121,7 +121,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     Location = new Point(detachButton.Location.X, detachButton.Location.Y + detachButton.Size.Y),
                     Width = 32,
                     Height = 32,
-                    Texture = this.contentsManager.GetTexture("wiki.png"),
+                    Texture = this.contentsManager.GetTexture("link.png"),
                 };
 
                 wikiButton.Click += (s, e)
