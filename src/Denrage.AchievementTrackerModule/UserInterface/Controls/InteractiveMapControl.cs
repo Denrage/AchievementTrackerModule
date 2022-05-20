@@ -136,11 +136,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private static AsyncTexture2D InitializeTexture(string url)
         {
             var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
-            _ = Task.Run(() =>
+            _ = Task.Run(async () =>
               {
                   try
                   {
-                      var imageStream = url.WithHeader("user-agent", USER_AGENT).GetStreamAsync().Result;
+                      var imageStream = await url.WithHeader("user-agent", USER_AGENT).GetStreamAsync();
 
                       GameService.Graphics.QueueMainThreadRender(device =>
                       {
