@@ -53,6 +53,8 @@ namespace Denrage.AchievementTrackerModule.Services
                     window.Dispose();
                 };
 
+                this.subPageWindows[subPageInformation] = window;
+
                 window.Show();
             }
         }

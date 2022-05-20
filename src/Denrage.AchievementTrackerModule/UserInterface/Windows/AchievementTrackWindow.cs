@@ -220,17 +220,27 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Parent = this,
             };
 
+            var closeSubPagesButton = new StandardButton()
+            {
+                // TODO: Localize
+                Text = "Close all Subpages",
+                Height = 30,
+                Width = this.ContentRegion.Width,
+                Parent = this,
+            };
+
             this.flowPanel = new FlowPanel()
             {
                 Parent = this,
                 CanScroll = true,
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,
                 Width = this.ContentRegion.Width,
-                Height = this.ContentRegion.Height - openAchievementPanelButton.Height,
+                Height = this.ContentRegion.Height - openAchievementPanelButton.Height - closeSubPagesButton.Height,
                 ControlPadding = new Vector2(7f),
             };
 
             openAchievementPanelButton.Location = new Point(0, this.flowPanel.Height);
+            closeSubPagesButton.Location = new Point(0, openAchievementPanelButton.Height + openAchievementPanelButton.Location.Y);
 
             openAchievementPanelButton.Click += (s, e) =>
             {
@@ -241,6 +251,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 this.overlayService.BlishHudWindow.Navigate(this.achievementOverviewView());
             };
+
+            closeSubPagesButton.Click += (s, e) =>
+                this.subPageInformationWindowManager.CloseWindows();
 
             this.noAchievementsLabel = new Label()
             {
