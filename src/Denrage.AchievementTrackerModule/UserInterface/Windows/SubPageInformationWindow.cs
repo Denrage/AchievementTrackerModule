@@ -22,14 +22,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly IAchievementService achievementService;
         private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly SubPageInformation subPageInformation;
+        private readonly IExternalImageService externalImageService;
         private readonly Texture2D texture;
 
-        public SubPageInformationWindow(ContentsManager contentsManager, IAchievementService achievementService, IFormattedLabelHtmlService formattedLabelHtmlService, SubPageInformation subPageInformation)
+        public SubPageInformationWindow(ContentsManager contentsManager, IAchievementService achievementService, IFormattedLabelHtmlService formattedLabelHtmlService, SubPageInformation subPageInformation, IExternalImageService externalImageService)
         {
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.subPageInformation = subPageInformation;
+            this.externalImageService = externalImageService;
             this.texture = this.contentsManager.GetTexture("subpage_background.png");
             this.BuildWindow();
         }
@@ -41,6 +43,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             {
                 title += " ...";
             }
+
             this.Title = title;
             this.ConstructWindow(this.texture, new Microsoft.Xna.Framework.Rectangle(0, 0, 550, 400), new Microsoft.Xna.Framework.Rectangle(0, 30, 550, 400 - 30));
 
@@ -108,30 +111,20 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             {
                 if (!string.IsNullOrEmpty(hasImage.ImageUrl))
                 {
-                    var image = new Image()
+                    var imageSpinner = new ImageSpinner(this.externalImageService.GetImageFromIndirectLink(hasImage.ImageUrl))
                     {
+                        Parent = panel,
                         Width = (panel.ContentRegion.Width / 2) - 5,
                         Height = 200,
                         Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, 0),
-                        Parent = panel,
                     };
 
                     if (statisticsControl != null)
                     {
-                        image.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, statisticsControl.Height + 5);
+                        imageSpinner.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5, statisticsControl.Height + 5);
                     }
 
-                    var spinner = new LoadingSpinner()
-                    {
-                        Parent = panel,
-                    };
-
-                    spinner.Location = new Microsoft.Xna.Framework.Point(labelWidth + 5 + ((panel.Width - labelWidth - 5) / 2) - (spinner.Width / 2), image.Location.Y + (image.Height / 2) - (spinner.Height / 2));
-
-                    spinner.Show();
-
-                    image.Texture = this.achievementService.GetImageFromIndirectLink(hasImage.ImageUrl, () => spinner.Dispose());
-                    imageControl = image;
+                    imageControl = imageSpinner;
                 }
             }
 
@@ -202,20 +195,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
                 foreach (var item in additionalImages.AdditionalImages)
                 {
-                    var spinner = new LoadingSpinner()
+                    _ = new ImageSpinner(this.externalImageService.GetImageFromIndirectLink(item))
                     {
-                        Location = new Microsoft.Xna.Framework.Point(additionalImagesFlowPanel.Width / 2, additionalImagesFlowPanel.Height / 2),
                         Parent = additionalImagesFlowPanel,
-                    };
-
-                    spinner.Show();
-
-                    _ = new Image()
-                    {
-                        Texture = this.achievementService.GetImageFromIndirectLink(item, () => spinner.Dispose()),
                         Width = additionalImagesFlowPanel.Width / 3,
                         Height = 100,
-                        Parent = additionalImagesFlowPanel,
                     };
                 }
             }

@@ -41,7 +41,7 @@ namespace Denrage.AchievementTrackerModule
             : base(moduleParameters)
         {
             this.logger = Logger;
-            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager, this.logger);
+            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager, this.logger, GameService.Graphics);
         }
 
         protected override void DefineSettings(SettingCollection settings)

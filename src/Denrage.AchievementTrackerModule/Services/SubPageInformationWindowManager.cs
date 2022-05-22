@@ -19,14 +19,16 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly ContentsManager contentsManager;
         private readonly IAchievementService achievementService;
         private readonly Func<IFormattedLabelHtmlService> getFormattedLabelHtmlSerice;
+        private readonly IExternalImageService externalImageService;
         private IFormattedLabelHtmlService formattedLabelHtmlService;
 
-        public SubPageInformationWindowManager(GraphicsService graphicsService, ContentsManager contentsManager, IAchievementService achievementService, Func<IFormattedLabelHtmlService> getFormattedLabelHtmlSerice)
+        public SubPageInformationWindowManager(GraphicsService graphicsService, ContentsManager contentsManager, IAchievementService achievementService, Func<IFormattedLabelHtmlService> getFormattedLabelHtmlSerice, IExternalImageService externalImageService)
         {
             this.graphicsService = graphicsService;
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.getFormattedLabelHtmlSerice = getFormattedLabelHtmlSerice;
+            this.externalImageService = externalImageService;
         }
 
         public void Create(SubPageInformation subPageInformation)
@@ -42,7 +44,7 @@ namespace Denrage.AchievementTrackerModule.Services
                     this.formattedLabelHtmlService = this.getFormattedLabelHtmlSerice();
                 }
 
-                window = new SubPageInformationWindow(this.contentsManager, this.achievementService, this.formattedLabelHtmlService, subPageInformation)
+                window = new SubPageInformationWindow(this.contentsManager, this.achievementService, this.formattedLabelHtmlService, subPageInformation, this.externalImageService)
                 {
                     Parent = this.graphicsService.SpriteScreen,
                 };

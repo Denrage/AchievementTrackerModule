@@ -16,6 +16,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly ContentService contentService;
         private readonly DirectoriesManager directoriesManager;
         private readonly Logger logger;
+        private readonly GraphicsService graphicsService;
 
         public IItemDetailWindowManager ItemDetailWindowManager { get; set; }
 
@@ -44,31 +45,35 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IFormattedLabelHtmlService FormattedLabelHtmlService { get; set; }
 
-        public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager, ContentService contentService, DirectoriesManager directoriesManager, Logger logger)
+        public IExternalImageService ExternalImageService { get; set; }
+
+        public DependencyInjectionContainer(Gw2ApiManager gw2ApiManager, ContentsManager contentsManager, ContentService contentService, DirectoriesManager directoriesManager, Logger logger, GraphicsService graphicsService)
         {
             this.gw2ApiManager = gw2ApiManager;
             this.contentsManager = contentsManager;
             this.contentService = contentService;
             this.directoriesManager = directoriesManager;
             this.logger = logger;
+            this.graphicsService = graphicsService;
         }
 
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
+            this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger);
             this.AchievementService = achievementService;
 
-            this.SubPageInformationWindowManager = new SubPageInformationWindowManager(GameService.Graphics, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService);
-            this.FormattedLabelHtmlService = new FormattedLabelHtmlService(this.contentsManager, this.AchievementService, this.SubPageInformationWindowManager);
+            this.SubPageInformationWindowManager = new SubPageInformationWindowManager(this.graphicsService, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService, this.ExternalImageService);
+            this.FormattedLabelHtmlService = new FormattedLabelHtmlService(this.contentsManager, this.AchievementService, this.SubPageInformationWindowManager, this.ExternalImageService);
             var achievementTrackerService = new AchievementTrackerService(this.logger);
             this.AchievementTrackerService = achievementTrackerService;
             this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService);
             this.AchievementItemOverviewFactory = new AchievementItemOverviewFactory(this.AchievementListItemFactory, this.AchievementService);
-            this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.AchievementService, this.FormattedLabelHtmlService, this.logger);
+            this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.FormattedLabelHtmlService, this.ExternalImageService, this.logger);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider, this.SubPageInformationWindowManager);
             var itemDetailWindowManager = new ItemDetailWindowManager(this.ItemDetailWindowFactory, this.AchievementService, this.logger);
             this.ItemDetailWindowManager = itemDetailWindowManager;
-            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.FormattedLabelHtmlService, this.contentsManager);
+            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.FormattedLabelHtmlService, this.contentsManager, this.ExternalImageService);
             this.AchievementControlManager = new AchievementControlManager(this.AchievementControlProvider);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
             var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService, this.logger);

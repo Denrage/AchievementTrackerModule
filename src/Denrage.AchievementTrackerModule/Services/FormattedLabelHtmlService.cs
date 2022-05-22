@@ -18,13 +18,15 @@ namespace Denrage.AchievementTrackerModule.Services
         private const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
         private readonly IAchievementService achievementService;
         private readonly ISubPageInformationWindowManager subPageInformationWindowManager;
+        private readonly IExternalImageService externalImageService;
         public readonly ContentsManager contentsManager;
 
-        public FormattedLabelHtmlService(ContentsManager contentsManager, IAchievementService achievementService, ISubPageInformationWindowManager subPageInformationWindowManager)
+        public FormattedLabelHtmlService(ContentsManager contentsManager, IAchievementService achievementService, ISubPageInformationWindowManager subPageInformationWindowManager, IExternalImageService externalImageService)
         {
             this.contentsManager = contentsManager;
             this.achievementService = achievementService;
             this.subPageInformationWindowManager = subPageInformationWindowManager;
+            this.externalImageService = externalImageService;
         }
 
         public FormattedLabelBuilder CreateLabel(string textWithHtml)
@@ -103,7 +105,7 @@ namespace Denrage.AchievementTrackerModule.Services
                     if (imageNode != null)
                     {
                         var builder = labelBuilder.CreatePart("");
-                        _ = builder.SetPrefixImage(this.GetTexture(imageNode.GetAttributeValue("src", ""))).SetPrefixImageSize(new Microsoft.Xna.Framework.Point(24, 24));
+                        _ = builder.SetPrefixImage(this.externalImageService.GetImage(imageNode.GetAttributeValue("src", ""))).SetPrefixImageSize(new Microsoft.Xna.Framework.Point(24, 24));
                         yield return builder;
                     }
                 }
@@ -223,7 +225,7 @@ namespace Denrage.AchievementTrackerModule.Services
             else if (childNode.Name == "img")
             {
                 var builder = labelBuilder.CreatePart(string.Empty);
-                yield return builder.SetPrefixImage(this.GetTexture(childNode.GetAttributeValue("src", string.Empty)));
+                yield return builder.SetPrefixImage(this.externalImageService.GetImage(childNode.GetAttributeValue("src", string.Empty)));
             }
             else if (childNode.Name == "s")
             {
@@ -277,40 +279,6 @@ namespace Denrage.AchievementTrackerModule.Services
                     }
                 }
             }
-        }
-
-        private AsyncTexture2D GetTexture(string url)
-        {
-            var texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    var imageStream = ("https://wiki.guildwars2.com" + url).WithHeader("user-agent", USER_AGENT).GetStreamAsync().Result;
-
-                    GameService.Graphics.QueueMainThreadRender(device =>
-                    {
-                        texture.SwapTexture(TextureUtil.FromStreamPremultiplied(device, imageStream));
-                        imageStream.Close();
-                    });
-                }
-                catch (Exception ex)
-                {
-                    if (ex.InnerException is FlurlHttpException httpException)
-                    {
-                        if (!httpException.Message.Contains("404 (Not Found)")) // Ignore 404 Errors
-                        {
-                            throw;
-                        }
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-            });
-
-            return texture;
         }
     }
 }

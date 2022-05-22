@@ -11,15 +11,19 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
     public class AchievementCollectionControl : AchievementListControl<CollectionDescription, CollectionDescriptionEntry>
     {
+        private readonly IExternalImageService externalImageService;
+
         public AchievementCollectionControl(
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             IFormattedLabelHtmlService formattedLabelHtmlService,
+            IExternalImageService externalImageService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             CollectionDescription description)
             : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, contentsManager, achievement, description)
         {
+            this.externalImageService = externalImageService;
         }
 
         protected override void ColorControl(Control control, bool achievementBitFinished)
@@ -33,25 +37,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         }
 
         protected override Control CreateEntryControl(int index, CollectionDescriptionEntry entry, Container parent)
-        {
-            var spinner = new LoadingSpinner()
-            {
-                Parent = parent,
-            };
-
-            spinner.Location = new Point((parent.Width - spinner.Width) / 2, (parent.Height - spinner.Height) / 2);
-
-            spinner.Show();
-
-            return new Image()
-            {
-                Parent = parent,
-                Width = 32,
-                Height = 32,
-                Texture = this.AchievementService.GetImage(entry.ImageUrl, () => spinner.Dispose()),
-                ZIndex = 1,
-            };
-        }
+        => new ImageSpinner(this.externalImageService.GetImageFromIndirectLink(entry.ImageUrl))
+           {
+               Parent = parent,
+               Width = 32,
+               Height = 32,
+               ZIndex = 1,
+           };
+        
 
         protected override string GetDisplayName(CollectionDescriptionEntry entry) => entry?.DisplayName ?? string.Empty;
 

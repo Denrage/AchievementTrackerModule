@@ -7,11 +7,11 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
 {
     public class AchievementTableItemEntryFactory : AchievementTableEntryFactory<CollectionAchievementTableItemEntry>
     {
-        private readonly IAchievementService achievementService;
+        private readonly IExternalImageService externalImageService;
 
-        public AchievementTableItemEntryFactory(IAchievementService achievementService)
+        public AchievementTableItemEntryFactory(IExternalImageService externalImageService)
         {
-            this.achievementService = achievementService;
+            this.externalImageService = externalImageService;
         }
 
         protected override Control CreateInternal(CollectionAchievementTableItemEntry entry)
@@ -21,7 +21,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
 
             if (!string.IsNullOrEmpty(entry.ImageUrl))
             {
-                _ = partBuilder.SetPrefixImage(this.achievementService.GetImageFromIndirectLink(entry.ImageUrl, null));
+                _ = partBuilder.SetPrefixImage(this.externalImageService.GetImageFromIndirectLink(entry.ImageUrl));
             }
 
             return builder.CreatePart(partBuilder).Build();
