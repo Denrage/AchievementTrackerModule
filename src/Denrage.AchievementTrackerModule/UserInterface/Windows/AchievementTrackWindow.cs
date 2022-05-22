@@ -150,7 +150,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                     var inSubpages = false;
                     foreach (var subPage in this.achievementService.Subpages)
                     {
-                        if (subPage.Link.Contains(achievement.Link))
+                        if (subPage.Link == "https://wiki.guildwars2.com" + achievement.Link)
                         {
                             inSubpages = true;
                             this.subPageInformationWindowManager.Create(subPage);
