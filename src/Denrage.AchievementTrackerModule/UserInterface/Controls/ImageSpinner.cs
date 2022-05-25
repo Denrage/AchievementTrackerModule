@@ -16,6 +16,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly Image image;
         private readonly LoadingSpinner loadingSpinner;
 
+        public Color Tint
+        {
+            get => this.image.Tint;
+            set => this.image.Tint = value;
+        }
+
         public ImageSpinner(AsyncTexture2D texture)
         {
             texture.TextureSwapped += (s, e) =>

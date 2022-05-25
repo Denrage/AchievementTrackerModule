@@ -28,7 +28,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
         protected override void ColorControl(Control control, bool achievementBitFinished)
         {
-            if (control is Image image)
+            if (control is ImageSpinner image)
             {
                 image.Tint = achievementBitFinished
                            ? Microsoft.Xna.Framework.Color.White
