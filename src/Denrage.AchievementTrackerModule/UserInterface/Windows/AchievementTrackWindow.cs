@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 {
@@ -78,13 +79,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             this.BuildWindow();
 
-            foreach (var item in this.achievementTrackerService.ActiveAchievements)
+            Task.Run(() =>
             {
-                if (!this.achievementDetailsWindowManager.WindowExists(item))
+                foreach (var item in this.achievementTrackerService.ActiveAchievements)
                 {
-                    this.AchievementTrackerService_AchievementTracked(item);
+                    if (!this.achievementDetailsWindowManager.WindowExists(item))
+                    {
+                        this.AchievementTrackerService_AchievementTracked(item);
+                    }
                 }
-            }
+            });
         }
 
         public class TestPanel : Panel
