@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Modules.Managers;
+using Blish_HUD.Settings;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services.Factories;
 using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
@@ -29,6 +30,7 @@ namespace Denrage.AchievementTrackerModule.Services
         public IAchievementService AchievementService { get; set; }
 
         public IPersistanceService PersistanceService { get; private set; }
+        
         public IAchievementControlProvider AchievementControlProvider { get; set; }
 
         public IAchievementControlManager AchievementControlManager { get; private set; }
@@ -57,7 +59,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.graphicsService = graphicsService;
         }
 
-        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        public async Task InitializeAsync(SettingEntry<bool> autoSave, CancellationToken cancellationToken = default)
         {
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger);
@@ -78,7 +80,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
             var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService, this.logger);
             this.AchievementDetailsWindowManager = achievementDetailsWindowManager;
-            this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService, this.logger);
+            this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService, this.logger, autoSave);
 
             await achievementService.LoadAsync(cancellationToken);
             achievementDetailsWindowManager.Load(this.PersistanceService);

@@ -28,6 +28,7 @@ namespace Denrage.AchievementTrackerModule
         private AchievementTrackWindow window;
         private CornerIcon cornerIcon;
         private bool purposelyHidden;
+        private SettingEntry<bool> autoSave;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -45,8 +46,8 @@ namespace Denrage.AchievementTrackerModule
         }
 
         protected override void DefineSettings(SettingCollection settings)
-        {
-        }
+            => this.autoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
+        
 
         protected override void Initialize()
         {
@@ -70,7 +71,7 @@ namespace Denrage.AchievementTrackerModule
                         this.dependencyInjectionContainer.AchievementService);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
-                await this.dependencyInjectionContainer.InitializeAsync();
+                await this.dependencyInjectionContainer.InitializeAsync(this.autoSave);
                 this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
                 if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
@@ -100,6 +101,8 @@ namespace Denrage.AchievementTrackerModule
 
                     this.window.ToggleWindow();
                 };
+
+                this.dependencyInjectionContainer.PersistanceService.AutoSave += this.SavePersistentInformation;
             });
 
             await base.LoadAsync();
@@ -176,10 +179,15 @@ namespace Denrage.AchievementTrackerModule
         /// <inheritdoc />
         protected override void Unload()
         {
-            var location = this.window?.Location ?? new Point(-1, -1);
-            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
+            this.SavePersistentInformation();
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
+        }
+
+        private void SavePersistentInformation()
+        {
+            var location = this.window?.Location ?? new Point(-1, -1);
+            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
         }
     }
 }

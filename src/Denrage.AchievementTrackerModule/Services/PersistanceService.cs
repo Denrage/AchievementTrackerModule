@@ -5,31 +5,86 @@ using Denrage.AchievementTrackerModule.Models.Persistance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
     public class PersistanceService : IPersistanceService
     {
         private const string SAVE_FILE_NAME = "persistanceStorage.json";
-        private Storage storage;
         private readonly DirectoriesManager directoriesManager;
         private readonly AchievementDetailsWindowManager achievementDetailsWindowManager;
         private readonly ItemDetailWindowManager itemDetailWindowManager;
         private readonly AchievementTrackerService achievementTrackerService;
         private readonly Logger logger;
+        private Storage storage;
+        private Task autoSaveTask;
+        private CancellationTokenSource autoSaveCancellationTokenSource;
+
+        public event Action AutoSave;
 
         public PersistanceService(
             DirectoriesManager directoriesManager,
             AchievementDetailsWindowManager achievementDetailsWindowManager,
             ItemDetailWindowManager itemDetailWindowManager,
             AchievementTrackerService achievementTrackerService,
-            Logger logger)
+            Logger logger,
+            Blish_HUD.Settings.SettingEntry<bool> autoSave)
         {
             this.directoriesManager = directoriesManager;
             this.achievementDetailsWindowManager = achievementDetailsWindowManager;
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.achievementTrackerService = achievementTrackerService;
             this.logger = logger;
+
+            autoSave.SettingChanged += (s, e) =>
+            {
+                if (e.NewValue)
+                {
+                    this.InitializeAutoSaveTask();
+                }
+                else
+                {
+                    this.ResetAutoSaveTask();
+                }
+            };
+
+            if (autoSave.Value)
+            {
+                this.InitializeAutoSaveTask();
+            }
+        }
+
+        private void ResetAutoSaveTask()
+        {
+            if (this.autoSaveTask != null)
+            {
+                this.autoSaveCancellationTokenSource.Cancel();
+                this.autoSaveTask = null;
+            }
+        }
+
+        private void InitializeAutoSaveTask()
+        {
+            this.ResetAutoSaveTask();
+
+            this.autoSaveCancellationTokenSource = new CancellationTokenSource();
+            this.autoSaveTask = Task.Run(async () =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(5), this.autoSaveCancellationTokenSource.Token);
+                        this.AutoSave?.Invoke();
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                }
+            }, autoSaveCancellationTokenSource.Token);
+
         }
 
         public void Save(int achievementTrackWindowLocationX, int achievementTrackWindowLocationY, bool showTrackWindow)
