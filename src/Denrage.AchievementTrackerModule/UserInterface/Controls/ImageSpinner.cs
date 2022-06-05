@@ -13,13 +13,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     public class ImageSpinner : Panel
     {
         private readonly Point defaultLoadingSpinnerSize;
-        private readonly Image image;
         private readonly LoadingSpinner loadingSpinner;
+        
+        public Image Image { get; private set; }
 
         public Color Tint
         {
-            get => this.image.Tint;
-            set => this.image.Tint = value;
+            get => this.Image.Tint;
+            set => this.Image.Tint = value;
         }
 
         public ImageSpinner(AsyncTexture2D texture)
@@ -27,10 +28,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             texture.TextureSwapped += (s, e) =>
             {
                 this.loadingSpinner.Hide();
-                this.image.Show();
+                this.Image.Show();
             };
 
-            this.image = new Image()
+            this.Image = new Image()
             {
                 Parent = this,
                 Visible = false,
@@ -52,7 +53,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             if (texture.Texture != ContentService.Textures.TransparentPixel)
             {
-                this.image.Show();
+                this.Image.Show();
                 this.loadingSpinner.Hide();
             }
         }
@@ -65,16 +66,16 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                 this.loadingSpinner.Location = new Microsoft.Xna.Framework.Point((this.Width / 2) - (this.loadingSpinner.Width / 2), (this.Height / 2) - (this.loadingSpinner.Height / 2));
             }
 
-            if (this.image != null)
+            if (this.Image != null)
             {
-                this.image.Width = this.Width;
-                this.image.Height = this.Height;
+                this.Image.Width = this.Width;
+                this.Image.Height = this.Height;
             }
         }
 
         protected override void DisposeControl()
         {
-            this.image.Dispose();
+            this.Image.Dispose();
             this.loadingSpinner.Dispose();
             base.DisposeControl();
         }

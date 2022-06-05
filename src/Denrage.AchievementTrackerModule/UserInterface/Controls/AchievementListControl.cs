@@ -106,8 +106,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                     var control = this.CreateEntryControl(i, entries[i], imagePanel);
 
                     control.Location = new Point((imagePanel.Width - control.Width) / 2, (imagePanel.Height - control.Height) / 2);
+                    var tooltipControl = control;
 
-                    control.Tooltip = new Tooltip()
+                    if (control is ImageSpinner imageSpinner)
+                    {
+                        tooltipControl = imageSpinner.Image;
+                    }
+
+                    tooltipControl.Tooltip = new Tooltip()
                     {
                         HeightSizingMode = SizingMode.AutoSize,
                         WidthSizingMode = SizingMode.AutoSize,
@@ -115,7 +121,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     var tooltipPanel = new FlowPanel()
                     {
-                        Parent = control.Tooltip,
+                        Parent = tooltipControl.Tooltip,
                         Width = 100,
                         HeightSizingMode = SizingMode.AutoSize,
                         FlowDirection = ControlFlowDirection.SingleTopToBottom,
