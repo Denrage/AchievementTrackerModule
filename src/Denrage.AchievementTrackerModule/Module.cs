@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
-    // TODO: Get TP prices for CoinEntries (after release)
     // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
