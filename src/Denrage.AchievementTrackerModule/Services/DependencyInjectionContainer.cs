@@ -62,7 +62,7 @@ namespace Denrage.AchievementTrackerModule.Services
         public async Task InitializeAsync(SettingEntry<bool> autoSave, CancellationToken cancellationToken = default)
         {
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
-            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger);
+            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, () => this.PersistanceService);
             this.AchievementService = achievementService;
 
             this.SubPageInformationWindowManager = new SubPageInformationWindowManager(this.graphicsService, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService, this.ExternalImageService);
@@ -80,7 +80,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
             var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService, this.logger);
             this.AchievementDetailsWindowManager = achievementDetailsWindowManager;
-            this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService, this.logger, autoSave);
+            this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService, this.logger, achievementService, autoSave);
 
             await achievementService.LoadAsync(cancellationToken);
             achievementDetailsWindowManager.Load(this.PersistanceService);

@@ -8,6 +8,8 @@ namespace Denrage.AchievementTrackerModule.Models.Persistance
 
         public Dictionary<int, Dictionary<int, ItemInformation>> ItemInformation { get; set; } = new Dictionary<int, Dictionary<int, ItemInformation>>();
 
+        public Dictionary<int, List<int>> ManualCompletedAchievements { get; set; } = new Dictionary<int, List<int>>();
+
         public List<int> TrackedAchievements { get; set; } = new List<int>();
 
         public int TrackWindowLocationX { get; set; } = -1;

@@ -18,6 +18,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly ItemDetailWindowManager itemDetailWindowManager;
         private readonly AchievementTrackerService achievementTrackerService;
         private readonly Logger logger;
+        private readonly AchievementService achievementService;
         private Storage storage;
         private Task autoSaveTask;
         private CancellationTokenSource autoSaveCancellationTokenSource;
@@ -30,6 +31,7 @@ namespace Denrage.AchievementTrackerModule.Services
             ItemDetailWindowManager itemDetailWindowManager,
             AchievementTrackerService achievementTrackerService,
             Logger logger,
+            AchievementService achievementService,
             Blish_HUD.Settings.SettingEntry<bool> autoSave)
         {
             this.directoriesManager = directoriesManager;
@@ -37,7 +39,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.achievementTrackerService = achievementTrackerService;
             this.logger = logger;
-
+            this.achievementService = achievementService;
             autoSave.SettingChanged += (s, e) =>
             {
                 if (e.NewValue)
@@ -118,6 +120,8 @@ namespace Denrage.AchievementTrackerModule.Services
                     PositionY = item.Value.Window.Location.Y,
                 };
             }
+
+            storage.ManualCompletedAchievements = this.achievementService.ManualCompletedAchievements;
 
             storage.TrackedAchievements.AddRange(this.achievementTrackerService.ActiveAchievements);
 

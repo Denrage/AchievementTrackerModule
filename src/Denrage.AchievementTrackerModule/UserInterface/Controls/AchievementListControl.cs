@@ -127,6 +127,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         FlowDirection = ControlFlowDirection.SingleTopToBottom,
                     };
 
+                    var index = i;
+
+                    tooltipControl.RightMouseButtonReleased += (s, e) => this.AchievementService.ToggleManualCompleteStatus(this.achievement.Id, index);
+
                     _ = new Label()
                     {
                         Parent = tooltipPanel,
@@ -141,7 +145,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     if (this.achievementDetails != null)
                     {
-                        var index = i;
                         control.Click += (s, eventArgs)
                             => this.itemDetailWindowManager.CreateAndShowWindow(
                                 this.GetDisplayName(entries[index]),

@@ -28,5 +28,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         bool HasFinishedAchievementBit(int achievementId, int positionIndex);
 
         Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default);
+        void ToggleManualCompleteStatus(int achievementId, int bit);
     }
 }
