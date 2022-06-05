@@ -5,7 +5,7 @@
   "package": "Denrage.AchievementTrackerModule.dll",
   "manifest_version": 1,
 
-  "description": "Allows to track any achievement with multiple windows and information from the official wiki.",
+  "description": "Allows to track any achievement with multiple windows and information from the official wiki.\nKeep in mind that you can right click a step in an achievement to mark it as completed.",
   "dependencies": {
     "bh.blishhud": ">=0.5.2"
   },
