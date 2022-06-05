@@ -59,7 +59,7 @@ namespace Denrage.AchievementTrackerModule.Services
             this.graphicsService = graphicsService;
         }
 
-        public async Task InitializeAsync(SettingEntry<bool> autoSave, CancellationToken cancellationToken = default)
+        public async Task InitializeAsync(SettingEntry<bool> autoSave, SettingEntry<bool> limitAchievement, CancellationToken cancellationToken = default)
         {
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, () => this.PersistanceService);
@@ -67,7 +67,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
             this.SubPageInformationWindowManager = new SubPageInformationWindowManager(this.graphicsService, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService, this.ExternalImageService);
             this.FormattedLabelHtmlService = new FormattedLabelHtmlService(this.contentsManager, this.AchievementService, this.SubPageInformationWindowManager, this.ExternalImageService);
-            var achievementTrackerService = new AchievementTrackerService(this.logger);
+            var achievementTrackerService = new AchievementTrackerService(this.logger, limitAchievement);
             this.AchievementTrackerService = achievementTrackerService;
             this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService);
             this.AchievementItemOverviewFactory = new AchievementItemOverviewFactory(this.AchievementListItemFactory, this.AchievementService);

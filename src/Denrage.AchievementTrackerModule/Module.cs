@@ -29,6 +29,7 @@ namespace Denrage.AchievementTrackerModule
         private CornerIcon cornerIcon;
         private bool purposelyHidden;
         private SettingEntry<bool> autoSave;
+        private SettingEntry<bool> limitAchievements;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -46,8 +47,11 @@ namespace Denrage.AchievementTrackerModule
         }
 
         protected override void DefineSettings(SettingCollection settings)
-            => this.autoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
-        
+        {
+            this.autoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
+
+            this.limitAchievements = settings.DefineSetting("LimitAchievements", true, () => "Limit Achievements to 15", () => "This will limit the maximum of achievements to 15. If it's disabled expect performance and usability issues.");
+        }
 
         protected override void Initialize()
         {
@@ -71,7 +75,7 @@ namespace Denrage.AchievementTrackerModule
                         this.dependencyInjectionContainer.AchievementService);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
-                await this.dependencyInjectionContainer.InitializeAsync(this.autoSave);
+                await this.dependencyInjectionContainer.InitializeAsync(this.autoSave, this.limitAchievements);
                 this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
                 if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
