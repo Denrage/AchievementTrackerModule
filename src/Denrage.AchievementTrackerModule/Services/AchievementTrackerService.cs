@@ -22,10 +22,19 @@ namespace Denrage.AchievementTrackerModule.Services
             this.logger = logger;
         }
 
-        public void TrackAchievement(int achievement)
+        public bool TrackAchievement(int achievement)
         {
-            this.activeAchievements.Add(achievement);
-            this.AchievementTracked?.Invoke(achievement);
+            if (this.activeAchievements.Count <= 15)
+            {
+                if (!this.activeAchievements.Contains(achievement))
+                {
+                    this.activeAchievements.Add(achievement);
+                    this.AchievementTracked?.Invoke(achievement);
+                }
+                return true;
+            }
+
+            return false;
         }
 
         public void RemoveAchievement(int achievement)

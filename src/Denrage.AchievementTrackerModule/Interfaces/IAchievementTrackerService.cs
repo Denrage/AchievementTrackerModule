@@ -13,6 +13,6 @@ namespace Denrage.AchievementTrackerModule.Interfaces
 
         void RemoveAchievement(int achievement);
 
-        void TrackAchievement(int achievement);
+        bool TrackAchievement(int achievement);
     }
 }

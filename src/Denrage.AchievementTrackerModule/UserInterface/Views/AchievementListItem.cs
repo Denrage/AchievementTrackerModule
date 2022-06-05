@@ -29,7 +29,14 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
         protected override void Build(Container buildPanel)
         {
-            buildPanel.Click += (s, e) => this.achievementTrackerService.TrackAchievement(this.achievement.Id);
+            buildPanel.Click += (s, e) =>
+            {
+                if(!this.achievementTrackerService.TrackAchievement(this.achievement.Id))
+                {
+                    // TODO: Localize
+                    ScreenNotification.ShowNotification("You can have a maximum of 15 achievements tracked concurrently.\n Untrack one to add a new one.");
+                }
+            };
 
             this.button = new DetailsButton()
             {
