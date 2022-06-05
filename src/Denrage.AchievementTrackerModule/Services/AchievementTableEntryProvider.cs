@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
 using System;
@@ -12,10 +13,10 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly Dictionary<Type, AchievementTableEntryFactory> mapping = new Dictionary<Type, AchievementTableEntryFactory>();
 
-        public AchievementTableEntryProvider(IFormattedLabelHtmlService formattedLabelHtmlService, IExternalImageService externalImageService, Logger logger)
+        public AchievementTableEntryProvider(IFormattedLabelHtmlService formattedLabelHtmlService, IExternalImageService externalImageService, Logger logger, Gw2ApiManager gw2ApiManager, ContentsManager contentsManager)
         {
             this.mapping.Add(typeof(CollectionAchievementTableNumberEntry), new AchievementTableNumberEntryFactory());
-            this.mapping.Add(typeof(CollectionAchievementTableCoinEntry), new AchievementTableCoinEntryFactory());
+            this.mapping.Add(typeof(CollectionAchievementTableCoinEntry), new AchievementTableCoinEntryFactory(gw2ApiManager, contentsManager));
             this.mapping.Add(typeof(CollectionAchievementTableItemEntry), new AchievementTableItemEntryFactory(externalImageService));
             this.mapping.Add(typeof(CollectionAchievementTableLinkEntry), new AchievementTableLinkEntryFactory(formattedLabelHtmlService));
             this.mapping.Add(typeof(CollectionAchievementTableMapEntry), new AchievementTableMapEntryFactory(externalImageService, logger));
