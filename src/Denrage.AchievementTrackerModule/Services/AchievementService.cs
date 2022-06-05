@@ -51,6 +51,28 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void ToggleManualCompleteStatus(int achievementId, int bit)
         {
+            if (this.specialSnowflakeCompletedHandling.TryGetValue(achievementId, out var conversionFunc))
+            {
+                bit = conversionFunc(bit);
+            }
+            if (this.PlayerAchievements != null)
+            {
+                var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
+                if (achievement != null)
+                {
+                    if (achievement.Done)
+                    {
+                        return;
+                    }
+
+                    if (achievement.Bits.Contains(bit))
+                    {
+                        return;
+                    }
+                }
+            }
+
+
             if (!this.ManualCompletedAchievements.TryGetValue(achievementId, out var achievementBits))
             {
                 achievementBits = new List<int>();
