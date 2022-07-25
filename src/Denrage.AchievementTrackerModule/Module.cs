@@ -29,6 +29,7 @@ namespace Denrage.AchievementTrackerModule
         private bool purposelyHidden;
         private SettingEntry<bool> autoSave;
         private SettingEntry<bool> limitAchievements;
+        private WindowTab blishhudOverlayTab;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -83,7 +84,7 @@ namespace Denrage.AchievementTrackerModule
                     this.window.Show();
                 }
 
-                _ = GameService.Overlay.BlishHudWindow.AddTab(
+                this.blishhudOverlayTab = GameService.Overlay.BlishHudWindow.AddTab(
                     "Achievement Tracker",
                     this.ContentsManager.GetTexture("achievement_icon.png"),
                     this.achievementOverviewView);
@@ -183,6 +184,9 @@ namespace Denrage.AchievementTrackerModule
         protected override void Unload()
         {
             this.SavePersistentInformation();
+            var location = this.window?.Location ?? new Point(-1, -1);
+            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
+            GameService.Overlay.BlishHudWindow.RemoveTab(this.blishhudOverlayTab);
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
         }
