@@ -1,6 +1,6 @@
 {
   "name": "Achievement Tracker",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "namespace": "Denrage.AchievementTrackerModule",
   "package": "Denrage.AchievementTrackerModule.dll",
   "manifest_version": 1,
