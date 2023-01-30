@@ -501,7 +501,7 @@ public partial class WikiParser
         return currentEntry;
     }
 
-    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 3)
+    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 6)
     {
         try
         {
