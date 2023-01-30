@@ -10,8 +10,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly AchievementTableEntry achievement;
         private readonly StringDescription description;
 
-        private FormattedLabel.FormattedLabel gameTextLabel;
-        private FormattedLabel.FormattedLabel gameHintLabel;
+        private FormattedLabel gameTextLabel;
+        private FormattedLabel gameHintLabel;
 
         public AchievementTextControl(IFormattedLabelHtmlService formattedLabelHtmlService, AchievementTableEntry achievement, StringDescription description)
         {

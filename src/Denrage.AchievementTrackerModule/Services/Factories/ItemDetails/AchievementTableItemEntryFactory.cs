@@ -1,6 +1,5 @@
 ﻿using Blish_HUD.Controls;
 using Denrage.AchievementTrackerModule.Interfaces;
-using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
 using static Denrage.AchievementTrackerModule.Libs.Achievement.CollectionAchievementTable;
 
 namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails

@@ -43,7 +43,7 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.ItemDetails
                 var price = await this.gw2ApiManager.Gw2ApiClient.V2.Commerce.Prices.GetAsync(entry.ItemId);
                 var sellPrice = this.ConvertIntoCoinParts(price.Sells.UnitPrice);
                 var buyPrice = this.ConvertIntoCoinParts(price.Buys.UnitPrice);
-                var formattedLabel = new AchievementTrackerModule.UserInterface.Controls.FormattedLabel.FormattedLabelBuilder();
+                var formattedLabel = new FormattedLabelBuilder();
 
                 if (entry.Type == CollectionAchievementTableCoinEntry.TradingPostType.Sell)
                 {

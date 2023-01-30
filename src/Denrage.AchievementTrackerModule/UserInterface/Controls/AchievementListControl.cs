@@ -19,8 +19,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly T description;
         private readonly CollectionAchievementTable achievementDetails;
         private readonly List<Control> itemControls = new List<Control>();
-        private FormattedLabel.FormattedLabel gameTextLabel;
-        private FormattedLabel.FormattedLabel gameHintLabel;
+        private FormattedLabel gameTextLabel;
+        private FormattedLabel gameHintLabel;
         private FlowPanel panel;
 
         protected IAchievementService AchievementService { get; }

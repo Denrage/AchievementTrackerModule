@@ -1,15 +1,10 @@
-﻿using Blish_HUD;
-using Blish_HUD.Content;
+﻿using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
-using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
-using Flurl.Http;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {

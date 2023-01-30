@@ -1,4 +1,4 @@
-﻿using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
+﻿using Blish_HUD.Controls;
 
 namespace Denrage.AchievementTrackerModule.Interfaces
 {

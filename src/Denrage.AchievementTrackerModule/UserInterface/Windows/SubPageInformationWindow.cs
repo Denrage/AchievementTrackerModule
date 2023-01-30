@@ -4,13 +4,7 @@ using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using Denrage.AchievementTrackerModule.UserInterface.Controls;
-using Denrage.AchievementTrackerModule.UserInterface.Controls.FormattedLabel;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 {

@@ -3,10 +3,7 @@ using Blish_HUD.Content;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Flurl.Http;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 

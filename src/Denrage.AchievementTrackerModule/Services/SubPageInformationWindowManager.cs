@@ -6,9 +6,6 @@ using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
