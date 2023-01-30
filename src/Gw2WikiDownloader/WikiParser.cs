@@ -103,7 +103,7 @@ public partial class WikiParser
                 var innerHtml = new HtmlWeb();
                 var innerDocument = innerHtml.Load("https://wiki.guildwars2.com" + entry.Link);
                 var tableNode = innerDocument.DocumentNode.SelectNodes("//table[contains(@class, 'mech1 achievementbox table')]");
-                if (tableNode != null && innerDocument.DocumentNode.InnerHtml.Contains("Collection:"))
+                if (tableNode != null && innerDocument.DocumentNode.InnerHtml.Contains("Collection"))
                 {
                     var tableBody = tableNode.FindFirst("tbody");
                     if (tableBody != null)
@@ -286,7 +286,7 @@ public partial class WikiParser
 
                     achievementTableEntry.Description = description;
                 }
-                else if (ddElement.InnerHtml.Contains("Collection:")) // Collection Achievement. Problem: Collection Items are in the next dd-Element
+                else if (ddElement.InnerHtml.Contains("Collection")) // Collection Achievement. Problem: Collection Items are in the next dd-Element
                 {
                     var description = new CollectionDescription();
 
@@ -556,7 +556,7 @@ public partial class WikiParser
 
             foreach (var item in pageNode.ChildNodes)
             {
-                if (item.Name == "p")
+                if (item.Name == "p" && item.InnerHtml != "\n")
                 {
                     firstText.Add(item);
                 }
