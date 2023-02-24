@@ -15,10 +15,10 @@ namespace Denrage.AchievementTrackerModule.Services
 {
     public class AchievementService : IAchievementService, IDisposable
     {
-        private const string DataVersionUrl = "https://raw.githubusercontent.com/Denrage/AchievementTrackerModule/main/data/version.txt";
-        private const string AchievementDataUrl = "https://raw.githubusercontent.com/Denrage/AchievementTrackerModule/main/data/achievement_data.json";
-        private const string AchievementTablesUrl = "https://raw.githubusercontent.com/Denrage/AchievementTrackerModule/main/data/achievement_tables.json";
-        private const string SubPagesUrl = "https://raw.githubusercontent.com/Denrage/AchievementTrackerModule/main/data/subPages.json";
+        private const string DataVersionUrl = "https://bhm.blishhud.com/Denrage.AchievementTrackerModule/data/version.txt";
+        private const string AchievementDataUrl = "https://bhm.blishhud.com/Denrage.AchievementTrackerModule/data/achievement_data.json";
+        private const string AchievementTablesUrl = "https://bhm.blishhud.com/Denrage.AchievementTrackerModule/data/achievement_tables.json";
+        private const string SubPagesUrl = "https://bhm.blishhud.com/Denrage.AchievementTrackerModule/data/subPages.json";
         private const string VersionFileName = "version.txt";
         private const string AchievementDataFileName = "achievement_data.json";
         private const string AchievementTablesFileName = "achievement_tables.json";
