@@ -64,7 +64,7 @@ namespace Denrage.AchievementTrackerModule.Services
         public async Task InitializeAsync(SettingEntry<bool> autoSave, SettingEntry<bool> limitAchievement, CancellationToken cancellationToken = default)
         {
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
-            this.TextureService = new TextureService(this.contentService);
+            this.TextureService = new TextureService(this.contentService, this.contentsManager);
 
             var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, this.directoriesManager, () => this.PersistanceService, this.TextureService);
             this.AchievementService = achievementService;

@@ -12,7 +12,8 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         event Action<int> AchievementUntracked;
 
         void RemoveAchievement(int achievement);
-
+        bool IsBeingTracked(int achievement);
         bool TrackAchievement(int achievement);
+
     }
 }
