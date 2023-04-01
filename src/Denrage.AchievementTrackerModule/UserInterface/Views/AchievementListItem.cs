@@ -3,6 +3,7 @@ using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {
@@ -11,16 +12,18 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly IAchievementTrackerService achievementTrackerService;
         private readonly IAchievementService achievementService;
         private readonly ContentService contentService;
+        private readonly ITextureService textureService;
         private readonly string icon;
         private readonly AchievementTableEntry achievement;
         private DetailsButton button;
 
-        public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, string icon)
+        public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, ITextureService textureService, string icon)
         {
             this.achievement = achievement;
             this.achievementTrackerService = achievementTrackerService;
             this.achievementService = achievementService;
             this.contentService = contentService;
+            this.textureService = textureService;
             this.icon = icon;
 
             this.achievementService.PlayerAchievementsLoaded += ()
@@ -43,7 +46,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Text = this.achievement.Name,
                 Parent = buildPanel,
                 ShowToggleButton = true,
-                Icon = this.contentService.GetRenderServiceTexture(this.icon),
+                Icon = textureService.GetTexture(this.icon),
             };
 
             this.ColorAchievement();
