@@ -188,6 +188,7 @@ namespace Denrage.AchievementTrackerModule
             GameService.Overlay.BlishHudWindow.RemoveTab(this.blishhudOverlayTab);
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
+            this.dependencyInjectionContainer.TextureService?.Dispose();
         }
 
         private void SavePersistentInformation()
