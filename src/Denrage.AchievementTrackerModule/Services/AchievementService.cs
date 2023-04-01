@@ -187,7 +187,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 foreach(var category in this.AchievementCategories)
                 {
                     //Store texture
-                    textureService.GetTexture(category.Icon);
+                    this.textureService.GetTexture(category.Icon);
                 }
 
                 this.logger.Info("Finished getting achievement data from api");

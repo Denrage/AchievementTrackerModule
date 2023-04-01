@@ -85,7 +85,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 catch (TaskCanceledException)
                 {
                 }
-            }, autoSaveCancellationTokenSource.Token);
+            }, this.autoSaveCancellationTokenSource.Token);
 
         }
 

@@ -32,8 +32,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
         private void BuildWindow()
         {
-            var title = subPageInformation.Title.Substring(0, System.Math.Min(subPageInformation.Title.Length, 25));
-            if (title != subPageInformation.Title)
+            var title = this.subPageInformation.Title.Substring(0, System.Math.Min(this.subPageInformation.Title.Length, 25));
+            if (title != this.subPageInformation.Title)
             {
                 title += " ...";
             }
@@ -101,7 +101,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             Control imageControl = null;
 
-            if (subPageInformation is IHasImage hasImage)
+            if (this.subPageInformation is IHasImage hasImage)
             {
                 if (!string.IsNullOrEmpty(hasImage.ImageUrl))
                 {

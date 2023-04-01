@@ -198,7 +198,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             {
                 for (var j = 0; j < this.tiles.GetLength(1); j++)
                 {
-                    if (tiles[i, j] != null && firstValidTileIndexX == -1 && firstValidTileIndexY == -1)
+                    if (this.tiles[i, j] != null && firstValidTileIndexX == -1 && firstValidTileIndexY == -1)
                     {
                         firstValidTileIndexX = i;
                         firstValidTileIndexY = j;

@@ -30,7 +30,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Create(SubPageInformation subPageInformation)
         {
-            if (subPageWindows.TryGetValue(subPageInformation, out var window))
+            if (this.subPageWindows.TryGetValue(subPageInformation, out var window))
             {
                 window.BringWindowToFront();
             }
@@ -60,12 +60,12 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void CloseWindows()
         {
-            foreach (var item in subPageWindows)
+            foreach (var item in this.subPageWindows)
             {
                 item.Value.Dispose();
             }
 
-            subPageWindows.Clear();
+            this.subPageWindows.Clear();
         }
 
         public void Dispose() 

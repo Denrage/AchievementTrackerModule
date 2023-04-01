@@ -7,28 +7,21 @@ using System.Threading.Tasks;
 using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Modules.Managers;
+using Denrage.AchievementTrackerModule.Interfaces;
 
 namespace Denrage.AchievementTrackerModule.Services
 {
-    public interface ITextureService
+    public class TextureService : ITextureService, IDisposable
     {
-        AsyncTexture2D GetTexture(string url);
-
-        AsyncTexture2D GetRefTexture(string fileName);
-    }
-    public class TextureService : ITextureService
-    {
-        private ContentService contentService { get;  }
-
-        private ContentsManager contentsManager { get; }
-
-        private ConcurrentDictionary<string, AsyncTexture2D> Textures { get; set; }
-        private ConcurrentDictionary<string, AsyncTexture2D> RefTextures { get; set; }
+        private readonly ConcurrentDictionary<string, AsyncTexture2D> textures;
+        private readonly ConcurrentDictionary<string, AsyncTexture2D> refTextures;
+        private readonly ContentService contentService;
+        private readonly ContentsManager contentsManager;
 
         public TextureService(ContentService contentService, ContentsManager contentsManager)
         {
-            Textures = new ConcurrentDictionary<string, AsyncTexture2D>();
-            RefTextures = new ConcurrentDictionary<string, AsyncTexture2D>();
+            this.textures = new ConcurrentDictionary<string, AsyncTexture2D>();
+            this.refTextures = new ConcurrentDictionary<string, AsyncTexture2D>();
 
             this.contentService = contentService;
             this.contentsManager = contentsManager;
@@ -36,32 +29,56 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public AsyncTexture2D GetTexture(string url)
         {
-            var texture = Textures.FirstOrDefault(t => t.Key.Equals(url)).Value;
+            var texture = this.textures.FirstOrDefault(t => t.Key.Equals(url)).Value;
 
             if (texture != null)
+            {
                 return texture;
+            }
 
-            texture = contentService.GetRenderServiceTexture(url);
+            texture = this.contentService.GetRenderServiceTexture(url);
 
-            if(texture != null)
-                Textures.AddOrUpdate(url, texture, (key, value) => value = texture);
+            if (texture != null)
+            {
+                _ = this.textures.AddOrUpdate(url, texture, (key, value) => value = texture);
+            }
 
             return texture;
         }
 
         public AsyncTexture2D GetRefTexture(string file)
         {
-            var texture = RefTextures.FirstOrDefault(t => t.Key.Equals(file)).Value;
+            var texture = this.refTextures.FirstOrDefault(t => t.Key.Equals(file)).Value;
 
             if (texture != null)
+            {
                 return texture;
+            }
 
-            texture = contentsManager.GetTexture(file);
+            texture = this.contentsManager.GetTexture(file);
 
             if (texture != null)
-                RefTextures.AddOrUpdate(file, texture, (key, value) => value = texture);
+            {
+                _ = this.refTextures.AddOrUpdate(file, texture, (key, value) => value = texture);
+            }
 
             return texture;
+        }
+
+        public void Dispose()
+        {
+            foreach (var item in this.textures)
+            {
+                item.Value.Dispose();
+            }
+
+            foreach (var item in this.refTextures)
+            {
+                item.Value.Dispose();
+            }
+
+            this.textures.Clear();
+            this.refTextures.Clear();
         }
     }
 }

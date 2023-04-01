@@ -18,7 +18,6 @@ namespace Denrage.AchievementTrackerModule.Services.Factories
             this.contentService = contentService;
             this.achievementService = achievementService;
             this.textureService = textureService;
-
         }
 
         public AchievementListItem Create(AchievementTableEntry achievement, string icon)
