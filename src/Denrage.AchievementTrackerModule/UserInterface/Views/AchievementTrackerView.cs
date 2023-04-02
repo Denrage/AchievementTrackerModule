@@ -3,6 +3,7 @@ using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Models;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System;
@@ -45,7 +46,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 Parent = buildPanel,
             };
 
-            this.searchBar.TextChanged += this.SearchBar_TextChanged;
+            this.searchBar.TextChanged += (object sender, EventArgs e) =>
+            {
+                if (!this.searchBar.Enabled) return;
+
+                Search(this.searchBar.Text);
+            };
 
             var menuPanel = new Panel()
             {
@@ -128,7 +134,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                         this.selectedMenuItemView.Clear();
                         this.selectedMenuItemView.Show(
                             this.achievementItemOverviewFactory.Create(
-                                achievements.Select(x => (menuItemCategory, x)),
+                                achievements.Select(x => new CategoryAchievements(menuItemCategory, x)),
                                 menuItemCategory.Name));
                     };
 
@@ -138,94 +144,27 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             }
         }
 
-        // TODO: Try timer
-        private void SearchBar_TextChanged(object sender, System.EventArgs e)
-        {
-            if (!this.searchBar.Enabled)
-            {
-                return;
-            }
-
-            try
-            {
-                if (this.delayTask != null)
-                {
-                    this.delayCancellationToken.Cancel();
-                    this.delayTask = null;
-                    this.delayCancellationToken = null;
-                }
-
-                this.delayCancellationToken = new CancellationTokenSource();
-                this.delayTask = new Task(async () => await this.DelaySeach(this.delayCancellationToken.Token), this.delayCancellationToken.Token);
-                this.delayTask.Start();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
-
-        private async Task DelaySeach(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await Task.Delay(300, cancellationToken);
-                await this.SearchAsync(cancellationToken);
-            }
-            catch (OperationCanceledException) { }
-        }
-
         private Dictionary<AchievementCategory, IEnumerable<AchievementTableEntry>> achievementCache;
         private Dictionary<int, AchievementCategory> categories;
 
-        private async Task SearchAsync(CancellationToken cancellationToken = default)
+        private void Search(string searchText)
         {
-            await this.searchSemaphore.WaitAsync(cancellationToken);
-            try
+            if (string.IsNullOrWhiteSpace(searchText))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var searchText = this.searchBar.Text;
-
-                if (string.IsNullOrWhiteSpace(searchText))
-                {
-                    this.selectedMenuItemView.Clear();
-                    return;
-                }
-
-                if (this.achievementCache is null)
-                {
-                    var achievements = new Dictionary<AchievementCategory, IEnumerable<AchievementTableEntry>>();
-
-                    foreach (var item in this.categories.Values)
-                    {
-                        if (item.Achievements.Count > 0)
-                        {
-                            achievements[item] = this.achievementService.Achievements.Where(x => item.Achievements.Contains(x.Id));
-                        }
-                    }
-
-                    this.achievementCache = achievements;
-                }
-
-                var searchedAchievements = new List<(AchievementCategory, AchievementTableEntry)>();
-
-                foreach (var item in this.achievementCache)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    foreach (var categoryAchievement in item.Value.Where(x => x.Name.ToUpper().Contains(searchText.ToUpper())))
-                    {
-                        searchedAchievements.Add((item.Key, categoryAchievement));
-                    }
-                }
-
                 this.selectedMenuItemView.Clear();
-                this.selectedMenuItemView.Show(this.achievementItemOverviewFactory.Create(searchedAchievements, searchText));
+                return;
             }
-            finally
-            {
-                _ = this.searchSemaphore.Release();
-            }
+
+            //Search
+            var achievements = achievementService.Achievements.Where(a => a.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Take(50)
+                .Select(a => new CategoryAchievements(
+                    achievementService.AchievementCategories.FirstOrDefault(x => x.Achievements.Contains(a.Id)),
+                    a))
+                .Where(a => a.Category != null);
+
+            this.selectedMenuItemView.Clear();
+            this.selectedMenuItemView.Show(this.achievementItemOverviewFactory.Create(achievements, searchText));
         }
     }
 }

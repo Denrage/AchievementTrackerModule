@@ -2,6 +2,7 @@
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Models;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -12,12 +13,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
     public class AchievementItemOverview : View
     {
         private readonly IAchievementService achievementService;
-        private readonly IEnumerable<(AchievementCategory Category, AchievementTableEntry Achievement)> achievements;
+        private readonly IEnumerable<CategoryAchievements> achievements;
         private readonly IAchievementListItemFactory achievementListItemFactory;
         private readonly string title;
 
         public AchievementItemOverview(
-            IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements,
+            IEnumerable<CategoryAchievements> achievements,
             string title,
             IAchievementService achievementService,
             IAchievementListItemFactory achievementListItemFactory)
