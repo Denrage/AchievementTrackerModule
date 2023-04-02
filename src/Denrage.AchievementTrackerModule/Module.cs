@@ -65,9 +65,12 @@ namespace Denrage.AchievementTrackerModule
 
         protected override async Task LoadAsync()
         {
-                this.achievementOverviewView = () => new AchievementTrackerView(
-                        this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                        this.dependencyInjectionContainer.AchievementService);
+            this.achievementOverviewView = () => new AchievementTrackerView(
+                    this.dependencyInjectionContainer.AchievementItemOverviewFactory,
+                    this.dependencyInjectionContainer.AchievementService);
+
+            await this.dependencyInjectionContainer.InitializeAsync(this.autoSave, this.limitAchievements);
+            this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
             if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
             {
