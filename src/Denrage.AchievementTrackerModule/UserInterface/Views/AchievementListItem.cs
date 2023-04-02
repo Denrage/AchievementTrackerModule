@@ -3,6 +3,7 @@ using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.UserInterface.Controls;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {
@@ -15,7 +16,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private readonly string icon;
         private readonly AchievementTableEntry achievement;
 
-        private DetailsButton button;
+        private AchievementButton button;
         private GlowButton trackButton;
 
         public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, ITextureService textureService, string icon)
@@ -32,12 +33,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         {
             this.achievementTrackerService.AchievementUntracked += this.Tracker_AchievementUntracked;
 
-            buildPanel.Height = 140;
+            buildPanel.Height = 112;
             buildPanel.Width -= 10;
 
-            this.button = new DetailsButton()
+            this.button = new AchievementButton()
             {
-                Text = this.achievement.Name,
+                Text = this.achievement.Name.Trim(),
                 Parent = buildPanel,
                 Icon = this.textureService.GetTexture(this.icon),
                 HeightSizingMode = SizingMode.Fill,
@@ -55,18 +56,23 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             }
         }
 
-        public void BuildCompleteButton(DetailsButton button)
+        public void BuildCompleteButton(AchievementButton button)
         {
             if (button == null)
             {
                 return;
             }
 
+            //Replace text to fix positioning
+            button.CompleteText = this.achievement.Name.Trim();
+            button.Text = null;
+
+            button.Description = "Complete";
+            button.BottomSectionHeight = 0;
             button.BackgroundColor = Microsoft.Xna.Framework.Color.FromNonPremultiplied(144, 238, 144, 50);
-            button.IconDetails = "Complete";
         }
 
-        public void BuildInCompleteButton(DetailsButton button)
+        public void BuildInCompleteButton(AchievementButton button)
         {
             if (button == null)
             {
@@ -77,7 +83,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             this.trackButton = this.BuildTrackingButton(button);
         }
 
-        public GlowButton BuildTrackingButton(DetailsButton parent)
+        public GlowButton BuildTrackingButton(AchievementButton parent)
         {
             return new GlowButton
             {
