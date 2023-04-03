@@ -1,6 +1,6 @@
 {
   "name": "Achievement Tracker",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "namespace": "Denrage.AchievementTrackerModule",
   "package": "Denrage.AchievementTrackerModule.dll",
   "manifest_version": 1,
@@ -13,6 +13,9 @@
   "contributors": [
     {
       "name": "Denrage"
+    },
+    {
+      "name": "Atzie"
     }
   ],
   "api_permissions": {
