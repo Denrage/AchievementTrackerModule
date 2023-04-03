@@ -20,6 +20,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 
         private readonly IAchievementItemOverviewFactory achievementItemOverviewFactory;
         private readonly IAchievementService achievementService;
+        private readonly ITextureService textureService;
         private readonly IDictionary<MenuItem, AchievementCategory> menuItemCategories;
         private Menu menu;
         private ViewContainer selectedMenuItemView;
@@ -28,10 +29,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private CancellationTokenSource delayCancellationToken;
         private TextBox searchBar;
 
-        public AchievementTrackerView(IAchievementItemOverviewFactory achievementItemOverviewFactory, IAchievementService achievementService)
+        public AchievementTrackerView(IAchievementItemOverviewFactory achievementItemOverviewFactory, IAchievementService achievementService, ITextureService textureService)
         {
             this.achievementItemOverviewFactory = achievementItemOverviewFactory;
             this.achievementService = achievementService;
+            this.textureService = textureService;
             this.menuItemCategories = new Dictionary<MenuItem, AchievementCategory>();
         }
 
@@ -116,7 +118,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 var menuItem = this.menu.AddMenuItem(group.Name);
                 foreach (var category in group.Categories.Select(x => this.categories[x]).OrderBy(x => x.Order))
                 {
-                    var innerMenuItem = new MenuItem(category.Name)
+                    var innerMenuItem = new MenuItem(category.Name, this.textureService.GetTexture(category.Icon))
                     {
                         Parent = menuItem
                     };

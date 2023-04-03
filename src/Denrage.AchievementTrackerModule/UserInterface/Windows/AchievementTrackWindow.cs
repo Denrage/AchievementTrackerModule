@@ -1,4 +1,4 @@
-﻿using Blish_HUD;
+using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules.Managers;
@@ -113,7 +113,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
                 Parent = panel,
                 Width = 32,
                 Height = 32,
-                Texture = this.contentsManager.GetTexture("605019.png"),
+                Texture = this.contentsManager.GetTexture("track_enabled.png"),
             };
 
             trackButton.Location = new Point(panel.ContentRegion.Width - trackButton.Width, 0);
@@ -233,7 +233,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         {
             // TODO: Localize
             this.Title = "Tracked";
-            this.Emblem = this.contentsManager.GetTexture("605019.png");
+            this.Emblem = this.contentsManager.GetTexture("track_enabled.png");
             this.ConstructWindow(this.texture, new Rectangle(0, 0, 350, 600), new Rectangle(0, 30, 350, 600 - 30));
 
             var collapseAll = new StandardButton()

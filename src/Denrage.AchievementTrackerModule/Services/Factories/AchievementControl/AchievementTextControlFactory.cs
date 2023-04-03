@@ -14,6 +14,6 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
         }
 
         protected override AchievementTextControl CreateInternal(AchievementTableEntry achievement, StringDescription description)
-            => new AchievementTextControl(formattedLabelHtmlService, achievement, description);
+            => new AchievementTextControl(this.formattedLabelHtmlService, achievement, description);
     }
 }

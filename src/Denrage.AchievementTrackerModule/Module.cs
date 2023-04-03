@@ -1,4 +1,4 @@
-﻿using Blish_HUD;
+using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules;
@@ -70,7 +70,8 @@ namespace Denrage.AchievementTrackerModule
 
                 this.achievementOverviewView = () => new AchievementTrackerView(
                         this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                        this.dependencyInjectionContainer.AchievementService);
+                        this.dependencyInjectionContainer.AchievementService,
+                        this.dependencyInjectionContainer.TextureService);
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
                 await this.dependencyInjectionContainer.InitializeAsync(this.autoSave, this.limitAchievements);
@@ -187,6 +188,7 @@ namespace Denrage.AchievementTrackerModule
             GameService.Overlay.BlishHudWindow.RemoveTab(this.blishhudOverlayTab);
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
+            this.dependencyInjectionContainer.TextureService?.Dispose();
         }
 
         private void SavePersistentInformation()

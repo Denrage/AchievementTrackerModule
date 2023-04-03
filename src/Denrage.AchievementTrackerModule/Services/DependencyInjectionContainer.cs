@@ -29,6 +29,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IAchievementService AchievementService { get; set; }
 
+        public ITextureService TextureService { get; set; }
+
         public IPersistanceService PersistanceService { get; private set; }
         
         public IAchievementControlProvider AchievementControlProvider { get; set; }
@@ -62,14 +64,17 @@ namespace Denrage.AchievementTrackerModule.Services
         public async Task InitializeAsync(SettingEntry<bool> autoSave, SettingEntry<bool> limitAchievement, CancellationToken cancellationToken = default)
         {
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
-            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, this.directoriesManager, () => this.PersistanceService);
+            this.TextureService = new TextureService(this.contentService, this.contentsManager);
+
+            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, this.directoriesManager, () => this.PersistanceService, this.TextureService);
             this.AchievementService = achievementService;
+            
 
             this.SubPageInformationWindowManager = new SubPageInformationWindowManager(this.graphicsService, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService, this.ExternalImageService);
             this.FormattedLabelHtmlService = new FormattedLabelHtmlService(this.contentsManager, this.AchievementService, this.SubPageInformationWindowManager, this.ExternalImageService);
             var achievementTrackerService = new AchievementTrackerService(this.logger, limitAchievement);
             this.AchievementTrackerService = achievementTrackerService;
-            this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService);
+            this.AchievementListItemFactory = new AchievementListItemFactory(this.AchievementTrackerService, this.contentService, this.AchievementService, this.TextureService);
             this.AchievementItemOverviewFactory = new AchievementItemOverviewFactory(this.AchievementListItemFactory, this.AchievementService);
             this.AchievementTableEntryProvider = new AchievementTableEntryProvider(this.FormattedLabelHtmlService, this.ExternalImageService, this.logger, this.gw2ApiManager, this.contentsManager);
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider, this.SubPageInformationWindowManager);
