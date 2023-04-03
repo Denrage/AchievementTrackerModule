@@ -24,7 +24,6 @@ namespace Denrage.AchievementTrackerModule.Services
         private const string AchievementTablesFileName = "achievement_tables.json";
         private const string SubPagesFileName = "subPages.json";
 
-
         private readonly ContentsManager contentsManager;
         private readonly Gw2ApiManager gw2ApiManager;
         private readonly Logger logger;
@@ -68,6 +67,7 @@ namespace Denrage.AchievementTrackerModule.Services
             {
                 bit = conversionFunc(bit);
             }
+            
             if (this.PlayerAchievements != null)
             {
                 var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
@@ -84,7 +84,6 @@ namespace Denrage.AchievementTrackerModule.Services
                     }
                 }
             }
-
 
             if (!this.ManualCompletedAchievements.TryGetValue(achievementId, out var achievementBits))
             {
@@ -187,7 +186,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 foreach(var category in this.AchievementCategories)
                 {
                     //Store texture
-                    this.textureService.GetTexture(category.Icon);
+                    _ = this.textureService.GetTexture(category.Icon);
                 }
 
                 this.logger.Info("Finished getting achievement data from api");
@@ -269,6 +268,7 @@ namespace Denrage.AchievementTrackerModule.Services
                                 }
                             }
                         }
+                        
                         _ = Task.Run(() => this.PlayerAchievementsLoaded?.Invoke(), cancellationToken);
                     }
                     catch (Exception ex)
