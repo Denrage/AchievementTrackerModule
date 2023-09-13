@@ -118,11 +118,9 @@ namespace Denrage.AchievementTrackerModule.Services
         private bool CheckMd5(string md5ToCheck, string filePath)
         {
             using (var md5 = MD5.Create())
+            using (var fileStream = System.IO.File.Open(filePath, FileMode.Open))
             {
-                using (var fileStream = System.IO.File.Open(filePath, FileMode.Open))
-                {
-                    return md5ToCheck.Equals(ByteArrayToString(md5.ComputeHash(fileStream)), StringComparison.OrdinalIgnoreCase);
-                }
+                return md5ToCheck.Equals(ByteArrayToString(md5.ComputeHash(fileStream)), StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -131,13 +129,13 @@ namespace Denrage.AchievementTrackerModule.Services
             var tries = 0;
             do
             {
-                _ = await url.DownloadFileAsync(folder, fileName);
-                tries++;
-                if (tries == 4)
+                if (tries == 3)
                 {
                     this.logger.Error("Couldn't download file, please download it manually! " + url);
                     return false;
                 }
+                _ = await url.DownloadFileAsync(folder, fileName);
+                tries++;
             } while (!System.IO.File.Exists(Path.Combine(folder, fileName)) || !this.CheckMd5(md5, Path.Combine(folder, fileName)));
 
             return true;
