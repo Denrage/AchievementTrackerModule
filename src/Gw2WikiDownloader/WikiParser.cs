@@ -83,19 +83,30 @@ public partial class WikiParser
 
             foreach (var item in tableData.ChildNodes)
             {
-                if (item.Name == "dl" || item.Name == "p" || item.Name == "span")
+                if (item.Name == "dl" || item.Name == "span")
                 {
                     break;
                 }
 
-                if (item.NodeType == HtmlNodeType.Text)
+                if (item.Name == "p")
                 {
-                    gameText += item.InnerText;
+                    if (!(item.FirstChild != null && item.FirstChild.Name == "i"))
+                    {
+                        gameText += item.InnerText;
+                    }
                 }
                 else
                 {
-                    gameText += item.OuterHtml;
+                    if (item.NodeType == HtmlNodeType.Text)
+                    {
+                        gameText += item.InnerText;
+                    }
+                    else
+                    {
+                        gameText += item.OuterHtml;
+                    }
                 }
+
             }
 
             if (entry.HasLink) // Parse Collection achievements on their details page
@@ -133,15 +144,18 @@ public partial class WikiParser
                 }
                 else if (node.Name == "p") // Additional notes with cites
                 {
-                    var referenceNodes = fullDocument.SelectNodes("//ol[contains(@class, 'references')]");
-                    if (referenceNodes.Any())
+                    if (node.FirstChild.Name == "i")
                     {
-                        var relevantNode = referenceNodes.First();
-                        var references = relevantNode.ChildNodes.Where(x => x.Name == "li");
+                        var referenceNodes = fullDocument.SelectNodes("//ol[contains(@class, 'references')]");
+                        if (referenceNodes.Any())
+                        {
+                            var relevantNode = referenceNodes.First();
+                            var references = relevantNode.ChildNodes.Where(x => x.Name == "li");
 
-                        var citeLink = node.ChildNodes.FindFirst("sup").ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty)[1..];
-                        entry.Cite = references.First(x => x.GetAttributeValue("id", string.Empty) == citeLink).InnerText;
+                            var citeLink = node.ChildNodes.FindFirst("sup").ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty)[1..];
+                            entry.Cite = references.First(x => x.GetAttributeValue("id", string.Empty) == citeLink).InnerText;
 
+                        }
                     }
                 }
                 else if (node.Name == "span") // Game hint text
@@ -328,7 +342,7 @@ public partial class WikiParser
 
             try
             {
-                var apiNode = relevantDlNode.ChildNodes.Where(x => x.Name == "dd" && x.InnerHtml.Contains("API")).First().ChildNodes.FindFirst("a");
+                var apiNode = relevantDlNode.ChildNodes.Where(x => x.Name == "dd" && x.InnerHtml.Contains("//api.")).First().ChildNodes.FindFirst("a");
                 var apiLink = apiNode.GetAttributeValue("href", string.Empty);
                 var idStartIndex = apiLink.IndexOf("ids=") + "ids=".Length;
                 var idEndIndex = apiLink.IndexOf("&");
@@ -501,7 +515,7 @@ public partial class WikiParser
         return currentEntry;
     }
 
-    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 6)
+    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 10)
     {
         try
         {
@@ -513,6 +527,12 @@ public partial class WikiParser
             if (link.IndexOf("#") > 0)
             {
                 link = link[..link.IndexOf("#")];
+            }
+
+            if (results.Select(x => x.Link).Contains(link))
+            {
+                Console.WriteLine($"{link} - {depth} - skipped");
+                return;
             }
 
             Console.WriteLine($"{link} - {depth}");
@@ -549,7 +569,7 @@ public partial class WikiParser
             }
 
             subPageInformation.Title = SanitizesDisplayName(document.DocumentNode.SelectSingleNode("//h1[@id='firstHeading']").InnerText);
-            subPageInformation.Link = link;
+            subPageInformation.Link = link.Replace("com//", "com/");
 
             var pageNode = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'mw-parser-output')]");
             var firstText = new List<HtmlNode>();
@@ -587,10 +607,7 @@ public partial class WikiParser
                         subPageLink = subPageLink[..subPageLink.IndexOf("#")];
                     }
 
-                    if (results.Select(x => x.Link).Contains(subPageLink))
-                    {
-                        continue;
-                    }
+
 
                     await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
                 }
@@ -618,11 +635,6 @@ public partial class WikiParser
                             if (subPageLink.IndexOf("#") > 0)
                             {
                                 subPageLink = subPageLink[..subPageLink.IndexOf("#")];
-                            }
-
-                            if (results.Select(x => x.Link).Contains(subPageLink))
-                            {
-                                continue;
                             }
 
                             await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
@@ -774,7 +786,7 @@ public partial class WikiParser
 
         var iconElement = locationInfoBox.ChildNodes.FirstOrDefault(x => x.Name == "div" && x.GetClasses().Contains("infobox-icon"));
 
-        if (iconElement != null)
+        if (iconElement != null && iconElement.ChildNodes.Count > 0)
         {
             subPage.ImageUrl = iconElement.ChildNodes.First(x => x.Name == "a").GetAttributeValue("href", "");
         }
@@ -910,11 +922,11 @@ public partial class WikiParser
 
     private InteractiveMapInformation ParseInteractiveMap(string scriptTag)
     {
-        var inputInformationStartIndex = scriptTag.IndexOf("// Inputs");
-        var inputInformationEndIndex = scriptTag.IndexOf("// If all inputs", inputInformationStartIndex);
+        var inputInformationStartIndex = scriptTag.IndexOf("infoboxMap({");
+        var inputInformationEndIndex = scriptTag.IndexOf("});", inputInformationStartIndex);
         var relevantString = scriptTag[inputInformationStartIndex..inputInformationEndIndex];
 
-        var iconUrlStartIndex = relevantString.IndexOf("\"") + 1;
+        var iconUrlStartIndex = relevantString.IndexOf("iconUrl: \"") + "iconUrl: \"".Length;
         var iconUrlEndIndex = relevantString.IndexOf("\"", iconUrlStartIndex);
         var parsedIconUrl = relevantString[iconUrlStartIndex..iconUrlEndIndex];
         var iconUrl = string.IsNullOrEmpty(parsedIconUrl) ? string.Empty : "https:" + parsedIconUrl;

@@ -24,61 +24,66 @@ var parser = new Gw2WikiDownload.WikiParser();
 //var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
 //var result = parser.Parse(document, tables.First());
 
-var listElements = parser.ParseListElementsFromWiki(await response.Content.ReadAsStringAsync()).Skip(4).ToList();
-listElements.AddRange(parser.ParseListElementsFromWiki(secondPageAchievementsList));
+//var listElements = parser.ParseListElementsFromWiki(await response.Content.ReadAsStringAsync()).Skip(4).ToList();
+//listElements.AddRange(parser.ParseListElementsFromWiki(secondPageAchievementsList));
 var result = new List<AchievementTableEntry>();
-foreach (var item in listElements)
-{
-    if (item.title == "Living World Dailies")
-    {
-        Console.WriteLine(item.title + " skipped");
-        continue;
-    }
+//foreach (var item in listElements)
+//{
+//    if (item.title == "Living World Dailies")
+//    {
+//        Console.WriteLine(item.title + " skipped");
+//        continue;
+//    }
 
-    Console.WriteLine(item.title);
-    var web = new HtmlWeb();
-    var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link);
-    var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
-    result.AddRange(parser.Parse(document, tables.First()));
-}
+//    Console.WriteLine(item.title);
+//    var web = new HtmlWeb();
+//    var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link);
+//    var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
+//    result.AddRange(parser.Parse(document, tables.First()));
+//}
 
-async Task ParseItem(string name, string link, Action<int> setId, Func<bool> shouldSet)
-{
-    try
-    {
-        if (shouldSet())
-        {
-            Console.WriteLine(name);
-            var web = new HtmlWeb();
-            var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + link);
-            var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
-            setId(parser.ParseItemWikiPage(itemBoxNode));
-        }
-    }
-    catch (Exception)
-    {
-        throw;
-    }
-}
+//async Task ParseItem(string name, string link, Action<int> setId, Func<bool> shouldSet)
+//{
+//    try
+//    {
+//        if (shouldSet())
+//        {
+//            if (link == "/wiki/Transmutation_Charge")
+//            {
+//                link = "/wiki/Transmutation_Charge_(item)";
+//            }
 
-foreach (var item in result)
-{
-    if (item.Description is CollectionDescription collectionDescription)
-    {
-        foreach (var collectionEntry in collectionDescription.EntryList)
-        {
-            await ParseItem(collectionEntry.DisplayName, collectionEntry.Link, id => collectionEntry.Id = id, () => collectionEntry.Id == 0);
-        }
-    }
-}
+//            Console.WriteLine(name);
+//            var web = new HtmlWeb();
+//            var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + link);
+//            var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
+//            setId(parser.ParseItemWikiPage(itemBoxNode));
+//        }
+//    }
+//    catch (Exception)
+//    {
+//        throw;
+//    }
+//}
 
-foreach (var item in result)
-{
-    if (item.Reward is ItemReward reward)
-    {
-        await ParseItem(reward.DisplayName, reward.ItemUrl, id => reward.Id = id, () => reward.Id == 0);
-    }
-}
+//foreach (var item in result)
+//{
+//    if (item.Description is CollectionDescription collectionDescription)
+//    {
+//        foreach (var collectionEntry in collectionDescription.EntryList)
+//        {
+//            await ParseItem(collectionEntry.DisplayName, collectionEntry.Link, id => collectionEntry.Id = id, () => collectionEntry.Id == 0);
+//        }
+//    }
+//}
+
+//foreach (var item in result)
+//{
+//    if (item.Reward is ItemReward reward)
+//    {
+//        await ParseItem(reward.DisplayName, reward.ItemUrl, id => reward.Id = id, () => reward.Id == 0);
+//    }
+//}
 
 var jsonResult = System.Text.Json.JsonSerializer.Serialize(result, new JsonSerializerOptions()
 {
@@ -86,7 +91,7 @@ var jsonResult = System.Text.Json.JsonSerializer.Serialize(result, new JsonSeria
     Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
 });
 
-File.WriteAllText("achievement_data.json", jsonResult);
+//File.WriteAllText("achievement_data.json", jsonResult);
 
 
 
@@ -99,54 +104,54 @@ File.WriteAllText("achievement_data.json", jsonResult);
 
 // Parse CollectionAchievement Details page 
 
-result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("achievement_data.json"), new JsonSerializerOptions()
-{
-    WriteIndented = true,
-    Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
-});
+//result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("achievement_data.json"), new JsonSerializerOptions()
+//{
+//    WriteIndented = true,
+//    Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
+//});
 
 
 //var webtemp = new HtmlWeb();
 //var document = await webtemp.LoadFromWebAsync("https://wiki.guildwars2.com/wiki/Molten_Memorial");
 //parser.ParseCollectionAchievementPage(document.DocumentNode);
 
-var achievementTables = new List<CollectionAchievementTable>();
-foreach (var item in result)
-{
-    if (item.HasLink)
-    {
-        Console.Write("Achievement: " + "https://wiki.guildwars2.com" + item.Link);
-        if (item.Link != "/wiki/Dragon_Response_Mission" && item.Link != "/wiki/Strike_Mission")
-        {
-            var web = new HtmlWeb();
-            var doc = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.Link);
-            var table = parser.ParseCollectionAchievementPage(doc.DocumentNode);
-            if (table != null)
-            {
-                table.Id = item.Id;
-                table.Name = item.Name;
-                table.Link = item.Link;
-                Console.Write(" | Had table");
-                achievementTables.Add(table);
-            }
-        }
+//var achievementTables = new List<CollectionAchievementTable>();
+//foreach (var item in result)
+//{
+//    if (item.HasLink)
+//    {
+//        Console.Write("Achievement: " + "https://wiki.guildwars2.com" + item.Link);
+//        if (item.Link != "/wiki/Dragon_Response_Mission" && item.Link != "/wiki/Strike_Mission")
+//        {
+//            var web = new HtmlWeb();
+//            var doc = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.Link);
+//            var table = parser.ParseCollectionAchievementPage(doc.DocumentNode);
+//            if (table != null)
+//            {
+//                table.Id = item.Id;
+//                table.Name = item.Name;
+//                table.Link = item.Link;
+//                Console.Write(" | Had table");
+//                achievementTables.Add(table);
+//            }
+//        }
 
-        Console.WriteLine("");
-    }
-}
+//        Console.WriteLine("");
+//    }
+//}
 
-var json = System.Text.Json.JsonSerializer.Serialize(achievementTables, new JsonSerializerOptions()
-{
-    WriteIndented = true,
-    Converters = { new CollectionAchievementTableEntryConverter() },
-});
+//var json = System.Text.Json.JsonSerializer.Serialize(achievementTables, new JsonSerializerOptions()
+//{
+//    WriteIndented = true,
+//    Converters = { new CollectionAchievementTableEntryConverter() },
+//});
 
-File.WriteAllText("achievement_tables.json", json);
+//File.WriteAllText("achievement_tables.json", json);
 
 
 // Parse Subpages
 
-result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("AchievementData_final2.json"), new JsonSerializerOptions()
+result = System.Text.Json.JsonSerializer.Deserialize<List<AchievementTableEntry>>(File.ReadAllText("achievement_data.json"), new JsonSerializerOptions()
 {
     WriteIndented = true,
     Converters = { new RewardConverter(), new AchievementTableEntryDescriptionConverter() },
@@ -206,7 +211,7 @@ jsonResult = System.Text.Json.JsonSerializer.Serialize(subpageInformation, new J
     Converters = { new SubPageInformationConverter() },
 });
 
-File.WriteAllText("subPages.json", json);
+File.WriteAllText("subPages.json", jsonResult);
 
 
 //var result = System.Text.Json.JsonSerializer.Deserialize<List<SubPageInformation>>(File.ReadAllText("subPages.json"), new JsonSerializerOptions()
