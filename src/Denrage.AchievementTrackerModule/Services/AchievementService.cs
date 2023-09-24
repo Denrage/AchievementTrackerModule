@@ -169,7 +169,10 @@ namespace Denrage.AchievementTrackerModule.Services
                     using (var metadata = System.IO.File.Open(Path.Combine(dataFolder, VersionFileName), FileMode.Open))
                     {
                         var localMetadata = await JsonSerializer.DeserializeAsync<AchievementDataMetadata>(metadata, serializerOptions, cancellationToken);
-                        if (localMetadata.Version != githubMetadata.Version)
+                        if (localMetadata.Version != githubMetadata.Version || 
+                            !this.CheckMd5(githubMetadata.AchievementDataMd5, Path.Combine(dataFolder, AchievementDataFileName)) ||
+                            !this.CheckMd5(githubMetadata.AchievementTablesMd5, Path.Combine(dataFolder, AchievementTablesFileName)) ||
+                            !this.CheckMd5(githubMetadata.SubPagesMd5, Path.Combine(dataFolder, SubPagesFileName)))
                         {
                             downloadData = true;
                         }
