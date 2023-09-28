@@ -12,7 +12,7 @@ public partial class WikiParser
     // Parses a overview category page. Used for the initial list of achievement categories. https://wiki.guildwars2.com/index.php?title=Category:Achievement_categories
     public IEnumerable<(string link, string title)> ParseListElementsFromWiki(string categoryOverviewSource)
     {
-        var collections = categoryOverviewSource.Split('\n').Where(x => x.StartsWith("<li>") || x.StartsWith("<ul><li>"));
+        var collections = categoryOverviewSource.Split('\n').Where(x => (x.StartsWith("<li><a href") || x.StartsWith("<ul><li><a href")) && (!x.Contains("Category") || x.Contains("previous page")));
 
         var result = new List<AchievementPage>();
 
@@ -37,6 +37,12 @@ public partial class WikiParser
         {
             var groupedAchievements = new Dictionary<string, List<HtmlNode>>();
             var achievementNodes = table.SelectNodes("//tr[@data-id]");
+
+            if (achievementNodes is null)
+            {
+                return Enumerable.Empty<AchievementTableEntry>();
+            }
+
             foreach (var achievementNode in achievementNodes)
             {
                 var achievementId = achievementNode.Attributes["data-id"].Value;
