@@ -27,7 +27,7 @@ namespace Denrage.AchievementTrackerModule.Services
         public FormattedLabelBuilder CreateLabel(string textWithHtml)
         {
             var labelBuilder = new FormattedLabelBuilder();
-
+            textWithHtml = this.SanitizeHtml(textWithHtml);
             var node = HtmlNode.CreateNode("<div>" + textWithHtml + "</div>");
 
             foreach (var childNode in node.ChildNodes)
@@ -39,6 +39,11 @@ namespace Denrage.AchievementTrackerModule.Services
             }
 
             return labelBuilder;
+        }
+
+        private string SanitizeHtml(string html)
+        {
+            return html.Replace("&#160;", string.Empty).Replace("&#10;", "\n");
         }
 
         private IEnumerable<FormattedLabelPartBuilder> CreateParts(HtmlNode childNode, FormattedLabelBuilder labelBuilder)
