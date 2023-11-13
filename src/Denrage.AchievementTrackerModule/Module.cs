@@ -1,10 +1,14 @@
+using Autofac;
 using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Services;
+using Denrage.AchievementTrackerModule.Services.Factories;
+using Denrage.AchievementTrackerModule.Services.Factories.ItemDetails;
 using Denrage.AchievementTrackerModule.UserInterface.Views;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
@@ -14,20 +18,14 @@ using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
 {
-    // TODO: Use Microsoft.Extensions.DependencyInjection
     [Export(typeof(Blish_HUD.Modules.Module))]
     public class Module : Blish_HUD.Modules.Module
     {
         private static readonly Logger Logger = Logger.GetLogger<Module>();
-        private readonly DependencyInjectionContainer dependencyInjectionContainer;
-        private readonly Logger logger;
-        private Func<IView> achievementOverviewView;
+        private readonly IContainer container;
         private AchievementTrackWindow window;
         private CornerIcon cornerIcon;
         private bool purposelyHidden;
-        private SettingEntry<bool> autoSave;
-        private SettingEntry<bool> limitAchievements;
-        private WindowTab blishhudOverlayTab;
 
         #region Service Managers
         internal SettingsManager SettingsManager => this.ModuleParameters.SettingsManager;
@@ -40,26 +38,54 @@ namespace Denrage.AchievementTrackerModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters)
             : base(moduleParameters)
         {
-            this.logger = Logger;
-            this.dependencyInjectionContainer = new DependencyInjectionContainer(this.Gw2ApiManager, this.ContentsManager, GameService.Content, this.DirectoriesManager, this.logger, GameService.Graphics);
+            var builder = new ContainerBuilder();
+            
+            builder.RegisterInstance(this.Gw2ApiManager);
+            builder.RegisterInstance(this.ContentsManager);
+            builder.RegisterInstance(GameService.Content);
+            builder.RegisterInstance(this.DirectoriesManager);
+            builder.RegisterInstance(Logger);
+            builder.RegisterInstance(GameService.Graphics);
+            builder.RegisterInstance(GameService.Overlay);
+            builder.RegisterType<ExternalImageService>().As<IExternalImageService>().SingleInstance();
+            builder.RegisterType<TextureService>().As<ITextureService>().SingleInstance();
+            builder.RegisterType<AchievementService>().As<IAchievementService>().AsSelf().SingleInstance();
+            builder.RegisterType<SubPageInformationWindowManager>().As<ISubPageInformationWindowManager>().SingleInstance();
+            builder.RegisterType<FormattedLabelHtmlService>().As<IFormattedLabelHtmlService>().SingleInstance();
+            builder.RegisterType<AchievementTrackerService>().As<IAchievementTrackerService>().AsSelf().SingleInstance();
+            builder.RegisterType<AchievementItemOverviewFactory>().As<IAchievementItemOverviewFactory>().SingleInstance();
+            builder.RegisterType<AchievementListItemFactory>().As<IAchievementListItemFactory>().SingleInstance();
+            builder.RegisterType<AchievementTableEntryProvider>().As<IAchievementTableEntryProvider>().SingleInstance();
+            builder.RegisterType<ItemDetailWindowFactory>().As<IItemDetailWindowFactory>().SingleInstance();
+            builder.RegisterType<ItemDetailWindowManager>().As<IItemDetailWindowManager>().AsSelf().SingleInstance();
+            builder.RegisterType<AchievementControlProvider>().As<IAchievementControlProvider>().SingleInstance();
+            builder.RegisterType<AchievementControlManager>().As<IAchievementControlManager>().SingleInstance();
+            builder.RegisterType<AchievementDetailsWindowFactory>().As<IAchievementDetailsWindowFactory>().SingleInstance();
+            builder.RegisterType<AchievementDetailsWindowManager>().As<IAchievementDetailsWindowManager>().AsSelf().SingleInstance();        
+            builder.RegisterType<PersistanceService>().As<IPersistanceService>().SingleInstance();
+            builder.RegisterType<Services.SettingsService>().As<ISettingsService>().SingleInstance();
+            builder.RegisterType<BlishTabNavigationService>().As<IBlishTabNavigationService>().SingleInstance();
+            
+            builder.RegisterType<AchievementTrackerView>().AsSelf().SingleInstance();
+            builder.RegisterType<AchievementTrackWindow>().AsSelf().SingleInstance();
+
+            this.container = builder.Build();
         }
 
         protected override void DefineSettings(SettingCollection settings)
         {
-            this.autoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
+            var settingsService = this.container.Resolve<ISettingsService>();
+            settingsService.AutoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
 
-            this.limitAchievements = settings.DefineSetting("LimitAchievements", true, () => "Limit Achievements to 15", () => "This will limit the maximum of achievements to 15. If it's disabled expect performance and usability issues.");
+            settingsService.LimitAchievements = settings.DefineSetting("LimitAchievements", true, () => "Limit Achievements to 15", () => "This will limit the maximum of achievements to 15. If it's disabled expect performance and usability issues.");
         }
 
         protected override void Initialize()
         {
             this.Gw2ApiManager.SubtokenUpdated += async (_, args) =>
             {
-                this.logger.Info("Subtoken updated");
-                if (this.dependencyInjectionContainer != null && this.dependencyInjectionContainer.AchievementService != null)
-                {
-                    await this.dependencyInjectionContainer?.AchievementService?.LoadPlayerAchievements();
-                }
+                this.container.Resolve<Logger>().Info("Subtoken updated");
+                await this.container.Resolve<IAchievementService>().LoadPlayerAchievements();
             };
         }
 
@@ -67,45 +93,47 @@ namespace Denrage.AchievementTrackerModule
         {
             _ = Task.Run(async () =>
             {
-
-                this.achievementOverviewView = () => new AchievementTrackerView(
-                        this.dependencyInjectionContainer.AchievementItemOverviewFactory,
-                        this.dependencyInjectionContainer.AchievementService,
-                        this.dependencyInjectionContainer.TextureService);
-
-                await Task.Delay(TimeSpan.FromSeconds(3));
-                await this.dependencyInjectionContainer.InitializeAsync(this.autoSave, this.limitAchievements);
-                this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
-
-                if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
+                try
                 {
-                    this.InitializeWindow();
-                    this.window.Show();
+                    await this.container.Resolve<AchievementService>().LoadAsync();
+                    this.container.Resolve<AchievementDetailsWindowManager>().Load(this.container.Resolve<IPersistanceService>());
+                    this.container.Resolve<ItemDetailWindowManager>().Load(this.container.Resolve<IPersistanceService>());
+                    this.container.Resolve<AchievementTrackerService>().Load(this.container.Resolve<IPersistanceService>());
+                    this.container.Resolve<IBlishTabNavigationService>().Initialize();
+
+                    this.container.Resolve<IAchievementTrackerService>().AchievementTracked += this.AchievementTrackerService_AchievementTracked;
+
+                    if (this.container.Resolve<IPersistanceService>().Get().ShowTrackWindow)
+                    {
+                        this.InitializeWindow();
+                        this.window.Show();
+                    }
+
+                    this.cornerIcon = new CornerIcon()
+                    {
+                        // TODO: Localize
+                        IconName = "Open Achievement Panel",
+                        Icon = this.ContentsManager.GetTexture(@"corner_icon_inactive.png"),
+                        HoverIcon = this.ContentsManager.GetTexture(@"corner_icon_active.png"),
+                        Width = 64,
+                        Height = 64,
+                    };
+
+                    this.cornerIcon.Click += (s, e) =>
+                    {
+                        this.InitializeWindow();
+
+                        this.window.ToggleWindow();
+                    };
+
+                    this.container.Resolve<IPersistanceService>().AutoSave += this.SavePersistentInformation;
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
                 }
 
-                this.blishhudOverlayTab = GameService.Overlay.BlishHudWindow.AddTab(
-                    "Achievement Tracker",
-                    this.ContentsManager.GetTexture("achievement_icon.png"),
-                    this.achievementOverviewView);
-
-                this.cornerIcon = new CornerIcon()
-                {
-                    // TODO: Localize
-                    IconName = "Open Achievement Panel",
-                    Icon = this.ContentsManager.GetTexture(@"corner_icon_inactive.png"),
-                    HoverIcon = this.ContentsManager.GetTexture(@"corner_icon_active.png"),
-                    Width = 64,
-                    Height = 64,
-                };
-
-                this.cornerIcon.Click += (s, e) =>
-                {
-                    this.InitializeWindow();
-
-                    this.window.ToggleWindow();
-                };
-
-                this.dependencyInjectionContainer.PersistanceService.AutoSave += this.SavePersistentInformation;
             });
 
             await base.LoadAsync();
@@ -115,31 +143,19 @@ namespace Denrage.AchievementTrackerModule
         {
             if (this.window is null)
             {
-                this.window = new AchievementTrackWindow(
-                    this.ContentsManager,
-                    this.dependencyInjectionContainer.AchievementTrackerService,
-                    this.dependencyInjectionContainer.AchievementControlProvider,
-                    this.dependencyInjectionContainer.AchievementService,
-                    this.dependencyInjectionContainer.AchievementDetailsWindowManager,
-                    this.dependencyInjectionContainer.AchievementControlManager,
-                    this.dependencyInjectionContainer.SubPageInformationWindowManager,
-                    GameService.Overlay,
-                    this.dependencyInjectionContainer.FormattedLabelHtmlService,
-                    this.achievementOverviewView)
-                {
-                    Parent = GameService.Graphics.SpriteScreen,
-                };
+                this.window = this.container.Resolve<AchievementTrackWindow>();
+                this.window.Parent = GameService.Graphics.SpriteScreen;
 
-                var savedWindowLocation = this.dependencyInjectionContainer.PersistanceService.Get();
+                var savedWindowLocation = this.container.Resolve<IPersistanceService>().Get();
 
-                this.logger.Info($"SavedWindowLocation -  X:{savedWindowLocation.TrackWindowLocationX} Y:{savedWindowLocation.TrackWindowLocationY}");
+                this.container.Resolve<Logger>().Info($"SavedWindowLocation -  X:{savedWindowLocation.TrackWindowLocationX} Y:{savedWindowLocation.TrackWindowLocationY}");
 
                 this.window.Location =
                     savedWindowLocation.TrackWindowLocationX == -1 || savedWindowLocation.TrackWindowLocationY == -1 ?
                     (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2)) :
                     new Point(savedWindowLocation.TrackWindowLocationX, savedWindowLocation.TrackWindowLocationY);
 
-                this.logger.Info($"AchievementTrackWindowLocation -  X:{this.window.Location.X} Y:{this.window.Location.Y}");
+                this.container.Resolve<Logger>().Info($"AchievementTrackWindowLocation -  X:{this.window.Location.X} Y:{this.window.Location.Y}");
             }
         }
 
@@ -158,8 +174,8 @@ namespace Denrage.AchievementTrackerModule
 
         protected override void Update(GameTime gameTime)
         {
-            this.dependencyInjectionContainer?.ItemDetailWindowManager?.Update();
-            this.dependencyInjectionContainer?.AchievementDetailsWindowManager?.Update();
+            this.container.Resolve<IItemDetailWindowManager>().Update();
+            this.container.Resolve<IAchievementDetailsWindowManager>().Update();
 
             if (GameService.Gw2Mumble.IsAvailable && this.window != null)
             {
@@ -184,17 +200,17 @@ namespace Denrage.AchievementTrackerModule
         {
             this.SavePersistentInformation();
             var location = this.window?.Location ?? new Point(-1, -1);
-            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
-            GameService.Overlay.BlishHudWindow.RemoveTab(this.blishhudOverlayTab);
+            this.container.Resolve<IPersistanceService>().Save(location.X, location.Y, this.window?.Visible ?? false);
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
-            this.dependencyInjectionContainer.TextureService?.Dispose();
+            this.container.Resolve<ITextureService>().Dispose();
+            this.container.Resolve<IBlishTabNavigationService>().Dispose();
         }
 
         private void SavePersistentInformation()
         {
             var location = this.window?.Location ?? new Point(-1, -1);
-            this.dependencyInjectionContainer.PersistanceService?.Save(location.X, location.Y, this.window?.Visible ?? false);
+            this.container.Resolve<IPersistanceService>().Save(location.X, location.Y, this.window?.Visible ?? false);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
         private readonly ISubPageInformationWindowManager subPageInformationWindowManager;
         private readonly OverlayService overlayService;
         private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
-        private readonly Func<IView> achievementOverviewView;
+        private readonly IBlishTabNavigationService blishTabNavigationService;
         private readonly Texture2D texture;
         private readonly Dictionary<int, Panel> trackedAchievements = new Dictionary<int, Panel>();
 
@@ -43,7 +43,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             ISubPageInformationWindowManager subPageInformationWindowManager,
             OverlayService overlayService,
             IFormattedLabelHtmlService formattedLabelHtmlService,
-            Func<IView> achievementOverviewView)
+            IBlishTabNavigationService blishTabNavigationService)
         {
             this.contentsManager = contentsManager;
             this.achievementTrackerService = achievementTrackerService;
@@ -54,7 +54,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             this.subPageInformationWindowManager = subPageInformationWindowManager;
             this.overlayService = overlayService;
             this.formattedLabelHtmlService = formattedLabelHtmlService;
-            this.achievementOverviewView = achievementOverviewView;
+            this.blishTabNavigationService = blishTabNavigationService;
             this.texture = this.contentsManager.GetTexture("background.png");
             this.achievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
 
@@ -279,12 +279,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
 
             openAchievementPanelButton.Click += (s, e) =>
             {
-                if (!this.overlayService.BlishHudWindow.Visible)
-                {
-                    this.overlayService.BlishHudWindow.Show();
-                }
-
-                this.overlayService.BlishHudWindow.Navigate(this.achievementOverviewView());
+                this.blishTabNavigationService.NavigateToAchievementTab();
             };
 
             closeSubPagesButton.Click += (s, e) =>

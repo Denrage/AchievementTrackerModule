@@ -51,6 +51,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+      <PackageReference Include="Autofac" Version="5.2.0" />
       <PackageReference Include="BlishHUD" Version="1.0.0" ExcludeAssets="runtime" />
       <PackageReference Include="Flurl.Http" Version="2.4.2" />
       <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />

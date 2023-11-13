@@ -10,7 +10,7 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private readonly List<int> activeAchievements;
         private readonly Logger logger;
-        private readonly SettingEntry<bool> limitAchievement;
+        private readonly ISettingsService settings;
 
         public event Action<int> AchievementTracked;
 
@@ -18,16 +18,16 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IReadOnlyList<int> ActiveAchievements => this.activeAchievements.AsReadOnly();
 
-        public AchievementTrackerService(Logger logger, SettingEntry<bool> limitAchievement)
+        public AchievementTrackerService(Logger logger, ISettingsService settings)
         {
             this.activeAchievements = new List<int>();
             this.logger = logger;
-            this.limitAchievement = limitAchievement;
+            this.settings = settings;
         }
 
         public bool TrackAchievement(int achievement)
         {
-            if (!this.limitAchievement.Value || this.activeAchievements.Count <= 15)
+            if (!this.settings.LimitAchievements.Value || this.activeAchievements.Count <= 15)
             {
                 if (!this.activeAchievements.Contains(achievement))
                 {
@@ -42,7 +42,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public bool IsBeingTracked(int achievement)
         {
-            if (!this.limitAchievement.Value || this.activeAchievements.Count <= 15)
+            if (!this.settings.LimitAchievements.Value || this.activeAchievements.Count <= 15)
             {
                 return this.activeAchievements.Contains(achievement);
             }
