@@ -11,16 +11,23 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
         private readonly IItemDetailWindowManager itemDetailWindowFactory;
         private readonly ContentsManager contentsManager;
         private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
+        private readonly PlayerAchievementServiceFactory playerAchievementServiceFactory;
 
-        public AchievementObjectiveControlFactory(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, ContentsManager contentsManager, IFormattedLabelHtmlService formattedLabelHtmlService)
+        public AchievementObjectiveControlFactory(
+            IAchievementService achievementService, 
+            IItemDetailWindowManager itemDetailWindowManager, 
+            ContentsManager contentsManager, 
+            IFormattedLabelHtmlService formattedLabelHtmlService,
+            PlayerAchievementServiceFactory playerAchievementServiceFactory)
         {
             this.achievementService = achievementService;
             this.itemDetailWindowFactory = itemDetailWindowManager;
             this.contentsManager = contentsManager;
             this.formattedLabelHtmlService = formattedLabelHtmlService;
+            this.playerAchievementServiceFactory = playerAchievementServiceFactory;
         }
 
         protected override AchievementObjectivesControl CreateInternal(AchievementTableEntry achievement, ObjectivesDescription description)
-            => new AchievementObjectivesControl(this.itemDetailWindowFactory, this.achievementService, this.formattedLabelHtmlService, this.contentsManager, achievement, description);
+            => new AchievementObjectivesControl(this.itemDetailWindowFactory, this.achievementService, this.formattedLabelHtmlService, this.contentsManager, achievement, description, this.playerAchievementServiceFactory);
     }
 }

@@ -3,6 +3,7 @@ using Blish_HUD.Controls;
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using Denrage.AchievementTrackerModule.UserInterface.Controls;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Views
@@ -10,7 +11,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
     public class AchievementListItem : View
     {
         private readonly IAchievementTrackerService achievementTrackerService;
-        private readonly IAchievementService achievementService;
+        private readonly PlayerAchievementService playerAchievementService;
         private readonly ContentService contentService;
         private readonly ITextureService textureService;
         private readonly string icon;
@@ -19,11 +20,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         private AchievementButton button;
         private GlowButton trackButton;
 
-        public AchievementListItem(AchievementTableEntry achievement, IAchievementTrackerService achievementTrackerService, IAchievementService achievementService, ContentService contentService, ITextureService textureService, string icon)
+        public AchievementListItem(
+            AchievementTableEntry achievement, 
+            IAchievementTrackerService achievementTrackerService, 
+            PlayerAchievementServiceFactory factory, 
+            ContentService contentService, 
+            ITextureService textureService, 
+            string icon)
         {
             this.achievement = achievement;
             this.achievementTrackerService = achievementTrackerService;
-            this.achievementService = achievementService;
+            this.playerAchievementService = factory.CreateOwn();
             this.contentService = contentService;
             this.textureService = textureService;
             this.icon = icon;
@@ -45,7 +52,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
                 WidthSizingMode = SizingMode.Fill
             };
 
-            if (this.achievementService.HasFinishedAchievement(this.achievement.Id))
+            if (this.playerAchievementService.HasFinishedAchievement(this.achievement.Id))
             {
                 this.BuildCompleteButton(this.button);
             }

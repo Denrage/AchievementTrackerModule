@@ -14,12 +14,11 @@ namespace Denrage.AchievementTrackerModule.Services
     {
         private const string SAVE_FILE_NAME = "persistanceStorage.json";
         private readonly DirectoriesManager directoriesManager;
-        private readonly AchievementDetailsWindowManager achievementDetailsWindowManager;
         private readonly ItemDetailWindowManager itemDetailWindowManager;
         private readonly AchievementTrackerService achievementTrackerService;
         private readonly Logger logger;
-        private readonly AchievementService achievementService;
         private readonly ISettingsService settings;
+        private readonly List<Action<Storage>> registeredSaveDelegates = new List<Action<Storage>>();
         private Storage storage;
         private Task autoSaveTask;
         private CancellationTokenSource autoSaveCancellationTokenSource;
@@ -28,19 +27,15 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public PersistanceService(
             DirectoriesManager directoriesManager,
-            AchievementDetailsWindowManager achievementDetailsWindowManager,
             ItemDetailWindowManager itemDetailWindowManager,
             AchievementTrackerService achievementTrackerService,
             Logger logger,
-            AchievementService achievementService,
             ISettingsService settings)
         {
             this.directoriesManager = directoriesManager;
-            this.achievementDetailsWindowManager = achievementDetailsWindowManager;
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.achievementTrackerService = achievementTrackerService;
             this.logger = logger;
-            this.achievementService = achievementService;
             this.settings = settings;
             this.settings.AutoSave.SettingChanged += (s, e) =>
             {
@@ -91,19 +86,14 @@ namespace Denrage.AchievementTrackerModule.Services
 
         }
 
+        public void RegisterSaveDelegate(Action<Storage> action)
+        {
+            this.registeredSaveDelegates.Add(action);
+        }
+
         public void Save(int achievementTrackWindowLocationX, int achievementTrackWindowLocationY, bool showTrackWindow)
         {
             var storage = new Storage();
-
-            foreach (var item in this.achievementDetailsWindowManager.Windows.Where(x => x.Value.Visible))
-            {
-                storage.AchievementInformation[item.Key] = new AchievementWindowInformation()
-                {
-                    AchievementId = item.Value.AchievementId,
-                    PositionX = item.Value.Location.X,
-                    PositionY = item.Value.Location.Y,
-                };
-            }
 
             foreach (var item in this.itemDetailWindowManager.Windows.Where(x => x.Value.Window.Visible))
             {
@@ -123,7 +113,10 @@ namespace Denrage.AchievementTrackerModule.Services
                 };
             }
 
-            storage.ManualCompletedAchievements = this.achievementService.ManualCompletedAchievements;
+            foreach (var item in this.registeredSaveDelegates)
+            {
+                item(storage);
+            }
 
             storage.TrackedAchievements.AddRange(this.achievementTrackerService.ActiveAchievements);
 

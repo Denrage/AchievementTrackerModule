@@ -2,6 +2,7 @@
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private readonly T description;
         private readonly CollectionAchievementTable achievementDetails;
         private readonly List<Control> itemControls = new List<Control>();
+        private readonly PlayerAchievementService playerAchievementService;
         private FormattedLabel gameTextLabel;
         private FormattedLabel gameHintLabel;
         private FlowPanel panel;
@@ -28,6 +30,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         public AchievementListControl(
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
+            PlayerAchievementServiceFactory factory,
             IFormattedLabelHtmlService formattedLabelHtmlService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
@@ -35,6 +38,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         {
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.AchievementService = achievementService;
+            this.playerAchievementService = factory.CreateOwn();
             this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.contentsManager = contentsManager;
             this.achievement = achievement;
@@ -44,15 +48,15 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             this.FlowDirection = ControlFlowDirection.SingleTopToBottom;
             this.ControlPadding = new Vector2(7f);
 
-            this.AchievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
+            this.playerAchievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
         }
 
         private void AchievementService_PlayerAchievementsLoaded()
         {
-            var finishedAchievement = this.AchievementService.HasFinishedAchievement(this.achievement.Id);
+            var finishedAchievement = this.playerAchievementService.HasFinishedAchievement(this.achievement.Id);
             for (var i = 0; i < this.itemControls.Count; i++)
             {
-                this.ColorControl(this.itemControls[i], finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
+                this.ColorControl(this.itemControls[i], finishedAchievement || this.playerAchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
             }
         }
 
@@ -91,7 +95,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
             _ = Task.Run(() =>
             {
-                var finishedAchievement = this.AchievementService.HasFinishedAchievement(this.achievement.Id);
+                var finishedAchievement = this.playerAchievementService.HasFinishedAchievement(this.achievement.Id);
                 var entries = this.GetEntries(this.description).ToArray();
                 for (var i = 0; i < entries.Length; i++)
                 {
@@ -129,7 +133,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
                     var index = i;
 
-                    tooltipControl.RightMouseButtonReleased += (s, e) => this.AchievementService.ToggleManualCompleteStatus(this.achievement.Id, index);
+                    tooltipControl.RightMouseButtonReleased += (s, e) => this.playerAchievementService.ToggleManualCompleteStatus(this.achievement.Id, index);
 
                     _ = new Label()
                     {
@@ -141,7 +145,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
                         Text = this.GetDisplayName(entries[i]),
                     };
 
-                    this.ColorControl(control, finishedAchievement || this.AchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
+                    this.ColorControl(control, finishedAchievement || this.playerAchievementService.HasFinishedAchievementBit(this.achievement.Id, i));
 
                     if (this.achievementDetails != null)
                     {

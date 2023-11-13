@@ -8,7 +8,7 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         event Action AutoSave;
 
         Storage Get();
-
+        void RegisterSaveDelegate(Action<Storage> action);
         void Save(int achievementTrackWindowLocationX, int achievementTrackWindowLocationY, bool showTrackWindow);
     }
 }

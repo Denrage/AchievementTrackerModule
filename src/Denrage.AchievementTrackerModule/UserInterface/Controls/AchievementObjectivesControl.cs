@@ -2,6 +2,7 @@
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using System.Collections.Generic;
 
 namespace Denrage.AchievementTrackerModule.UserInterface.Controls
@@ -14,8 +15,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IFormattedLabelHtmlService formattedLabelHtmlService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
-            ObjectivesDescription description)
-            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, contentsManager, achievement, description)
+            ObjectivesDescription description,
+            PlayerAchievementServiceFactory factory)
+            : base(itemDetailWindowManager, achievementService, factory, formattedLabelHtmlService, contentsManager, achievement, description)
         {
         }
 

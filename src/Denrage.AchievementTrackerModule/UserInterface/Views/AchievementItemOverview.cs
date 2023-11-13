@@ -2,6 +2,7 @@
 using Blish_HUD.Graphics.UI;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using Gw2Sharp.WebApi.V2.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
 {
     public class AchievementItemOverview : View
     {
-        private readonly IAchievementService achievementService;
+        private readonly PlayerAchievementService playerAchievementService;
         private readonly IEnumerable<(AchievementCategory Category, AchievementTableEntry Achievement)> achievements;
         private readonly IAchievementListItemFactory achievementListItemFactory;
         private readonly string title;
@@ -19,12 +20,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
         public AchievementItemOverview(
             IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements,
             string title,
-            IAchievementService achievementService,
+            PlayerAchievementServiceFactory factory,
             IAchievementListItemFactory achievementListItemFactory)
         {
             this.achievements = achievements;
             this.title = title;
-            this.achievementService = achievementService;
+            this.playerAchievementService = factory.CreateOwn();
             this.achievementListItemFactory = achievementListItemFactory;
         }
 
@@ -41,7 +42,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Views
             };
 
             foreach (var achievement in this.achievements
-                .Select(x => (this.achievementService.HasFinishedAchievement(x.Achievement.Id), x))
+                .Select(x => (this.playerAchievementService.HasFinishedAchievement(x.Achievement.Id), x))
                 .OrderBy(x => x.Item1)
                 .ThenBy(x => x.x.Category.Name)
                 .ThenBy(x => x.x.Achievement.Name)

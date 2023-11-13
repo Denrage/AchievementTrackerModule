@@ -2,6 +2,7 @@
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using Denrage.AchievementTrackerModule.Services.Factories.AchievementControl;
 using System;
 using System.Collections.Generic;
@@ -12,11 +13,17 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     {
         private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
-        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, IFormattedLabelHtmlService formattedLabelHtmlService, ContentsManager contentsManager, IExternalImageService externalImageService)
+        public AchievementControlProvider(
+            IAchievementService achievementService, 
+            IItemDetailWindowManager itemDetailWindowManager, 
+            IFormattedLabelHtmlService formattedLabelHtmlService, 
+            ContentsManager contentsManager, 
+            IExternalImageService externalImageService, 
+            PlayerAchievementServiceFactory playerAchievementServiceFactory)
         {
             this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory(formattedLabelHtmlService));
-            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, formattedLabelHtmlService, contentsManager, externalImageService));
-            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager, formattedLabelHtmlService));
+            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, formattedLabelHtmlService, contentsManager, externalImageService, playerAchievementServiceFactory));
+            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager, formattedLabelHtmlService, playerAchievementServiceFactory));
         }
 
         public Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description)

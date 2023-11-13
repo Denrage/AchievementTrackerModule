@@ -2,6 +2,7 @@
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Services;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,8 +20,9 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IExternalImageService externalImageService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
-            CollectionDescription description)
-            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, contentsManager, achievement, description)
+            CollectionDescription description,
+            PlayerAchievementServiceFactory factory)
+            : base(itemDetailWindowManager, achievementService, factory, formattedLabelHtmlService, contentsManager, achievement, description)
         {
             this.externalImageService = externalImageService;
         }

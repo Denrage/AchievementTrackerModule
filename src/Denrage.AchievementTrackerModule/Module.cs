@@ -39,7 +39,7 @@ namespace Denrage.AchievementTrackerModule
             : base(moduleParameters)
         {
             var builder = new ContainerBuilder();
-            
+
             builder.RegisterInstance(this.Gw2ApiManager);
             builder.RegisterInstance(this.ContentsManager);
             builder.RegisterInstance(GameService.Content);
@@ -61,11 +61,12 @@ namespace Denrage.AchievementTrackerModule
             builder.RegisterType<AchievementControlProvider>().As<IAchievementControlProvider>().SingleInstance();
             builder.RegisterType<AchievementControlManager>().As<IAchievementControlManager>().SingleInstance();
             builder.RegisterType<AchievementDetailsWindowFactory>().As<IAchievementDetailsWindowFactory>().SingleInstance();
-            builder.RegisterType<AchievementDetailsWindowManager>().As<IAchievementDetailsWindowManager>().AsSelf().SingleInstance();        
+            builder.RegisterType<AchievementDetailsWindowManager>().As<IAchievementDetailsWindowManager>().AsSelf().SingleInstance();
             builder.RegisterType<PersistanceService>().As<IPersistanceService>().SingleInstance();
             builder.RegisterType<Services.SettingsService>().As<ISettingsService>().SingleInstance();
             builder.RegisterType<BlishTabNavigationService>().As<IBlishTabNavigationService>().SingleInstance();
-            
+
+            builder.RegisterType<PlayerAchievementServiceFactory>().AsSelf().SingleInstance();
             builder.RegisterType<AchievementTrackerView>().AsSelf().SingleInstance();
             builder.RegisterType<AchievementTrackWindow>().AsSelf().SingleInstance();
 
@@ -85,7 +86,7 @@ namespace Denrage.AchievementTrackerModule
             this.Gw2ApiManager.SubtokenUpdated += async (_, args) =>
             {
                 this.container.Resolve<Logger>().Info("Subtoken updated");
-                await this.container.Resolve<IAchievementService>().LoadPlayerAchievements();
+                await this.container.Resolve<PlayerAchievementServiceFactory>().CreateOwn().LoadPlayerAchievements();
             };
         }
 
@@ -96,6 +97,7 @@ namespace Denrage.AchievementTrackerModule
                 try
                 {
                     await this.container.Resolve<AchievementService>().LoadAsync();
+                    await this.container.Resolve<PlayerAchievementServiceFactory>().CreateOwn().LoadAsync();
                     this.container.Resolve<AchievementDetailsWindowManager>().Load(this.container.Resolve<IPersistanceService>());
                     this.container.Resolve<ItemDetailWindowManager>().Load(this.container.Resolve<IPersistanceService>());
                     this.container.Resolve<AchievementTrackerService>().Load(this.container.Resolve<IPersistanceService>());

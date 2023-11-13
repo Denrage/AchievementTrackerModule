@@ -16,17 +16,9 @@ namespace Denrage.AchievementTrackerModule.Interfaces
         IEnumerable<AchievementGroup> AchievementGroups { get; }
 
         IEnumerable<AchievementCategory> AchievementCategories { get; }
+
         IReadOnlyList<SubPageInformation> Subpages { get; }
 
-        event Action PlayerAchievementsLoaded;
-
         event Action ApiAchievementsLoaded;
-
-        bool HasFinishedAchievement(int achievementId);
-
-        bool HasFinishedAchievementBit(int achievementId, int positionIndex);
-
-        Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default);
-        void ToggleManualCompleteStatus(int achievementId, int bit);
     }
 }

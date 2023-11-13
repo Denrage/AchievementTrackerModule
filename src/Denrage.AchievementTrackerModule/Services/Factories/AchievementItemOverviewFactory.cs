@@ -9,15 +9,16 @@ namespace Denrage.AchievementTrackerModule.Services.Factories
     public class AchievementItemOverviewFactory : IAchievementItemOverviewFactory
     {
         private readonly IAchievementListItemFactory achievementListItemFactory;
+        private readonly PlayerAchievementServiceFactory factory;
         private readonly IAchievementService achievementService;
 
-        public AchievementItemOverviewFactory(IAchievementListItemFactory achievementListItemFactory, IAchievementService achievementService)
+        public AchievementItemOverviewFactory(IAchievementListItemFactory achievementListItemFactory, PlayerAchievementServiceFactory factory)
         {
             this.achievementListItemFactory = achievementListItemFactory;
-            this.achievementService = achievementService;
+            this.factory = factory;
         }
 
         public AchievementItemOverview Create(IEnumerable<(AchievementCategory, AchievementTableEntry)> achievements, string title)
-            => new AchievementItemOverview(achievements, title, this.achievementService, this.achievementListItemFactory);
+            => new AchievementItemOverview(achievements, title, this.factory, this.achievementListItemFactory);
     }
 }

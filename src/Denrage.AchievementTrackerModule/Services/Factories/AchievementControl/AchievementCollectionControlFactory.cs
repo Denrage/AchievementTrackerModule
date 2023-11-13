@@ -12,17 +12,25 @@ namespace Denrage.AchievementTrackerModule.Services.Factories.AchievementControl
         private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
         private readonly ContentsManager contentsManager;
         private readonly IExternalImageService externalImageService;
+        private readonly PlayerAchievementServiceFactory playerAchievementServiceFactory;
 
-        public AchievementCollectionControlFactory(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, IFormattedLabelHtmlService formattedLabelHtmlService, ContentsManager contentsManager, IExternalImageService externalImageService)
+        public AchievementCollectionControlFactory(
+            IAchievementService achievementService, 
+            IItemDetailWindowManager itemDetailWindowManager, 
+            IFormattedLabelHtmlService formattedLabelHtmlService, 
+            ContentsManager contentsManager, 
+            IExternalImageService externalImageService,
+            PlayerAchievementServiceFactory playerAchievementServiceFactory)
         {
             this.achievementService = achievementService;
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.formattedLabelHtmlService = formattedLabelHtmlService;
             this.contentsManager = contentsManager;
             this.externalImageService = externalImageService;
+            this.playerAchievementServiceFactory = playerAchievementServiceFactory;
         }
 
         protected override AchievementCollectionControl CreateInternal(AchievementTableEntry achievement, CollectionDescription description)
-            => new AchievementCollectionControl(this.itemDetailWindowManager, this.achievementService, this.formattedLabelHtmlService, this.externalImageService, this.contentsManager, achievement, description);
+            => new AchievementCollectionControl(this.itemDetailWindowManager, this.achievementService, this.formattedLabelHtmlService, this.externalImageService, this.contentsManager, achievement, description, playerAchievementServiceFactory);
     }
 }

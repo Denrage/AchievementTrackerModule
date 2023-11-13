@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
+using Denrage.AchievementTrackerModule.Models.Persistance;
 using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
 using System;
@@ -44,6 +45,19 @@ namespace Denrage.AchievementTrackerModule.Services
 
                     this.Windows[item.Key].Location = new Point(item.Value.PositionX, item.Value.PositionY);
                 }
+
+                persistanceService.RegisterSaveDelegate(storage =>
+                {
+                    foreach (var item in this.Windows.Where(x => x.Value.Visible))
+                    {
+                        storage.AchievementInformation[item.Key] = new AchievementWindowInformation()
+                        {
+                            AchievementId = item.Value.AchievementId,
+                            PositionX = item.Value.Location.X,
+                            PositionY = item.Value.Location.Y,
+                        };
+                    }
+                });
             }
             catch (Exception ex)
             {
