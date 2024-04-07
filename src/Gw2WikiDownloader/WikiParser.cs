@@ -484,6 +484,12 @@ public partial class WikiParser
                 if (currentEntry is CollectionAchievementTable.CollectionAchievementTableItemEntry itemEntry)
                 {
                     itemEntry.Link = item.GetAttributeValue("href", string.Empty);
+
+                    if (itemEntry.Link == "/wiki/Essence_of_Luck")
+                    {
+                        itemEntry.Link = "/wiki/Essence_of_Luck_(fine)";
+                    }
+
                     itemEntry.Name = SanitizesDisplayName(item.GetAttributeValue("title", string.Empty));
                     Debug.WriteLine(itemEntry.Name);
                     var web = new HtmlWeb();

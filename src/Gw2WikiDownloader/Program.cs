@@ -78,6 +78,10 @@ async Task ParseItem(string name, string link, Action<int> setId, Func<bool> sho
             {
                 link = "/wiki/Transmutation_Charge_(item)";
             }
+            else if(link == "/wiki/Essence_of_Luck")
+            {
+                link = "/wiki/Essence_of_Luck_(fine)";
+            }
 
             Console.WriteLine(name);
             var web = new HtmlWeb();
