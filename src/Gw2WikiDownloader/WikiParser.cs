@@ -47,12 +47,15 @@ public partial class WikiParser
             {
                 var achievementId = achievementNode.Attributes["data-id"].Value;
 
-                if (!groupedAchievements.ContainsKey(achievementId))
+                if (achievementId.StartsWith("achievement"))
                 {
-                    groupedAchievements[achievementId] = new List<HtmlNode>();
-                }
+                    if (!groupedAchievements.ContainsKey(achievementId))
+                    {
+                        groupedAchievements[achievementId] = new List<HtmlNode>();
+                    }
 
-                groupedAchievements[achievementId].Add(achievementNode);
+                    groupedAchievements[achievementId].Add(achievementNode);
+                }
             }
 
             var result = new List<AchievementTableEntry>();
