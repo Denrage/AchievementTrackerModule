@@ -2,6 +2,8 @@
 using Denrage.AchievementTrackerModule.Libs.Achievement;
 using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using HtmlAgilityPack;
+using Spectre.Console;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 
@@ -31,7 +33,7 @@ public partial class WikiParser
         }
     }
 
-    public IEnumerable<AchievementTableEntry> Parse(HtmlDocument fullDocument, HtmlNode table) // Parse Overviewpage f.e. https://wiki.guildwars2.com/wiki/A_Bug_in_the_System_(achievements)
+    public IEnumerable<AchievementTableEntry> Parse(HtmlDocument fullDocument, HtmlNode table, ProgressContext progress) // Parse Overviewpage f.e. https://wiki.guildwars2.com/wiki/A_Bug_in_the_System_(achievements)
     {
         try
         {
@@ -55,11 +57,18 @@ public partial class WikiParser
                 groupedAchievements[achievementId].Add(achievementNode);
             }
 
+            var progressTask = progress.AddTask("GroupedAchievementParse");
+            progressTask.MaxValue = groupedAchievements.Count;
             var result = new List<AchievementTableEntry>();
 
-            foreach ((var key, var achievement) in groupedAchievements)
+            Parallel.For(0, groupedAchievements.Count, i =>
             {
+                (var key, var achievement) = groupedAchievements.Select(x => x).ToArray()[i];
+                if (!(achievement[0].ParentNode.ParentNode.Attributes.Contains("data-info") && achievement[0].ParentNode.ParentNode.Attributes["data-info"].Value == "buys"))
+                {
+                    
                 var achievementName = this.ParseHeaderRow(achievement[0].ChildNodes.FindFirst("th"));
+                progressTask.Description = Markup.Escape(achievementName.Name);
                 var entry = new AchievementTableEntry()
                 {
                     Id = int.Parse(key.Replace("achievement", string.Empty)),
@@ -69,8 +78,11 @@ public partial class WikiParser
 
                 this.ParseDescriptionRow(fullDocument.DocumentNode, achievement[1], entry);
                 result.Add(entry);
-            }
+                }
+                progressTask.Increment(1);
+            });
 
+            progressTask.StopTask();
             return result;
         }
         catch (Exception)
@@ -484,6 +496,12 @@ public partial class WikiParser
                 if (currentEntry is CollectionAchievementTable.CollectionAchievementTableItemEntry itemEntry)
                 {
                     itemEntry.Link = item.GetAttributeValue("href", string.Empty);
+
+                    if (itemEntry.Link == "/wiki/Essence_of_Luck")
+                    {
+                        itemEntry.Link = "/wiki/Essence_of_Luck_(fine)";
+                    }
+
                     itemEntry.Name = SanitizesDisplayName(item.GetAttributeValue("title", string.Empty));
                     Debug.WriteLine(itemEntry.Name);
                     var web = new HtmlWeb();
@@ -521,7 +539,7 @@ public partial class WikiParser
         return currentEntry;
     }
 
-    public async Task ParseSubPage(string link, int depth, List<SubPageInformation> results, int maxDepth = 10)
+    public async Task ParseSubPage(string link, int depth, ConcurrentBag<SubPageInformation> results, ProgressTask task, int maxDepth = 20)
     {
         try
         {
@@ -537,16 +555,15 @@ public partial class WikiParser
 
             if (results.Select(x => x.Link).Contains(link))
             {
-                Console.WriteLine($"{link} - {depth} - skipped");
                 return;
             }
-
-            Console.WriteLine($"{link} - {depth}");
 
             if (depth > maxDepth)
             {
                 return;
             }
+
+            task.Description = Markup.Escape($"{link}[{depth}]");
 
             var web = new HtmlWeb();
             var document = await web.LoadFromWebAsync(link);
@@ -615,7 +632,7 @@ public partial class WikiParser
 
 
 
-                    await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
+                    await this.ParseSubPage(subPageLink, depth + 1, results, task, maxDepth);
                 }
             }
 
@@ -643,7 +660,7 @@ public partial class WikiParser
                                 subPageLink = subPageLink[..subPageLink.IndexOf("#")];
                             }
 
-                            await this.ParseSubPage(subPageLink, depth + 1, results, maxDepth);
+                            await this.ParseSubPage(subPageLink, depth + 1, results, task, maxDepth);
                         }
                     }
                 }
