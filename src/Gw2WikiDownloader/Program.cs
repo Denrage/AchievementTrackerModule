@@ -257,24 +257,23 @@ internal class Program
         });
 
         //var parser = new Gw2WikiDownload.WikiParser();
-        var subpageInformation = new ConcurrentBag<SubPageInformation>();
+        var subpageInformation = new ConcurrentDictionary<string, SubPageInformation?>();
         //await parser.ParseSubPage("https://wiki.guildwars2.com/wiki/Chasing_Tales:_Azra_the_Sunslayer", 0, subpageInformation);
 
         progress.Description = "Parsing SubPages";
         progress.Value = 0;
         progress.MaxValue = result.Count;
 
-        Parallel.For(0, result.Count, new ParallelOptions() { MaxDegreeOfParallelism = 15 }, i =>
+        Parallel.ForEach(result, new ParallelOptions() { MaxDegreeOfParallelism = 15 }, item =>
         {
-            var item = result[i];
             var node = HtmlNode.CreateNode("<div>" + item.Description.GameText + "</div>");
-            Parallel.ForEach(node.ChildNodes.Where(x => x.Name == "a"), linkNode =>
+            foreach (var linkNode in node.Descendants().Where(x => x.Name == "a"))
             {
                 var task = progressContext.AddTask(linkNode.GetAttributeValue("href", "empty"));
                 task.IsIndeterminate = true;
                 parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation, task).Wait();
                 task.StopTask();
-            });
+            };
 
             if (!string.IsNullOrEmpty(item.Link))
             {
@@ -322,7 +321,7 @@ internal class Program
             progress.Description = $"Parsing SubPages ({progress.Value}/{progress.MaxValue})";
         });
 
-        var jsonResult = JsonSerializer.Serialize(subpageInformation, new JsonSerializerOptions()
+        var jsonResult = JsonSerializer.Serialize(subpageInformation.Values, new JsonSerializerOptions()
         {
             WriteIndented = true,
             Converters = { new SubPageInformationConverter() },

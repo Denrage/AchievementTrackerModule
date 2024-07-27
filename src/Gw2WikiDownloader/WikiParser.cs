@@ -539,7 +539,7 @@ public partial class WikiParser
         return currentEntry;
     }
 
-    public async Task ParseSubPage(string link, int depth, ConcurrentBag<SubPageInformation> results, ProgressTask task, int maxDepth = 20)
+    public async Task ParseSubPage(string link, int depth, ConcurrentDictionary<string, SubPageInformation?> results, ProgressTask task, int maxDepth = 20)
     {
         try
         {
@@ -553,21 +553,24 @@ public partial class WikiParser
                 link = link[..link.IndexOf("#")];
             }
 
-            if (results.Select(x => x.Link).Contains(link))
-            {
-                return;
-            }
 
             if (depth > maxDepth)
             {
                 return;
             }
 
+            if (results.ContainsKey(link))
+            {
+                return;
+            }
+
+            results.TryAdd(link, null);
+
             task.Description = Markup.Escape($"{link}[{depth}]");
 
             var web = new HtmlWeb();
             var document = await web.LoadFromWebAsync(link);
-            SubPageInformation subPageInformation = null;
+            SubPageInformation? subPageInformation = null;
 
             if (document.DocumentNode.OuterHtml.Contains("infobox npc")) // NPC subpage https://wiki.guildwars2.com/wiki/Efi
             {
@@ -594,10 +597,10 @@ public partial class WikiParser
             subPageInformation.Title = SanitizesDisplayName(document.DocumentNode.SelectSingleNode("//h1[@id='firstHeading']").InnerText);
             subPageInformation.Link = link.Replace("com//", "com/");
 
-            var pageNode = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'mw-parser-output')]");
+            var pageNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'mw-parser-output')]");
             var firstText = new List<HtmlNode>();
 
-            foreach (var item in pageNode.ChildNodes)
+            foreach (var item in pageNode.SelectMany(x => x.ChildNodes))
             {
                 if (item.Name == "p" && item.InnerHtml != "\n")
                 {
@@ -611,8 +614,8 @@ public partial class WikiParser
             }
             var descriptionNode = HtmlNode.CreateNode("<div>" + string.Join("", firstText.Select(x => x.InnerHtml)) + "</div>");
             subPageInformation.Description = descriptionNode.InnerHtml;
-            results.Add(subPageInformation);
-            foreach (var linkNode in descriptionNode.ChildNodes.Where(x => x.Name == "a"))
+            results.TryUpdate(link, subPageInformation, null);
+            foreach (var linkNode in descriptionNode.Descendants().Where(x => x.Name == "a"))
             {
                 if (linkNode.GetAttributeValue("class", "").Contains("selflink"))
                 {
@@ -642,7 +645,7 @@ public partial class WikiParser
                 {
                     var keyNode = HtmlNode.CreateNode("<div>" + item.Key + "</div>");
                     var valueNode = HtmlNode.CreateNode("<div>" + item.Value + "</div>");
-                    foreach (var node in keyNode.ChildNodes.Where(x => x.Name == "a").Concat(valueNode.ChildNodes.Where(x => x.Name == "a")))
+                    foreach (var node in keyNode.Descendants().Where(x => x.Name == "a").Concat(valueNode.Descendants().Where(x => x.Name == "a")))
                     {
                         if (node.GetAttributeValue("class", "").Contains("selflink"))
                         {
@@ -902,7 +905,7 @@ public partial class WikiParser
             {
                 var data = item.ChildNodes.FindFirst("td");
 
-                var linkNodes = data.ChildNodes.Where(x => x.Name == "a");
+                var linkNodes = data.Descendants().Where(x => x.Name == "a");
                 if (linkNodes.Any())
                 {
                     foreach (var linkNode in linkNodes)
@@ -926,7 +929,7 @@ public partial class WikiParser
                 }
 
 
-                var scriptNodes = data.ChildNodes.Where(x => x.Name == "script");
+                var scriptNodes = data.Descendants().Where(x => x.Name == "script");
                 if (scriptNodes.Any())
                 {
                     foreach (var script in scriptNodes)
@@ -946,6 +949,10 @@ public partial class WikiParser
     private InteractiveMapInformation ParseInteractiveMap(string scriptTag)
     {
         var inputInformationStartIndex = scriptTag.IndexOf("infoboxMap({");
+        if (inputInformationStartIndex == - 1)
+        {
+            return null;
+        }
         var inputInformationEndIndex = scriptTag.IndexOf("});", inputInformationStartIndex);
         var relevantString = scriptTag[inputInformationStartIndex..inputInformationEndIndex];
 
