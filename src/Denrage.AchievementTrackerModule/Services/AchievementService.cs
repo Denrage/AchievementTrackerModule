@@ -169,12 +169,15 @@ namespace Denrage.AchievementTrackerModule.Services
                     using (var metadata = System.IO.File.Open(Path.Combine(dataFolder, VersionFileName), FileMode.Open))
                     {
                         var localMetadata = await JsonSerializer.DeserializeAsync<AchievementDataMetadata>(metadata, serializerOptions, cancellationToken);
-                        if (localMetadata.Version != githubMetadata.Version || 
-                            !this.CheckMd5(githubMetadata.AchievementDataMd5, Path.Combine(dataFolder, AchievementDataFileName)) ||
-                            !this.CheckMd5(githubMetadata.AchievementTablesMd5, Path.Combine(dataFolder, AchievementTablesFileName)) ||
-                            !this.CheckMd5(githubMetadata.SubPagesMd5, Path.Combine(dataFolder, SubPagesFileName)))
+                        if (localMetadata.Version != -1) // Debug skip
                         {
-                            downloadData = true;
+                            if (localMetadata.Version != githubMetadata.Version ||
+                                !this.CheckMd5(githubMetadata.AchievementDataMd5, Path.Combine(dataFolder, AchievementDataFileName)) ||
+                                !this.CheckMd5(githubMetadata.AchievementTablesMd5, Path.Combine(dataFolder, AchievementTablesFileName)) ||
+                                !this.CheckMd5(githubMetadata.SubPagesMd5, Path.Combine(dataFolder, SubPagesFileName)))
+                            {
+                                downloadData = true;
+                            }
                         }
                     }
                 }
@@ -187,7 +190,7 @@ namespace Denrage.AchievementTrackerModule.Services
                     {
                         var localMetadata = await JsonSerializer.DeserializeAsync<AchievementDataMetadata>(metadata, serializerOptions, cancellationToken);
 
-                        if(!await this.DownloadFile(AchievementDataUrl, dataFolder, AchievementDataFileName, localMetadata.AchievementDataMd5) ||
+                        if (!await this.DownloadFile(AchievementDataUrl, dataFolder, AchievementDataFileName, localMetadata.AchievementDataMd5) ||
                         !await this.DownloadFile(AchievementTablesUrl, dataFolder, AchievementTablesFileName, localMetadata.AchievementTablesMd5) ||
                         !await this.DownloadFile(SubPagesUrl, dataFolder, SubPagesFileName, localMetadata.SubPagesMd5))
                         {
