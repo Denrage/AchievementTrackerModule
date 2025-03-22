@@ -11,5 +11,7 @@ namespace Denrage.AchievementTrackerModule.Models
         public int ItemIndex { get; set; }
 
         public string Name { get; set; }
+
+        public string Identifier { get; set; }
     }
 }

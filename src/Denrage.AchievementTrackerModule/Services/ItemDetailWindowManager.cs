@@ -57,7 +57,12 @@ namespace Denrage.AchievementTrackerModule.Services
                     {
                         this.CreateAndShowWindow(item.Value.Name, achievementDetail.ColumnNames, achievementDetail.Entries[item.Value.Index], achievementDetail.Link, item.Value.AchievementId, item.Value.Index);
 
-                        this.Windows[item.Value.Name].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
+                        if (string.IsNullOrEmpty(item.Value.Identifier))
+                        {
+                            item.Value.Identifier = item.Value.Name + "_" + item.Value.Index;
+                        }
+
+                        this.Windows[item.Value.Identifier].Window.Location = new Point(item.Value.PositionX, item.Value.PositionY);
                     }
                 }
             }
@@ -69,7 +74,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void CreateAndShowWindow(string name, string[] columns, List<CollectionAchievementTableEntry> item, string achievementLink, int achievementId, int itemIndex)
         {
-            if (this.ShowWindow(name))
+            var windowIdentifier = name + "_" + itemIndex;
+            if (this.ShowWindow(windowIdentifier))
             {
                 return;
             }
@@ -79,9 +85,9 @@ namespace Denrage.AchievementTrackerModule.Services
             window.Parent = GameService.Graphics.SpriteScreen;
             window.Location = (GameService.Graphics.SpriteScreen.Size / new Point(2)) - (new Point(256, 178) / new Point(2));
 
-            this.Windows[name] = new ItemDetailWindowInformation() { Window = window, AchievementId = achievementId, ItemIndex = itemIndex, Name = name };
+            this.Windows[windowIdentifier] = new ItemDetailWindowInformation() { Window = window, AchievementId = achievementId, ItemIndex = itemIndex, Name = name, Identifier = windowIdentifier };
 
-            _ = this.ShowWindow(name);
+            _ = this.ShowWindow(windowIdentifier);
         }
 
         public void Update()

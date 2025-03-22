@@ -8,6 +8,8 @@
 
         public string Name { get; set; }
 
+        public string Identifier { get; set; }
+
         public int PositionX { get; set; }
 
         public int PositionY { get; set; }

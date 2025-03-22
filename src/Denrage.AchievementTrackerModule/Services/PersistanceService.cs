@@ -118,6 +118,7 @@ namespace Denrage.AchievementTrackerModule.Services
                     Name = item.Value.Name,
                     PositionX = item.Value.Window.Location.X,
                     PositionY = item.Value.Window.Location.Y,
+                    Identifier = item.Value.Identifier,
                 };
             }
 
