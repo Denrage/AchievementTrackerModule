@@ -61,26 +61,26 @@ public partial class WikiParser
             progressTask.MaxValue = groupedAchievements.Count;
             var result = new List<AchievementTableEntry>();
 
-            Parallel.For(0, groupedAchievements.Count, i =>
+            for (int i = 0; i < groupedAchievements.Count; i++)
             {
                 (var key, var achievement) = groupedAchievements.Select(x => x).ToArray()[i];
                 if (!(achievement[0].ParentNode.ParentNode.Attributes.Contains("data-info") && achievement[0].ParentNode.ParentNode.Attributes["data-info"].Value == "buys"))
                 {
-                    
-                var achievementName = this.ParseHeaderRow(achievement[0].ChildNodes.FindFirst("th"));
-                progressTask.Description = Markup.Escape(achievementName.Name);
-                var entry = new AchievementTableEntry()
-                {
-                    Id = int.Parse(key.Replace("achievement", string.Empty)),
-                    Name = achievementName.Name,
-                    Link = achievementName.Link,
-                };
 
-                this.ParseDescriptionRow(fullDocument.DocumentNode, achievement[1], entry);
-                result.Add(entry);
+                    var achievementName = this.ParseHeaderRow(achievement[0].ChildNodes.FindFirst("th"));
+                    progressTask.Description = "GroupedAchievementParse - " + Markup.Escape(achievementName.Name);
+                    var entry = new AchievementTableEntry()
+                    {
+                        Id = int.Parse(key.Replace("achievement", string.Empty)),
+                        Name = achievementName.Name,
+                        Link = achievementName.Link,
+                    };
+
+                    this.ParseDescriptionRow(fullDocument.DocumentNode, achievement[1], entry);
+                    result.Add(entry);
                 }
                 progressTask.Increment(1);
-            });
+            }
 
             progressTask.StopTask();
             return result;
@@ -129,24 +129,28 @@ public partial class WikiParser
 
             if (entry.HasLink) // Parse Collection achievements on their details page
             {
-                var innerHtml = new HtmlWeb();
-                var innerDocument = innerHtml.Load("https://wiki.guildwars2.com" + entry.Link);
-                var tableNode = innerDocument.DocumentNode.SelectNodes("//table[contains(@class, 'mech1 achievementbox table')]");
-                if (tableNode != null && innerDocument.DocumentNode.InnerHtml.Contains("Collection"))
+                var content = Downloader.Instance.Download("https://wiki.guildwars2.com" + entry.Link).Result;
+                if (!string.IsNullOrEmpty(content))
                 {
-                    var tableBody = tableNode.FindFirst("tbody");
-                    if (tableBody != null)
+                    var innerDocument = new HtmlDocument();
+                    innerDocument.LoadHtml(content);
+                    var tableNode = innerDocument.DocumentNode.SelectNodes("//table[contains(@class, 'mech1 achievementbox table')]");
+                    if (tableNode != null && innerDocument.DocumentNode.InnerHtml.Contains("Collection"))
                     {
-                        var tableRows = tableBody.ChildNodes.Where(x => x.Name == "tr").ToArray();
-                        if (tableRows.Length > 1)
+                        var tableBody = tableNode.FindFirst("tbody");
+                        if (tableBody != null)
                         {
-                            var descriptionListElement = tableRows[1].ChildNodes.FindFirst("dl");
-                            if (descriptionListElement != null)
+                            var tableRows = tableBody.ChildNodes.Where(x => x.Name == "tr").ToArray();
+                            if (tableRows.Length > 1)
                             {
-                                var ddElements = descriptionListElement.ChildNodes.Where(x => x.Name == "dd");
-                                if (ddElements.Any())
+                                var descriptionListElement = tableRows[1].ChildNodes.FindFirst("dl");
+                                if (descriptionListElement != null)
                                 {
-                                    this.ParseDescriptionList(entry, ddElements);
+                                    var ddElements = descriptionListElement.ChildNodes.Where(x => x.Name == "dd");
+                                    if (ddElements.Any())
+                                    {
+                                        this.ParseDescriptionList(entry, ddElements);
+                                    }
                                 }
                             }
                         }
@@ -504,10 +508,14 @@ public partial class WikiParser
 
                     itemEntry.Name = SanitizesDisplayName(item.GetAttributeValue("title", string.Empty));
                     Debug.WriteLine(itemEntry.Name);
-                    var web = new HtmlWeb();
-                    var document = web.LoadFromWebAsync("https://wiki.guildwars2.com" + itemEntry.Link).Result;
-                    var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
-                    itemEntry.Id = this.ParseItemWikiPage(itemBoxNode);
+                    var content = Downloader.Instance.Download("https://wiki.guildwars2.com" + itemEntry.Link).Result;
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var document = new HtmlDocument();
+                        document.LoadHtml(content);
+                        var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
+                        itemEntry.Id = this.ParseItemWikiPage(itemBoxNode);
+                    }
                 }
                 else
                 {
@@ -566,10 +574,14 @@ public partial class WikiParser
 
             results.TryAdd(link, null);
 
-            task.Description = Markup.Escape($"{link}[{depth}]");
-
-            var web = new HtmlWeb();
-            var document = await web.LoadFromWebAsync(link);
+            task.Description = Markup.Escape($"[{task.Value} / {task.MaxValue}]Subpage Parsing - {link}[{depth}]");
+            var content = Downloader.Instance.Download(link).Result;
+            if (string.IsNullOrEmpty(content))
+            {
+                return;
+            }
+            var document = new HtmlDocument();
+            document.LoadHtml(content);
             SubPageInformation? subPageInformation = null;
 
             if (document.DocumentNode.OuterHtml.Contains("infobox npc")) // NPC subpage https://wiki.guildwars2.com/wiki/Efi
@@ -668,6 +680,8 @@ public partial class WikiParser
                     }
                 }
             }
+
+            task.Increment(1);
         }
         catch (Exception ex)
         {
@@ -949,7 +963,7 @@ public partial class WikiParser
     private InteractiveMapInformation ParseInteractiveMap(string scriptTag)
     {
         var inputInformationStartIndex = scriptTag.IndexOf("infoboxMap({");
-        if (inputInformationStartIndex == - 1)
+        if (inputInformationStartIndex == -1)
         {
             return null;
         }

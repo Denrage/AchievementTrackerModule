@@ -4,17 +4,97 @@ using Denrage.AchievementTrackerModule.Libs.Interfaces;
 using HtmlAgilityPack;
 using Spectre.Console;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
+
+internal class Downloader
+{
+    public static Downloader Instance { get; } = new Downloader();
+
+    private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 AchievementTracker";
+    private HttpClient httpClient;
+    private ConcurrentQueue<(string, TaskCompletionSource<string?>)> downloads = new();
+
+    public Downloader()
+    {
+        var cookieContainer = new CookieContainer();
+        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2_session", "555bkipvha5gumve49q601ng3t1mn5e3"));
+        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2mwuser-sessionId", "425d37f62aba8767d329"));
+        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2Token", "78dcd60367e68d13b8192ce921242f17"));
+        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2UserID", "255731"));
+        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2UserName", "Denrage"));
+
+        var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
+        httpClient = new HttpClient(httpClientHandler);
+        httpClient.DefaultRequestHeaders.Add("user-agent", UserAgent);
+        Task.Run(async () => await this.DoDownload());
+    }
+
+    public async Task<string?> Download(string url)
+    {
+        var taskCompletionSource = new TaskCompletionSource<string?>();
+
+        downloads.Enqueue((url, taskCompletionSource));
+
+        return await taskCompletionSource.Task;
+    }
+
+    public async Task DoDownload()
+    {
+        try
+        {
+            while (true)
+            {
+                if (downloads.TryDequeue(out var download))
+                {
+                    string? content = null;
+                    bool success = false;
+                    while (!success)
+                    {
+                        try
+                        {
+                            HttpResponseMessage? response = null;
+                            do
+                            {
+                                var request = new HttpRequestMessage(HttpMethod.Get, download.Item1);
+                                response = await httpClient.SendAsync(request);
+                                if (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NotFound)
+                                {
+                                    await Task.Delay(5000);
+                                }
+                            } while (response.StatusCode != System.Net.HttpStatusCode.OK && response.StatusCode != HttpStatusCode.NotFound);
+
+                            content = response.StatusCode != HttpStatusCode.OK ? null : await response.Content.ReadAsStringAsync();
+                            success = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
+                    }
+
+                    Task.Run(() => download.Item2.SetResult(content));
+                }
+
+                await Task.Delay(100);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"{ex.Message}");
+        }
+
+    }
+}
 
 internal class Program
 {
-    private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36";
 
     private static readonly Gw2WikiDownload.WikiParser parser = new();
 
     private static async Task Main(string[] args)
     {
-
         Console.WriteLine("Hello, World!");
         await AnsiConsole.Progress()
             .HideCompleted(true)
@@ -22,16 +102,16 @@ internal class Program
             {
                 new PercentageColumn(),         // Percentage
                 new ProgressBarColumn(),        // Progress bar
-                new TaskDescriptionColumn(),    // Task description
+                new TaskDescriptionColumn() { Alignment = Justify.Left },    // Task description
             })
             .StartAsync(async context =>
             {
-                //var overviewTask = context.AddTask("OverviewParsing");
-                //overviewTask.IsIndeterminate = true;
-                //var elements = await ParseOverviewPage();
-                //overviewTask.IsIndeterminate = false;
-                //overviewTask.Value = overviewTask.MaxValue;
-                //overviewTask.StopTask();
+                var overviewTask = context.AddTask("OverviewParsing");
+                overviewTask.IsIndeterminate = true;
+                var elements = await ParseOverviewPage();
+                overviewTask.IsIndeterminate = false;
+                overviewTask.Value = overviewTask.MaxValue;
+                overviewTask.StopTask();
 
                 //var achievementParseTask = context.AddTask("AchievementParsing");
                 //await ParseAchievementPage(elements, context, achievementParseTask);
@@ -51,8 +131,6 @@ internal class Program
     {
         // Parse Achievement overview pages
 
-        var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Add("user-agent", UserAgent);
         var listElements = new List<(string link, string title)>();
         var nextPageLink = "https://wiki.guildwars2.com/index.php?title=Category:Achievement_categories";
 
@@ -63,9 +141,7 @@ internal class Program
         bool nextPage;
         do
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, nextPageLink);
-            var response = await httpClient.SendAsync(request);
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await Downloader.Instance.Download(nextPageLink);
             listElements.AddRange(parser.ParseListElementsFromWiki(content));
 
 
@@ -97,7 +173,7 @@ internal class Program
     {
         var result = new ConcurrentBag<AchievementTableEntry>();
         progress.MaxValue = listElements.Count;
-        Parallel.For(0, listElements.Count, i =>
+        for (int i = 0; i < listElements.Count; i++)
         {
             var item = listElements[i];
             if (item.title != "Living World Dailies")
@@ -106,17 +182,23 @@ internal class Program
                 //continue;
 
                 progress.Description(Markup.Escape(item.title));
-                var web = new HtmlWeb();
-                var document = web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.link).Result;
-                var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
-                var elements = parser.Parse(document, tables.First(), progressContext);
-                foreach (var element in elements)
+
+                var content = Downloader.Instance.Download("https://wiki.guildwars2.com" + item.link).Result;
+                if (!string.IsNullOrEmpty(content))
                 {
-                    result.Add(element);
+                    var document = new HtmlDocument();
+                    document.LoadHtml(content);
+                    var tables = document.DocumentNode.SelectNodes("//table[contains(@class, 'table')]");
+                    var elements = parser.Parse(document, tables.First(), progressContext);
+                    foreach (var element in elements)
+                    {
+                        result.Add(element);
+                    }
                 }
             }
             progress.Increment(1);
-        });
+        }
+        ;
 
         async Task ParseItem(string name, string link, Action<int> setId, Func<bool> shouldSet)
         {
@@ -139,10 +221,24 @@ internal class Program
                         link = "/wiki/Unbound_Magic_(service)";
                     }
 
-                    var web = new HtmlWeb();
-                    var document = await web.LoadFromWebAsync("https://wiki.guildwars2.com" + link);
-                    var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
-                    setId(parser.ParseItemWikiPage(itemBoxNode));
+                    var content = Downloader.Instance.Download("https://wiki.guildwars2.com" + link).Result;
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var document = new HtmlDocument();
+                        document.LoadHtml(content);
+                        if (document.DocumentNode.InnerHtml.Contains("There is currently no text in this page."))
+                        {
+                            setId(-1);
+                            return;
+                        }
+                        var itemBoxNode = document.DocumentNode.SelectNodes("//div[contains(@class, 'infobox')]").FindFirst("div");
+                        setId(parser.ParseItemWikiPage(itemBoxNode));
+                    }
+                    else
+                    {
+                        setId(-1);
+                    }
+
                 }
             }
             catch (Exception)
@@ -151,9 +247,18 @@ internal class Program
             }
         }
         progress.Value = 0;
-        progress.MaxValue = result.Count + result.Select(x => x.Description).OfType<CollectionDescription>().SelectMany(x => x.EntryList).Count();
+        try
+        {
+            progress.MaxValue = result.Count + result.Select(x => x.Description).OfType<CollectionDescription>().SelectMany(x => x.EntryList).Count();
+
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+            progress.MaxValue = result.Count;
+        }
         progress.Description = "Parsing Items ...";
-        Parallel.ForEach(result, new ParallelOptions() { MaxDegreeOfParallelism = 15 }, item =>
+        foreach (var item in result)
         {
             var task = progressContext.AddTask("Item Download");
             task.IsIndeterminate = true;
@@ -161,20 +266,21 @@ internal class Program
             {
                 foreach (var collectionEntry in collectionDescription.EntryList)
                 {
-                    task.Description = Markup.Escape(collectionEntry.DisplayName);
+                    task.Description = "Parsing Items ... - " + Markup.Escape(collectionEntry.DisplayName);
                     ParseItem(collectionEntry.DisplayName, collectionEntry.Link, id => collectionEntry.Id = id, () => collectionEntry.Id == 0).Wait();
                     progress.Increment(1);
                 }
             }
             else if (item.Reward is ItemReward reward)
             {
-                task.Description = Markup.Escape(reward.DisplayName);
+                task.Description = "Parsing Items ... - " + Markup.Escape(reward.DisplayName);
                 ParseItem(reward.DisplayName, reward.ItemUrl, id => reward.Id = id, () => reward.Id == 0).Wait();
             }
             task.StopTask();
             progress.Increment(1);
             progress.Description = $"Parsing Items ({progress.Value}/{progress.MaxValue})";
-        });
+        }
+        ;
 
         var jsonResult = JsonSerializer.Serialize(result, new JsonSerializerOptions()
         {
@@ -206,7 +312,7 @@ internal class Program
         progress.Value = 0;
         progress.MaxValue = result.Count;
 
-        Parallel.For(0, result.Count, new ParallelOptions() { MaxDegreeOfParallelism = 15 }, i =>
+        for (int i = 0; i < result.Count; i++)
         {
             var item = result[i];
             if (item.HasLink)
@@ -215,15 +321,19 @@ internal class Program
                 task.IsIndeterminate = true;
                 if (item.Link != "/wiki/Dragon_Response_Mission" && item.Link != "/wiki/Strike_Mission")
                 {
-                    var web = new HtmlWeb();
-                    var doc = web.LoadFromWebAsync("https://wiki.guildwars2.com" + item.Link).Result;
-                    var table = parser.ParseCollectionAchievementPage(doc.DocumentNode);
-                    if (table != null)
+                    var content = Downloader.Instance.Download("https://wiki.guildwars2.com" + item.Link).Result;
+                    if (!string.IsNullOrEmpty(content))
                     {
-                        table.Id = item.Id;
-                        table.Name = item.Name;
-                        table.Link = item.Link;
-                        achievementTables.Add(table);
+                        var doc = new HtmlDocument();
+                        doc.LoadHtml(content);
+                        var table = parser.ParseCollectionAchievementPage(doc.DocumentNode);
+                        if (table != null)
+                        {
+                            table.Id = item.Id;
+                            table.Name = item.Name;
+                            table.Link = item.Link;
+                            achievementTables.Add(table);
+                        }
                     }
                 }
 
@@ -233,7 +343,8 @@ internal class Program
             progress.Increment(1);
             progress.Description = $"Parsing Collections ({progress.Value}/{progress.MaxValue})";
 
-        });
+        }
+        ;
 
         var json = JsonSerializer.Serialize(achievementTables, new JsonSerializerOptions()
         {
@@ -264,21 +375,20 @@ internal class Program
         progress.Value = 0;
         progress.MaxValue = result.Count;
 
-        Parallel.ForEach(result, new ParallelOptions() { MaxDegreeOfParallelism = 15 }, item =>
+        foreach (var item in result)
         {
             var node = HtmlNode.CreateNode("<div>" + item.Description.GameText + "</div>");
             foreach (var linkNode in node.Descendants().Where(x => x.Name == "a"))
             {
                 var task = progressContext.AddTask(linkNode.GetAttributeValue("href", "empty"));
-                task.IsIndeterminate = true;
-                parser.ParseSubPage("https://wiki.guildwars2.com/" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation, task).Wait();
+                parser.ParseSubPage("https://wiki.guildwars2.com" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation, task).Wait();
                 task.StopTask();
-            };
+            }
+            ;
 
             if (!string.IsNullOrEmpty(item.Link))
             {
                 var task = progressContext.AddTask(string.IsNullOrWhiteSpace(item.Link) ? string.Empty : item.Link);
-                task.IsIndeterminate = true;
                 parser.ParseSubPage("https://wiki.guildwars2.com" + item.Link, 0, subpageInformation, task).Wait();
                 task.StopTask();
             }
@@ -292,7 +402,6 @@ internal class Program
                         if (!string.IsNullOrEmpty(linkEntry.Link))
                         {
                             var task = progressContext.AddTask(string.IsNullOrWhiteSpace(linkEntry.Link) ? string.Empty : linkEntry.Link);
-                            task.IsIndeterminate = true;
                             parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation, task).Wait();
                             task.StopTask();
                         }
@@ -309,7 +418,6 @@ internal class Program
                         if (!string.IsNullOrEmpty(linkEntry.Link))
                         {
                             var task = progressContext.AddTask(string.IsNullOrWhiteSpace(linkEntry.Link) ? string.Empty : linkEntry.Link);
-                            task.IsIndeterminate = true;
                             parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation, task).Wait();
                             task.StopTask();
                         }
@@ -319,7 +427,7 @@ internal class Program
 
             progress.Increment(1);
             progress.Description = $"Parsing SubPages ({progress.Value}/{progress.MaxValue})";
-        });
+        }
 
         var jsonResult = JsonSerializer.Serialize(subpageInformation.Values, new JsonSerializerOptions()
         {
