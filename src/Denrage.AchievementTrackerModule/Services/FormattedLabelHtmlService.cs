@@ -71,7 +71,7 @@ namespace Denrage.AchievementTrackerModule.Services
                             {
                                 if (link.StartsWith("/"))
                                 {
-                                    link = "https://wiki.guildwars2.com/" + link;
+                                    link = "https://wiki.guildwars2.com" + link;
                                 }
 
                                 yield return part.SetHyperLink(link).MakeUnderlined();
