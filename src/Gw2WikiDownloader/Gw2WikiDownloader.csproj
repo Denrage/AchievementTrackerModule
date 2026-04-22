@@ -17,4 +17,10 @@
     <ProjectReference Include="..\Denrage.AchievementTrackerModule.Libs\Denrage.AchievementTrackerModule.Libs.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="cookies.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

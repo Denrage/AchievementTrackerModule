@@ -174,7 +174,7 @@ public partial class WikiParser
                             var relevantNode = referenceNodes.First();
                             var references = relevantNode.ChildNodes.Where(x => x.Name == "li");
 
-                            var citeLink = node.ChildNodes.FindFirst("sup").ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty)[1..];
+                            var citeLink = node.ChildNodes.FindFirst("sup").ChildNodes.FindFirst("a").GetAttributeValue("href", string.Empty)[1..].Replace("_", "&#95;");
                             entry.Cite = references.First(x => x.GetAttributeValue("id", string.Empty) == citeLink).InnerText;
 
                         }
@@ -574,7 +574,7 @@ public partial class WikiParser
 
             results.TryAdd(link, null);
 
-            task.Description = Markup.Escape($"[{task.Value} / {task.MaxValue}]Subpage Parsing - {link}[{depth}]");
+            task.Description = Markup.Escape($"[{task.Value}]Subpage Parsing - {link}[{depth}]");
             var content = Downloader.Instance.Download(link).Result;
             if (string.IsNullOrEmpty(content))
             {
@@ -975,11 +975,7 @@ public partial class WikiParser
         var parsedIconUrl = relevantString[iconUrlStartIndex..iconUrlEndIndex];
         var iconUrl = string.IsNullOrEmpty(parsedIconUrl) ? string.Empty : "https:" + parsedIconUrl;
 
-        var localTilesStartIndex = relevantString.IndexOf("\"", iconUrlEndIndex + 1) + 1;
-        var localTilesEndIndex = relevantString.IndexOf("\"", localTilesStartIndex);
-        var localTiles = relevantString[localTilesStartIndex..localTilesEndIndex];
-
-        var coordsStartIndex = relevantString.IndexOf("\"", localTilesEndIndex + 1) + 1;
+        var coordsStartIndex = relevantString.IndexOf("\"", iconUrlEndIndex + 1) + 1;
         var coordsEndIndex = relevantString.IndexOf("\"", coordsStartIndex);
         var coords = relevantString[coordsStartIndex..coordsEndIndex];
 
@@ -995,7 +991,6 @@ public partial class WikiParser
         {
             Bounds = bounds,
             IconUrl = iconUrl,
-            LocalTiles = localTiles,
             Path = path,
             Coordinates = coords,
         };

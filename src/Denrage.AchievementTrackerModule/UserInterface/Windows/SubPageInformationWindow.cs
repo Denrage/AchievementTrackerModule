@@ -202,7 +202,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
             {
                 if (interactiveMap.InteractiveMap != null)
                 {
-                    _ = new InteractiveMapControl(interactiveMap.InteractiveMap.IconUrl, interactiveMap.InteractiveMap.LocalTiles, interactiveMap.InteractiveMap.Coordinates, interactiveMap.InteractiveMap.Path, interactiveMap.InteractiveMap.Bounds)
+                    _ = new InteractiveMapControl(interactiveMap.InteractiveMap.IconUrl, interactiveMap.InteractiveMap.Coordinates, interactiveMap.InteractiveMap.Path, interactiveMap.InteractiveMap.Bounds)
                     {
                         Parent = flowPanel,
                         Width = flowPanel.ContentRegion.Width - (PADDING * 3),

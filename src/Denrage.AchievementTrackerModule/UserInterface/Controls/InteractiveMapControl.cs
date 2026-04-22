@@ -30,7 +30,6 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         // Not needed yet
         private readonly ((double X, double Y) StartCoordinate, (double X, double Y) EndCoordinate) continentDimensions;
         //private readonly int minzoom;
-        private readonly string localTiles;
         private readonly (float X, float Y) mapBounds;
 
         private (int X, int Y) startCoordinate;
@@ -42,11 +41,10 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
         private static AsyncTexture2D flagStart;
         private static AsyncTexture2D flagEnd;
 
-        public InteractiveMapControl(string iconUrl, string localTiles, string inputCoords, string path, string bounds)
+        public InteractiveMapControl(string iconUrl, string inputCoords, string path, string bounds)
         {
             this.ClipsBounds = true;
             this.iconUrl = iconUrl;
-            this.localTiles = localTiles;
             var coords = this.ConvertStringToNestedArray(inputCoords);
             this.path = this.ConvertStringToNestedArray(path);
             this.bounds = this.ConvertStringToNestedArray(bounds);

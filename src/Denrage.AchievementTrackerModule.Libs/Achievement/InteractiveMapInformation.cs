@@ -4,8 +4,6 @@
     {
         public string IconUrl { get; set; }
 
-        public string LocalTiles { get; set; }
-
         public string Path { get; set; }
 
         public string Bounds { get; set; }

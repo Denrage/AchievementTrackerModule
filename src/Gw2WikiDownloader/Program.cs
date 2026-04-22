@@ -19,11 +19,12 @@ internal class Downloader
     public Downloader()
     {
         var cookieContainer = new CookieContainer();
-        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2_session", "555bkipvha5gumve49q601ng3t1mn5e3"));
-        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2mwuser-sessionId", "425d37f62aba8767d329"));
-        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2Token", "78dcd60367e68d13b8192ce921242f17"));
-        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2UserID", "255731"));
-        cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie("en_wikidb_gw2UserName", "Denrage"));
+        var cookies = File.ReadAllLines("cookies.txt");
+        foreach (var cookie in cookies)
+        {
+            var splittedCookie = cookie.Split(',');
+            cookieContainer.Add(new Uri("https://wiki.guildwars2.com"), new Cookie(splittedCookie[0], splittedCookie[1]));
+        }
 
         var httpClientHandler = new HttpClientHandler() { CookieContainer = cookieContainer };
         httpClient = new HttpClient(httpClientHandler);
@@ -381,10 +382,10 @@ internal class Program
             foreach (var linkNode in node.Descendants().Where(x => x.Name == "a"))
             {
                 var task = progressContext.AddTask(linkNode.GetAttributeValue("href", "empty"));
+                task.MaxValue = double.MaxValue;
                 parser.ParseSubPage("https://wiki.guildwars2.com" + linkNode.GetAttributeValue("href", ""), 0, subpageInformation, task).Wait();
                 task.StopTask();
             }
-            ;
 
             if (!string.IsNullOrEmpty(item.Link))
             {
@@ -402,6 +403,7 @@ internal class Program
                         if (!string.IsNullOrEmpty(linkEntry.Link))
                         {
                             var task = progressContext.AddTask(string.IsNullOrWhiteSpace(linkEntry.Link) ? string.Empty : linkEntry.Link);
+                            task.MaxValue = double.MaxValue;
                             parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation, task).Wait();
                             task.StopTask();
                         }
@@ -418,6 +420,7 @@ internal class Program
                         if (!string.IsNullOrEmpty(linkEntry.Link))
                         {
                             var task = progressContext.AddTask(string.IsNullOrWhiteSpace(linkEntry.Link) ? string.Empty : linkEntry.Link);
+                            task.MaxValue = double.MaxValue;
                             parser.ParseSubPage("https://wiki.guildwars2.com" + linkEntry.Link, 0, subpageInformation, task).Wait();
                             task.StopTask();
                         }
