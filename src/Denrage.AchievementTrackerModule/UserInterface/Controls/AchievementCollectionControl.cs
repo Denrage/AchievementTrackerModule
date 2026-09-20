@@ -16,11 +16,12 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             IFormattedLabelHtmlService formattedLabelHtmlService,
+            IBitAlignmentService bitAlignmentService,
             IExternalImageService externalImageService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             CollectionDescription description)
-            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, contentsManager, achievement, description)
+            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, bitAlignmentService, contentsManager, achievement, description)
         {
             this.externalImageService = externalImageService;
         }

@@ -10,6 +10,7 @@ using Denrage.AchievementTrackerModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
 using System;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Denrage.AchievementTrackerModule
@@ -27,6 +28,7 @@ namespace Denrage.AchievementTrackerModule
         private bool purposelyHidden;
         private SettingEntry<bool> autoSave;
         private SettingEntry<bool> limitAchievements;
+        private SettingEntry<bool> bitAlignmentValidation;
         private WindowTab blishhudOverlayTab;
 
         #region Service Managers
@@ -49,6 +51,8 @@ namespace Denrage.AchievementTrackerModule
             this.autoSave = settings.DefineSetting("AutoSave", false, () => "Auto save every 5 minutes", () => "Auto save tracked achievements, windows and their positions every 5 minutes");
 
             this.limitAchievements = settings.DefineSetting("LimitAchievements", true, () => "Limit Achievements to 15", () => "This will limit the maximum of achievements to 15. If it's disabled expect performance and usability issues.");
+
+            this.bitAlignmentValidation = settings.DefineSetting("BitAlignmentValidation", false, () => "Validate bit alignment (debug)", () => "One-time startup check: aligns every collection/objective achievement and logs a summary, including a comparison against the old hand-written table. Leave off unless debugging \"what's left\" text.");
         }
 
         protected override void Initialize()
@@ -76,6 +80,12 @@ namespace Denrage.AchievementTrackerModule
                 await Task.Delay(TimeSpan.FromSeconds(3));
                 await this.dependencyInjectionContainer.InitializeAsync(this.autoSave, this.limitAchievements);
                 this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.AchievementTrackerService_AchievementTracked;
+                this.dependencyInjectionContainer.AchievementTrackerService.AchievementTracked += this.PrefetchBitAlignment;
+
+                if (this.bitAlignmentValidation.Value)
+                {
+                    _ = this.dependencyInjectionContainer.BitAlignmentService.RunValidationAsync();
+                }
 
                 if (this.dependencyInjectionContainer.PersistanceService.Get().ShowTrackWindow)
                 {
@@ -153,6 +163,19 @@ namespace Denrage.AchievementTrackerModule
             }
         }
 
+        // The other prefetch trigger is AchievementDetailsWindowManager.CreateWindow ("opened in
+        // detail") -- tracking an achievement is worth aligning even before its detail/Track window
+        // control is ever built, since the Track window panel's embedded control needs it too.
+        private void PrefetchBitAlignment(int achievementId)
+        {
+            var achievement = this.dependencyInjectionContainer.AchievementService.Achievements?.FirstOrDefault(x => x.Id == achievementId);
+
+            if (achievement != null)
+            {
+                _ = this.dependencyInjectionContainer.BitAlignmentService.PrefetchAsync(achievementId, achievement);
+            }
+        }
+
         protected override void OnModuleLoaded(EventArgs e) =>
             base.OnModuleLoaded(e);
 
@@ -189,6 +212,7 @@ namespace Denrage.AchievementTrackerModule
             this.cornerIcon?.Dispose();
             this.window?.Dispose();
             this.dependencyInjectionContainer.TextureService?.Dispose();
+            this.dependencyInjectionContainer.BitAlignmentService?.Dispose();
         }
 
         private void SavePersistentInformation()

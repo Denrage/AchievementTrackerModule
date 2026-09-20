@@ -12,11 +12,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Windows
     {
         private readonly Dictionary<Type, AchievementControlFactory> mapping = new Dictionary<Type, AchievementControlFactory>();
 
-        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, IFormattedLabelHtmlService formattedLabelHtmlService, ContentsManager contentsManager, IExternalImageService externalImageService)
+        public AchievementControlProvider(IAchievementService achievementService, IItemDetailWindowManager itemDetailWindowManager, IFormattedLabelHtmlService formattedLabelHtmlService, IBitAlignmentService bitAlignmentService, ContentsManager contentsManager, IExternalImageService externalImageService)
         {
             this.mapping.Add(typeof(StringDescription), new AchievementTextControlFactory(formattedLabelHtmlService));
-            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, formattedLabelHtmlService, contentsManager, externalImageService));
-            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager, formattedLabelHtmlService));
+            this.mapping.Add(typeof(CollectionDescription), new AchievementCollectionControlFactory(achievementService, itemDetailWindowManager, formattedLabelHtmlService, bitAlignmentService, contentsManager, externalImageService));
+            this.mapping.Add(typeof(ObjectivesDescription), new AchievementObjectiveControlFactory(achievementService, itemDetailWindowManager, contentsManager, formattedLabelHtmlService, bitAlignmentService));
         }
 
         public Control GetAchievementControl(AchievementTableEntry achievement, AchievementTableEntryDescription description)

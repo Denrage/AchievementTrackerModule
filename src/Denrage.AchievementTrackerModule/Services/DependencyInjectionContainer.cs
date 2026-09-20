@@ -29,6 +29,8 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public IAchievementService AchievementService { get; set; }
 
+        public IBitAlignmentService BitAlignmentService { get; private set; }
+
         public ITextureService TextureService { get; set; }
 
         public IPersistanceService PersistanceService { get; private set; }
@@ -66,9 +68,14 @@ namespace Denrage.AchievementTrackerModule.Services
             this.ExternalImageService = new ExternalImageService(this.graphicsService, this.logger);
             this.TextureService = new TextureService(this.contentService, this.contentsManager);
 
-            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, this.directoriesManager, () => this.PersistanceService, this.TextureService);
+            var achievementService = new AchievementService(this.contentsManager, this.gw2ApiManager, this.logger, this.directoriesManager, () => this.PersistanceService, this.TextureService, () => this.BitAlignmentService);
             this.AchievementService = achievementService;
-            
+
+            // Constructed right after AchievementService, since it needs the wiki data (AchievementsById)
+            // -- and threaded back into AchievementService via the lazy Func above (same shape as
+            // PersistanceService's own forward reference) so HasFinishedAchievementBit/
+            // ToggleManualCompleteStatus can reach it without a real constructor cycle.
+            this.BitAlignmentService = new BitAlignmentService(this.AchievementService, this.gw2ApiManager, this.logger);
 
             this.SubPageInformationWindowManager = new SubPageInformationWindowManager(this.graphicsService, this.contentsManager, this.AchievementService, () => this.FormattedLabelHtmlService, this.ExternalImageService);
             this.FormattedLabelHtmlService = new FormattedLabelHtmlService(this.contentsManager, this.AchievementService, this.SubPageInformationWindowManager, this.ExternalImageService);
@@ -80,10 +87,10 @@ namespace Denrage.AchievementTrackerModule.Services
             this.ItemDetailWindowFactory = new ItemDetailWindowFactory(this.contentsManager, this.AchievementService, this.AchievementTableEntryProvider, this.SubPageInformationWindowManager);
             var itemDetailWindowManager = new ItemDetailWindowManager(this.ItemDetailWindowFactory, this.AchievementService, this.logger);
             this.ItemDetailWindowManager = itemDetailWindowManager;
-            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.FormattedLabelHtmlService, this.contentsManager, this.ExternalImageService);
+            this.AchievementControlProvider = new AchievementControlProvider(this.AchievementService, this.ItemDetailWindowManager, this.FormattedLabelHtmlService, this.BitAlignmentService, this.contentsManager, this.ExternalImageService);
             this.AchievementControlManager = new AchievementControlManager(this.AchievementControlProvider);
             this.AchievementDetailsWindowFactory = new AchievementDetailsWindowFactory(this.contentsManager, this.AchievementService, this.AchievementControlProvider, this.AchievementControlManager);
-            var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService, this.logger);
+            var achievementDetailsWindowManager = new AchievementDetailsWindowManager(this.AchievementDetailsWindowFactory, this.AchievementControlManager, this.AchievementService, this.BitAlignmentService, this.logger);
             this.AchievementDetailsWindowManager = achievementDetailsWindowManager;
             this.PersistanceService = new PersistanceService(this.directoriesManager, achievementDetailsWindowManager, itemDetailWindowManager, achievementTrackerService, this.logger, achievementService, autoSave);
 

@@ -14,6 +14,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly IAchievementDetailsWindowFactory achievementDetailsWindowFactory;
         private readonly IAchievementControlManager achievementControlManager;
         private readonly IAchievementService achievementService;
+        private readonly IBitAlignmentService bitAlignmentService;
         private readonly Logger logger;
         private readonly List<AchievementDetailsWindow> hiddenWindows = new List<AchievementDetailsWindow>();
 
@@ -25,11 +26,13 @@ namespace Denrage.AchievementTrackerModule.Services
             IAchievementDetailsWindowFactory achievementDetailsWindowFactory,
             IAchievementControlManager achievementControlManager,
             IAchievementService achievementService,
+            IBitAlignmentService bitAlignmentService,
             Logger logger)
         {
             this.achievementDetailsWindowFactory = achievementDetailsWindowFactory;
             this.achievementControlManager = achievementControlManager;
             this.achievementService = achievementService;
+            this.bitAlignmentService = bitAlignmentService;
             this.logger = logger;
         }
 
@@ -53,6 +56,9 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void CreateWindow(AchievementTableEntry achievement)
         {
+            // "Opened in detail" -- one of the two prefetch triggers (the other is tracking, in Module.cs).
+            _ = this.bitAlignmentService.PrefetchAsync(achievement.Id, achievement);
+
             var window = this.achievementDetailsWindowFactory.Create(achievement);
 
             window.Parent = GameService.Graphics.SpriteScreen;

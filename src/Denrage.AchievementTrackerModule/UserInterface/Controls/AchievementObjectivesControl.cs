@@ -12,10 +12,11 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             IFormattedLabelHtmlService formattedLabelHtmlService,
+            IBitAlignmentService bitAlignmentService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             ObjectivesDescription description)
-            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, contentsManager, achievement, description)
+            : base(itemDetailWindowManager, achievementService, formattedLabelHtmlService, bitAlignmentService, contentsManager, achievement, description)
         {
         }
 

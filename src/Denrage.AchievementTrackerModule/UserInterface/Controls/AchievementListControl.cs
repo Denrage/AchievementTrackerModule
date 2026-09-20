@@ -1,4 +1,5 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Modules.Managers;
 using Denrage.AchievementTrackerModule.Interfaces;
 using Denrage.AchievementTrackerModule.Libs.Achievement;
@@ -14,6 +15,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
     {
         private readonly IItemDetailWindowManager itemDetailWindowManager;
         private readonly IFormattedLabelHtmlService formattedLabelHtmlService;
+        private readonly IBitAlignmentService bitAlignmentService;
         private readonly ContentsManager contentsManager;
         private readonly AchievementTableEntry achievement;
         private readonly T description;
@@ -29,6 +31,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             IItemDetailWindowManager itemDetailWindowManager,
             IAchievementService achievementService,
             IFormattedLabelHtmlService formattedLabelHtmlService,
+            IBitAlignmentService bitAlignmentService,
             ContentsManager contentsManager,
             AchievementTableEntry achievement,
             T description)
@@ -36,6 +39,7 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             this.itemDetailWindowManager = itemDetailWindowManager;
             this.AchievementService = achievementService;
             this.formattedLabelHtmlService = formattedLabelHtmlService;
+            this.bitAlignmentService = bitAlignmentService;
             this.contentsManager = contentsManager;
             this.achievement = achievement;
             this.description = description;
@@ -45,6 +49,21 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
             this.ControlPadding = new Vector2(7f);
 
             this.AchievementService.PlayerAchievementsLoaded += this.AchievementService_PlayerAchievementsLoaded;
+
+            // Prefetch (on tracking) and detail-window open kick off alignment, but this control may
+            // already be on screen by the time it lands -- refresh the coloring for this achievement
+            // specifically when it does.
+            this.bitAlignmentService.AlignmentLoaded += this.BitAlignmentService_AlignmentLoaded;
+        }
+
+        private void BitAlignmentService_AlignmentLoaded(int achievementId)
+        {
+            if (achievementId != this.achievement.Id)
+            {
+                return;
+            }
+
+            GameService.Overlay.QueueMainThreadUpdate(gameTime => this.AchievementService_PlayerAchievementsLoaded());
         }
 
         private void AchievementService_PlayerAchievementsLoaded()
@@ -194,6 +213,8 @@ namespace Denrage.AchievementTrackerModule.UserInterface.Controls
 
         protected override void DisposeControl()
         {
+            this.bitAlignmentService.AlignmentLoaded -= this.BitAlignmentService_AlignmentLoaded;
+
             foreach (var item in this.itemControls)
             {
                 item.Dispose();

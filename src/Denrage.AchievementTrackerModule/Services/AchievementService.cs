@@ -34,6 +34,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private readonly DirectoriesManager directoriesManager;
         private readonly Func<IPersistanceService> getPersistanceService;
         private readonly ITextureService textureService;
+        private readonly Func<IBitAlignmentService> getBitAlignmentService;
         private Task trackAchievementProgressTask;
         private CancellationTokenSource trackAchievementProgressCancellationTokenSource;
 
@@ -55,7 +56,7 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public event Action ApiAchievementsLoaded;
 
-        public AchievementService(ContentsManager contentsManager, Gw2ApiManager gw2ApiManager, Logger logger, DirectoriesManager directoriesManager, Func<IPersistanceService> getPersistanceService, ITextureService textureService)
+        public AchievementService(ContentsManager contentsManager, Gw2ApiManager gw2ApiManager, Logger logger, DirectoriesManager directoriesManager, Func<IPersistanceService> getPersistanceService, ITextureService textureService, Func<IBitAlignmentService> getBitAlignmentService)
         {
             this.contentsManager = contentsManager;
             this.gw2ApiManager = gw2ApiManager;
@@ -63,13 +64,19 @@ namespace Denrage.AchievementTrackerModule.Services
             this.directoriesManager = directoriesManager;
             this.getPersistanceService = getPersistanceService;
             this.textureService = textureService;
+            this.getBitAlignmentService = getBitAlignmentService;
         }
 
+        // The bit parameter is a wiki row index (matches the entries iterated in AchievementListControl),
+        // not a raw API bit -- translate through BitAlignmentService before storing, same as
+        // HasFinishedAchievementBit below, so ManualCompletedAchievements keeps storing true bit indices.
         public void ToggleManualCompleteStatus(int achievementId, int bit)
         {
-            if (this.specialSnowflakeCompletedHandling.TryGetValue(achievementId, out var conversionFunc))
+            bit = this.getBitAlignmentService().MapRowToBit(achievementId, bit);
+
+            if (bit < 0)
             {
-                bit = conversionFunc(bit);
+                return;
             }
 
             if (this.PlayerAchievements != null)
@@ -268,16 +275,22 @@ namespace Denrage.AchievementTrackerModule.Services
             return !(achievement is null) && achievement.Done;
         }
 
+        // positionIndex arrives as a wiki row index; BitAlignmentService translates it to the API's actual
+        // bit index (or leaves it unchanged if no alignment has been computed for this id yet, or -1 if
+        // alignment ran but this row couldn't be resolved). Replaces the old hand-written
+        // specialSnowflakeCompletedHandling table, which only covered ten ids.
         public bool HasFinishedAchievementBit(int achievementId, int positionIndex)
         {
-            if (this.specialSnowflakeCompletedHandling.TryGetValue(achievementId, out var conversionFunc))
+            var bitIndex = this.getBitAlignmentService().MapRowToBit(achievementId, positionIndex);
+
+            if (bitIndex < 0)
             {
-                positionIndex = conversionFunc(positionIndex);
+                return false;
             }
 
             if (this.ManualCompletedAchievements.TryGetValue(achievementId, out var manualAchievement))
             {
-                if (manualAchievement.Contains(positionIndex))
+                if (manualAchievement.Contains(bitIndex))
                 {
                     return true;
                 }
@@ -289,7 +302,7 @@ namespace Denrage.AchievementTrackerModule.Services
             }
 
             var achievement = this.PlayerAchievements.FirstOrDefault(x => x.Id == achievementId);
-            return !(achievement is null) && (achievement.Bits?.Contains(positionIndex) ?? false);
+            return !(achievement is null) && (achievement.Bits?.Contains(bitIndex) ?? false);
         }
 
         public async Task LoadPlayerAchievements(bool forceRefresh = false, CancellationToken cancellationToken = default)
@@ -368,19 +381,5 @@ namespace Denrage.AchievementTrackerModule.Services
 
         public void Dispose()
             => this.trackAchievementProgressCancellationTokenSource.Cancel();
-
-        private readonly Dictionary<int, Func<int, int>> specialSnowflakeCompletedHandling = new Dictionary<int, Func<int, int>>()
-        {
-            { 5693, index => index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 2 : index == 3 ? 6 : index == 4 ? 7 : index == 5 ? 8 : -1  },
-            { 5700, index => index == 0 ? 1 : index == 1 ? 2 : index == 2 ? 5 : index == 3 ? 8 : -1  },
-            { 5704, index => index == 0 ? 1 : index == 1 ? 2 : index == 2 ? 5 : index == 3 ? 8 : -1  },
-            { 5703, index => index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 2 : index == 3 ? 3 : index == 4 ? 4 : index == 5 ? 5 : index == 6 ? 7 : -1  },
-            { 5697, index => index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 3 : index == 3 ? 5 : index == 4 ? 6 : -1  },
-            { 5688, index => index == 0 ? 3 : index == 1 ? 4 : index == 2 ? 6 : index == 3 ? 7 : index == 4 ? 8 : -1  },
-            { 5709, index => index == 0 ? 0 : index == 1 ? 2 : index == 2 ? 4 : index == 3 ? 6 : index == 4 ? 7 : -1  },
-            { 5698, index => index == 0 ? 0 : index == 1 ? 3 : index == 2 ? 4 : index == 3 ? 6 : -1  },
-            { 5691, index => index == 0 ? 4 : index == 1 ? 5 : index == 2 ? 6 : index == 3 ? 7 : -1  },
-            { 5708, index => index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 2 : index == 3 ? 5 : index == 4 ? 8 : -1  },
-        };
     }
 }
