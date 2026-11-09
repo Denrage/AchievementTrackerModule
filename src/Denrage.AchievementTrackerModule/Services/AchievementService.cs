@@ -118,7 +118,7 @@ namespace Denrage.AchievementTrackerModule.Services
         private bool CheckMd5(string md5ToCheck, string filePath)
         {
             using (var md5 = MD5.Create())
-            using (var fileStream = System.IO.File.Open(filePath, FileMode.Open))
+            using (var fileStream = System.IO.File.OpenRead(filePath))
             {
                 return md5ToCheck.Equals(ByteArrayToString(md5.ComputeHash(fileStream)), StringComparison.OrdinalIgnoreCase);
             }
@@ -166,7 +166,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 else
                 {
                     var githubMetadata = await DataVersionUrl.GetJsonAsync<AchievementDataMetadata>();
-                    using (var metadata = System.IO.File.Open(Path.Combine(dataFolder, VersionFileName), FileMode.Open))
+                    using (var metadata = System.IO.File.OpenRead(Path.Combine(dataFolder, VersionFileName)))
                     {
                         var localMetadata = await JsonSerializer.DeserializeAsync<AchievementDataMetadata>(metadata, serializerOptions, cancellationToken);
                         if (localMetadata.Version != -1) // Debug skip
@@ -186,7 +186,7 @@ namespace Denrage.AchievementTrackerModule.Services
                 {
                     this.logger.Info("Downloading AchievementData");
                     _ = await DataVersionUrl.DownloadFileAsync(dataFolder, VersionFileName);
-                    using (var metadata = System.IO.File.Open(Path.Combine(dataFolder, VersionFileName), FileMode.Open))
+                    using (var metadata = System.IO.File.OpenRead(Path.Combine(dataFolder, VersionFileName)))
                     {
                         var localMetadata = await JsonSerializer.DeserializeAsync<AchievementDataMetadata>(metadata, serializerOptions, cancellationToken);
 
@@ -199,17 +199,17 @@ namespace Denrage.AchievementTrackerModule.Services
                     }
                 }
 
-                using (var achievements = System.IO.File.Open(Path.Combine(dataFolder, AchievementDataFileName), FileMode.Open))
+                using (var achievements = System.IO.File.OpenRead(Path.Combine(dataFolder, AchievementDataFileName)))
                 {
                     this.Achievements = (await JsonSerializer.DeserializeAsync<List<Libs.Achievement.AchievementTableEntry>>(achievements, serializerOptions, cancellationToken)).AsReadOnly();
                 }
 
-                using (var achievementDetails = System.IO.File.Open(Path.Combine(dataFolder, AchievementTablesFileName), FileMode.Open))
+                using (var achievementDetails = System.IO.File.OpenRead(Path.Combine(dataFolder, AchievementTablesFileName)))
                 {
                     this.AchievementDetails = (await JsonSerializer.DeserializeAsync<List<Libs.Achievement.CollectionAchievementTable>>(achievementDetails, serializerOptions)).AsReadOnly();
                 }
 
-                using (var subpageInformation = System.IO.File.Open(Path.Combine(dataFolder, SubPagesFileName), FileMode.Open))
+                using (var subpageInformation = System.IO.File.OpenRead(Path.Combine(dataFolder, SubPagesFileName)))
                 {
                     this.Subpages = (await JsonSerializer.DeserializeAsync<List<Libs.Achievement.SubPageInformation>>(subpageInformation, serializerOptions)).AsReadOnly();
                 }
